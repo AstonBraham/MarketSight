@@ -8,6 +8,7 @@ import { columns } from '@/components/mobile-money/columns';
 import { mockMobileMoneyTransactions } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function MobileMoneyPage() {
   return (
@@ -51,15 +52,48 @@ export default function MobileMoneyPage() {
         </Card>
       </div>
 
-       <Card>
-        <CardHeader>
-            <CardTitle>Opérations Mobile Money</CardTitle>
-            <CardDescription>Liste des dépôts, retraits et transferts.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <DataTable data={mockMobileMoneyTransactions} columns={columns} />
-        </CardContent>
-       </Card>
+       <Tabs defaultValue="all">
+        <div className="flex items-center">
+            <TabsList>
+                <TabsTrigger value="all">Toutes les opérations</TabsTrigger>
+                <TabsTrigger value="mixx">Mixx</TabsTrigger>
+                <TabsTrigger value="flooz">Flooz</TabsTrigger>
+            </TabsList>
+        </div>
+        <TabsContent value="all">
+          <Card>
+            <CardHeader>
+                <CardTitle>Opérations Mobile Money</CardTitle>
+                <CardDescription>Liste des dépôts, retraits et transferts.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DataTable data={mockMobileMoneyTransactions} columns={columns} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="mixx">
+           <Card>
+            <CardHeader>
+                <CardTitle>Opérations Mixx</CardTitle>
+                <CardDescription>Historique des transactions pour Mixx.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DataTable data={mockMobileMoneyTransactions.filter(t => t.provider === 'Mixx')} columns={columns} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="flooz">
+           <Card>
+            <CardHeader>
+                <CardTitle>Opérations Flooz</CardTitle>
+                <CardDescription>Historique des transactions pour Flooz.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DataTable data={mockMobileMoneyTransactions.filter(t => t.provider === 'Flooz')} columns={columns} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+       </Tabs>
     </div>
   );
 }

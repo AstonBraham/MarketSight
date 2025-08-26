@@ -75,7 +75,7 @@ export type MobileMoneyTransaction = {
     id: string;
     transactionId: string;
     type: 'deposit' | 'withdrawal' | 'transfer';
-    provider: 'Moov Money' | 'MTN Money' | 'Wave' | 'Orange Money';
+    provider: 'Mixx' | 'Flooz';
     amount: number;
     commission: number;
     date: string;

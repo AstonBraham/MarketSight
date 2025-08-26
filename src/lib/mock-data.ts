@@ -218,7 +218,104 @@ export const mockExpenses: Expense[] = [
   },
 ];
 
-export const mockInventory: InventoryItem[] = [];
+export const mockInventory: InventoryItem[] = [
+  {
+    "id": "1",
+    "productName": "RUSH (Bouteille) 0,5L",
+    "sku": "BO-ENE001",
+    "category": "Boisson",
+    "brand": "RUSH",
+    "reference": "BO-ENE001",
+    "inStock": 100,
+    "inTransit": 50,
+    "reorderLevel": 20,
+    "supplier": "Fournisseur A"
+  },
+  {
+    "id": "2",
+    "productName": "Okeola Pure Water (Unité)",
+    "sku": "BO-EAU0016",
+    "category": "Boisson",
+    "brand": "Okeola",
+    "reference": "BO-EAU0016",
+    "inStock": 500,
+    "inTransit": 0,
+    "reorderLevel": 100,
+    "supplier": "Fournisseur B"
+  },
+  {
+    "id": "3",
+    "productName": "Tamarin (Bouteille) 0,5L",
+    "sku": "BO-SUC001",
+    "category": "Boisson",
+    "brand": "Tamarin",
+    "reference": "BO-SUC001",
+    "inStock": 80,
+    "inTransit": 20,
+    "reorderLevel": 15,
+    "supplier": "Fournisseur A"
+  },
+  {
+    "id": "4",
+    "productName": "Okeola Pure Water (Sachet)",
+    "sku": "BO-EAU0015",
+    "category": "Boisson",
+    "brand": "Okeola",
+    "reference": "BO-EAU0015",
+    "inStock": 1000,
+    "inTransit": 200,
+    "reorderLevel": 200,
+    "supplier": "Fournisseur B"
+  },
+  {
+    "id": "5",
+    "productName": "T100 Ampoule 1W OLEDN",
+    "sku": "EL-AMP0030",
+    "category": "Électronique",
+    "brand": "OLEDN",
+    "reference": "EL-AMP0030",
+    "inStock": 30,
+    "inTransit": 10,
+    "reorderLevel": 5,
+    "supplier": "Fournisseur C"
+  },
+  {
+    "id": "6",
+    "productName": "Boisson U",
+    "sku": "BO-SUC0020",
+    "category": "Boisson",
+    "brand": "U",
+    "reference": "BO-SUC0020",
+    "inStock": 120,
+    "inTransit": 0,
+    "reorderLevel": 25,
+    "supplier": "Fournisseur A"
+  },
+  {
+    "id": "7",
+    "productName": "LAIT UHT NATUREL",
+    "sku": "PRODLAI0030",
+    "category": "Produits laitiers",
+    "brand": "Laitière du Berger",
+    "reference": "PRODLAI0030",
+    "inStock": 60,
+    "inTransit": 30,
+    "reorderLevel": 10,
+    "supplier": "Fournisseur D"
+  },
+  {
+    "id": "8",
+    "productName": "Assortiment",
+    "sku": "CONFISER0020",
+    "category": "Confiserie",
+    "brand": "Divers",
+    "reference": "CONFISER0020",
+    "inStock": 200,
+    "inTransit": 0,
+    "reorderLevel": 50,
+    "supplier": "Fournisseur E"
+  }
+];
 
 export const mockStockMovements: StockMovement[] = [
     { id: 'MOV001', productId: 'PROD001', type: 'in', quantity: 50, date: '2024-05-28T10:00:00Z', reason: 'Livraison Fournisseur' },
@@ -237,8 +334,8 @@ export const mockAirtimeTransactions: AirtimeTransaction[] = [
 ];
 
 export const mockMobileMoneyTransactions: MobileMoneyTransaction[] = [
-    { id: 'MM001', transactionId: 'MM-DEP-001', type: 'deposit', provider: 'Moov Money', amount: 50000, commission: 250, date: '2024-05-29T11:00:00Z' },
-    { id: 'MM002', transactionId: 'MM-WDR-001', type: 'withdrawal', provider: 'MTN Money', amount: 25000, commission: 150, date: '2024-05-29T11:30:00Z' },
-    { id: 'MM003', transactionId: 'MM-DEP-002', type: 'deposit', provider: 'Wave', amount: 100000, commission: 500, date: '2024-05-29T12:00:00Z' },
-    { id: 'MM004', transactionId: 'MM-WDR-002', type: 'withdrawal', provider: 'Moov Money', amount: 30000, commission: 200, date: '2024-05-29T12:30:00Z' },
+    { id: 'MM001', transactionId: 'MM-DEP-001', type: 'deposit', provider: 'Mixx', amount: 50000, commission: 250, date: '2024-05-29T11:00:00Z' },
+    { id: 'MM002', transactionId: 'MM-WDR-001', type: 'withdrawal', provider: 'Flooz', amount: 25000, commission: 150, date: '2024-05-29T11:30:00Z' },
+    { id: 'MM003', transactionId: 'MM-DEP-002', type: 'deposit', provider: 'Mixx', amount: 100000, commission: 500, date: '2024-05-29T12:00:00Z' },
+    { id: 'MM004', transactionId: 'MM-WDR-002', type: 'withdrawal', provider: 'Flooz', amount: 30000, commission: 200, date: '2024-05-29T12:30:00Z' },
 ];
