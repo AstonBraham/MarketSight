@@ -1,7 +1,11 @@
+
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { DataTable } from '@/components/data-table/data-table';
+import { columns } from '@/components/purchases/columns';
+import { mockPurchases } from '@/lib/mock-data';
 
 export default function PurchasesPage() {
   return (
@@ -13,7 +17,7 @@ export default function PurchasesPage() {
             <CardDescription>Liste des dernières commandes fournisseurs.</CardDescription>
         </CardHeader>
         <CardContent>
-            <p className="text-muted-foreground">La table des achats sera affichée ici.</p>
+            <DataTable data={mockPurchases} columns={columns} />
         </CardContent>
        </Card>
     </div>
