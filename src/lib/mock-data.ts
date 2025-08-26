@@ -71,11 +71,11 @@ export const mockExpenses: Expense[] = [
 ];
 
 export const mockInventory: InventoryItem[] = [
-    { id: 'PROD001', productName: 'Pommes Golden', sku: 'FR-POM-GOL', category: 'Fruits', inStock: 150, inTransit: 50, reorderLevel: 30, supplier: 'Vergers du Sud' },
-    { id: 'PROD002', productName: 'Lait Entier 1L', sku: 'LA-LAI-ENT', category: 'Produits Laitiers', inStock: 200, inTransit: 0, reorderLevel: 50, supplier: 'Laiterie Centrale' },
-    { id: 'PROD003', productName: 'Pain de Campagne', sku: 'BO-PAI-CAM', category: 'Boulangerie', inStock: 60, inTransit: 0, reorderLevel: 20, supplier: 'Boulangerie Artisanale' },
-    { id: 'PROD004', productName: 'Steak Haché 500g', sku: 'VI-STH-500', category: 'Boucherie', inStock: 80, inTransit: 25, reorderLevel: 25, supplier: 'Boucherie du Marché' },
-    { id: 'PROD005', productName: 'Yaourt Nature x4', sku: 'PL-YAO-NAT', category: 'Produits Laitiers', inStock: 120, inTransit: 0, reorderLevel: 40, supplier: 'Laiterie Centrale' },
+    { id: 'PROD001', productName: 'Pommes Golden', sku: 'FR-POM-GOL', category: 'Fruits', brand: 'Golden', reference: 'REF001', inStock: 150, inTransit: 50, reorderLevel: 30, supplier: 'Vergers du Sud' },
+    { id: 'PROD002', productName: 'Lait Entier 1L', sku: 'LA-LAI-ENT', category: 'Produits Laitiers', brand: 'Candia', reference: 'REF002', inStock: 200, inTransit: 0, reorderLevel: 50, supplier: 'Laiterie Centrale' },
+    { id: 'PROD003', productName: 'Pain de Campagne', sku: 'BO-PAI-CAM', category: 'Boulangerie', brand: 'Boulangerie Paul', reference: 'REF003', inStock: 60, inTransit: 0, reorderLevel: 20, supplier: 'Boulangerie Artisanale' },
+    { id: 'PROD004', productName: 'Steak Haché 500g', sku: 'VI-STH-500', category: 'Boucherie', brand: 'Charal', reference: 'REF004', inStock: 80, inTransit: 25, reorderLevel: 25, supplier: 'Boucherie du Marché' },
+    { id: 'PROD005', productName: 'Yaourt Nature x4', sku: 'PL-YAO-NAT', category: 'Produits Laitiers', brand: 'Danone', reference: 'REF005', inStock: 120, inTransit: 0, reorderLevel: 40, supplier: 'Laiterie Centrale' },
 ];
 
 export const mockStockMovements: StockMovement[] = [

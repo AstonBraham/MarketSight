@@ -32,6 +32,8 @@ export type InventoryItem = {
   productName: string;
   sku: string;
   category: string;
+  brand?: string;
+  reference?: string;
   inStock: number;
   inTransit: number;
   reorderLevel: number;

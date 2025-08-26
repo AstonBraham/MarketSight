@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { InventoryItem } from '@/lib/types';
@@ -54,17 +55,24 @@ export const columns: ColumnDef<InventoryItem>[] = [
     accessorKey: 'productName',
     header: 'Produit',
     cell: ({ row }) => {
+        const item = row.original;
         return (
             <div className="flex flex-col">
-                <span className="font-medium">{row.getValue('productName')}</span>
-                <span className="text-xs text-muted-foreground">{row.original.sku}</span>
+                <span className="font-medium">{item.productName}</span>
+                <span className="text-xs text-muted-foreground">
+                  {item.sku} {item.reference && `| ${item.reference}`}
+                </span>
             </div>
         )
     }
   },
   {
     accessorKey: 'category',
-    header: 'Catégorie',
+    header: 'Famille',
+  },
+    {
+    accessorKey: 'brand',
+    header: 'Marque',
   },
   {
     accessorKey: 'inStock',
