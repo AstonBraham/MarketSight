@@ -54,17 +54,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
   {
     accessorKey: 'productName',
     header: 'Produit',
-    cell: ({ row }) => {
-        const item = row.original;
-        return (
-            <div className="flex flex-col">
-                <span className="font-medium">{item.productName}</span>
-                <span className="text-xs text-muted-foreground">
-                  {item.sku} {item.reference && `| ${item.reference}`}
-                </span>
-            </div>
-        )
-    }
+  },
+  {
+    accessorKey: 'sku',
+    header: 'SKU',
+  },
+  {
+    accessorKey: 'reference',
+    header: 'Référence',
   },
   {
     accessorKey: 'category',
