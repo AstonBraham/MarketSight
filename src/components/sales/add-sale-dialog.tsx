@@ -35,10 +35,20 @@ export function AddSaleDialog() {
   const { inventory, updateItem } = useInventory();
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [price, setPrice] = useState(0);
 
   const handleItemSelect = (itemId: string) => {
     const item = inventory.find(i => i.id === itemId);
     setSelectedItem(item || null);
+  };
+  
+  const handleNumericInput = (setter: (value: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (/^\d*\.?\d*$/.test(value)) {
+      setter(parseFloat(value));
+    } else if (value === '') {
+        setter(0);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,7 +74,6 @@ export function AddSaleDialog() {
 
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const saleData = Object.fromEntries(formData.entries());
-    const price = parseFloat(saleData.price as string);
     const amount = price * quantity;
 
     // Add sale to transactions
@@ -92,6 +101,7 @@ export function AddSaleDialog() {
     // Reset form and close
     setSelectedItem(null);
     setQuantity(1);
+    setPrice(0);
     setOpen(false);
   };
 
@@ -100,15 +110,15 @@ export function AddSaleDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Nouvelle Vente
+          Vente au comptant
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Nouvelle Vente</DialogTitle>
+            <DialogTitle>Vente au comptant</DialogTitle>
             <DialogDescription>
-              Saisissez les détails de la transaction de vente.
+              Enregistrez une vente rapide pour un seul type de produit.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -132,22 +142,10 @@ export function AddSaleDialog() {
             {selectedItem && (
                  <>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="reference" className="text-right">
-                            Référence
-                        </Label>
-                        <Input id="reference" name="reference" value={selectedItem.reference} className="col-span-3" readOnly />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="itemType" className="text-right">
-                            Famille
-                        </Label>
-                        <Input id="itemType" name="itemType" value={selectedItem.category} className="col-span-3" readOnly />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="price" className="text-right">
                             Prix
                         </Label>
-                        <Input id="price" name="price" type="number" className="col-span-3" placeholder="0" required/>
+                        <Input id="price" name="price" type="number" className="col-span-3" value={price} onChange={handleNumericInput(setPrice)} placeholder="0" required/>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="quantity" className="text-right">
