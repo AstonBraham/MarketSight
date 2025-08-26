@@ -1,5 +1,4 @@
 
-
 import type { Sale, Purchase, Expense, InventoryItem, StockMovement, AirtimeTransaction, MobileMoneyTransaction } from './types';
 
 export const mockSales: Sale[] = [
@@ -128,6 +127,48 @@ export const mockSales: Sale[] = [
     price: 1125,
     quantity: 1,
     itemType: 'Électronique'
+  },
+  {
+    id: 'SALE010',
+    type: 'sale',
+    description: "Vente au détail - Boisson U",
+    amount: 400,
+    date: '2024-07-26T10:52:00Z',
+    category: 'Vente',
+    client: 'Client Comptant',
+    product: "Boisson U",
+    reference: "BO-SUC0020",
+    price: 400,
+    quantity: 1,
+    itemType: 'Boisson'
+  },
+  {
+    id: 'SALE011',
+    type: 'sale',
+    description: "Vente au détail - LAIT UHT NATUREL",
+    amount: 875,
+    date: '2024-07-26T10:55:00Z',
+    category: 'Vente',
+    client: 'Client Comptant',
+    product: "LAIT UHT NATUREL",
+    reference: "PRODLAI0030",
+    price: 875,
+    quantity: 1,
+    itemType: 'Produits laitiers'
+  },
+  {
+    id: 'SALE012',
+    type: 'sale',
+    description: "Vente au détail - Assortiment",
+    amount: 125,
+    date: '2024-07-26T10:58:00Z',
+    category: 'Vente',
+    client: 'Client Comptant',
+    product: "Assortiment",
+    reference: "CONFISER0020",
+    price: 125,
+    quantity: 1,
+    itemType: 'Confiserie'
   }
 ];
 
@@ -177,72 +218,7 @@ export const mockExpenses: Expense[] = [
   },
 ];
 
-export const mockInventory: InventoryItem[] = [
-    { id: '1', productName: 'Vache qui rit (portion)', sku: 'PRODLAI001', category: 'Produits laitiers', brand: 'Vache qui rit', reference: 'VQR-P', inStock: 50, inTransit: 10, reorderLevel: 5, supplier: 'Fournisseur A' },
-    { id: '2', productName: 'Vache qui rit (triangle)', sku: 'PRODLAI002', category: 'Produits laitiers', brand: 'Vache qui rit', reference: 'VQR-T', inStock: 30, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur A' },
-    { id: '3', productName: 'Laity (boîte 400G)', sku: 'PRODLAI003', category: 'Produits laitiers', brand: 'Laity', reference: 'LAI-B-400', inStock: 20, inTransit: 20, reorderLevel: 10, supplier: 'Fournisseur A' },
-    { id: '4', productName: 'Bonnet rouge (boîte)', sku: 'PRODLAI004', category: 'Produits laitiers', brand: 'Bonnet rouge', reference: 'BR-B', inStock: 40, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur A' },
-    { id: '5', productName: 'Peak (boîte)', sku: 'PRODLAI005', category: 'Produits laitiers', brand: 'Peak', reference: 'PEAK-B', inStock: 25, inTransit: 15, reorderLevel: 5, supplier: 'Fournisseur A' },
-    { id: '6', productName: 'Nido (boîte)', sku: 'PRODLAI006', category: 'Produits laitiers', brand: 'Nido', reference: 'NIDO-B', inStock: 35, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur A' },
-    { id: '7', productName: 'Lait caillé (bouteille)', sku: 'PRODLAI007', category: 'Produits laitiers', brand: 'Délicia', reference: 'LC-DEL', inStock: 15, inTransit: 5, reorderLevel: 2, supplier: 'Fournisseur B' },
-    { id: '8', productName: 'Lait caillé (pot)', sku: 'PRODLAI008', category: 'Produits laitiers', brand: 'Délicia', reference: 'LC-DEL-POT', inStock: 20, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur B' },
-    { id: '9', productName: 'Yaourt (pot)', sku: 'PRODLAI009', category: 'Produits laitiers', brand: 'Yoplait', reference: 'YA-YOP', inStock: 40, inTransit: 10, reorderLevel: 10, supplier: 'Fournisseur B' },
-    { id: '10', productName: 'Margarine (pot)', sku: 'GRAISSE001', category: 'Huiles et graisses', brand: 'Blue Band', reference: 'MARG-BB', inStock: 50, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur C' },
-    { id: '11', productName: 'Margarine (sachet)', sku: 'GRAISSE002', category: 'Huiles et graisses', brand: 'Blue Band', reference: 'MARG-BB-S', inStock: 100, inTransit: 20, reorderLevel: 20, supplier: 'Fournisseur C' },
-    { id: '12', productName: 'Topcao (pot)', sku: 'CONFISER001', category: 'Confiserie', brand: 'Topcao', reference: 'TOPCAO', inStock: 60, inTransit: 0, reorderLevel: 15, supplier: 'Fournisseur D' },
-    { id: '13', productName: 'Chocopain (pot)', sku: 'CONFISER002', category: 'Confiserie', brand: 'Chocopain', reference: 'CHOCO', inStock: 55, inTransit: 10, reorderLevel: 15, supplier: 'Fournisseur D' },
-    { id: '14', productName: 'Nescafé (sachet)', sku: 'CAFE001', category: 'Café et succédanés', brand: 'Nescafé', reference: 'NES-S', inStock: 200, inTransit: 50, reorderLevel: 30, supplier: 'Fournisseur E' },
-    { id: '15', productName: 'Nescafé (boîte)', sku: 'CAFE002', category: 'Café et succédanés', brand: 'Nescafé', reference: 'NES-B', inStock: 40, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur E' },
-    { id: '16', productName: 'Lipton (sachet)', sku: 'THE001', category: 'Thé et infusions', brand: 'Lipton', reference: 'LIP-S', inStock: 150, inTransit: 30, reorderLevel: 25, supplier: 'Fournisseur E' },
-    { id: '17', productName: 'Lipton (boîte)', sku: 'THE002', category: 'Thé et infusions', brand: 'Lipton', reference: 'LIP-B', inStock: 30, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur E' },
-    { id: '18', productName: 'Pain (baguette)', sku: 'BOULANG001', category: 'Boulangerie', brand: 'Boulangerie du coin', reference: 'PAIN-BAG', inStock: 100, inTransit: 0, reorderLevel: 20, supplier: 'Fournisseur F' },
-    { id: '19', productName: 'Pain de mie', sku: 'BOULANG002', category: 'Boulangerie', brand: 'Boulangerie du coin', reference: 'PAIN-MIE', inStock: 20, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur F' },
-    { id: '20', productName: 'Gâteau (part)', sku: 'BOULANG003', category: 'Boulangerie', brand: 'Boulangerie du coin', reference: 'GAT-P', inStock: 15, inTransit: 0, reorderLevel: 3, supplier: 'Fournisseur F' },
-    { id: '21', productName: 'Spaghetti (paquet)', sku: 'PATE001', category: 'Pâtes alimentaires', brand: 'Maman', reference: 'SPAG-MAM', inStock: 80, inTransit: 10, reorderLevel: 15, supplier: 'Fournisseur G' },
-    { id: '22', productName: 'Macaroni (paquet)', sku: 'PATE002', category: 'Pâtes alimentaires', brand: 'Panzani', reference: 'MAC-PANZ', inStock: 60, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur G' },
-    { id: '23', productName: 'Riz (kg)', sku: 'CEREALE001', category: 'Céréales', brand: 'Uncle Sam', reference: 'RIZ-US-KG', inStock: 500, inTransit: 100, reorderLevel: 50, supplier: 'Fournisseur H' },
-    { id: '24', productName: 'Maïs (kg)', sku: 'CEREALE002', category: 'Céréales', brand: 'Local', reference: 'MAIS-LOC-KG', inStock: 300, inTransit: 50, reorderLevel: 40, supplier: 'Fournisseur H' },
-    { id: '25', productName: 'Mil (kg)', sku: 'CEREALE003', category: 'Céréales', brand: 'Local', reference: 'MIL-LOC-KG', inStock: 250, inTransit: 0, reorderLevel: 40, supplier: 'Fournisseur H' },
-    { id: '26', productName: 'Sorgho (kg)', sku: 'CEREALE004', category: 'Céréales', brand: 'Local', reference: 'SORG-LOC-KG', inStock: 200, inTransit: 0, reorderLevel: 40, supplier: 'Fournisseur H' },
-    { id: '27', productName: 'Fonio (kg)', sku: 'CEREALE005', category: 'Céréales', brand: 'Local', reference: 'FONIO-LOC-KG', inStock: 100, inTransit: 20, reorderLevel: 15, supplier: 'Fournisseur H' },
-    { id: '28', productName: 'Huile (bouteille)', sku: 'HUILE001', category: 'Huiles et graisses', brand: 'Dinor', reference: 'HUILE-DIN', inStock: 120, inTransit: 30, reorderLevel: 20, supplier: 'Fournisseur C' },
-    { id: '29', productName: 'Huile (bidon)', sku: 'HUILE002', category: 'Huiles et graisses', brand: 'Aya', reference: 'HUILE-AYA', inStock: 40, inTransit: 10, reorderLevel: 10, supplier: 'Fournisseur C' },
-    { id: '30', productName: 'Sel (sachet)', sku: 'CONDIMENT001', category: 'Condiments', brand: 'La Baleine', reference: 'SEL-BAL', inStock: 300, inTransit: 0, reorderLevel: 50, supplier: 'Fournisseur I' },
-    { id: '31', productName: 'Cube (boîte)', sku: 'CONDIMENT002', category: 'Condiments', brand: 'Maggi', reference: 'CUBE-MAG', inStock: 150, inTransit: 40, reorderLevel: 25, supplier: 'Fournisseur I' },
-    { id: '32', productName: 'Poivre (sachet)', sku: 'CONDIMENT003', category: 'Condiments', brand: 'Ducros', reference: 'POIV-DUC', inStock: 80, inTransit: 0, reorderLevel: 15, supplier: 'Fournisseur I' },
-    { id: '33', productName: 'Piment (sachet)', sku: 'CONDIMENT004', category: 'Condiments', brand: 'Local', reference: 'PIM-LOC', inStock: 100, inTransit: 0, reorderLevel: 20, supplier: 'Fournisseur I' },
-    { id: '34', productName: 'Tomate (boîte)', sku: 'CONSERVE001', category: 'Conserves', brand: 'Le Bon Goût', reference: 'TOM-LBG', inStock: 90, inTransit: 25, reorderLevel: 15, supplier: 'Fournisseur J' },
-    { id: '35', productName: 'Sardine (boîte)', sku: 'CONSERVE002', category: 'Conserves', brand: 'Titus', reference: 'SARD-TIT', inStock: 70, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur J' },
-    { id: '36', productName: 'Corned beef (boîte)', sku: 'CONSERVE003', category: 'Conserves', brand: 'Exeter', reference: 'CORN-EXE', inStock: 50, inTransit: 15, reorderLevel: 10, supplier: 'Fournisseur J' },
-    { id: '37', productName: 'Coca-cola (bouteille)', sku: 'BOISSON001', category: 'Boissons', brand: 'Coca-cola', reference: 'COCA-B', inStock: 200, inTransit: 50, reorderLevel: 30, supplier: 'Fournisseur K' },
-    { id: '38', productName: 'Fanta (bouteille)', sku: 'BOISSON002', category: 'Boissons', brand: 'Fanta', reference: 'FANTA-B', inStock: 180, inTransit: 50, reorderLevel: 30, supplier: 'Fournisseur K' },
-    { id: '39', productName: 'Sprite (bouteille)', sku: 'BOISSON003', category: 'Boissons', brand: 'Sprite', reference: 'SPRITE-B', inStock: 170, inTransit: 0, reorderLevel: 30, supplier: 'Fournisseur K' },
-    { id: '40', productName: 'Youki (bouteille)', sku: 'BOISSON004', category: 'Boissons', brand: 'Youki', reference: 'YOUKI-B', inStock: 150, inTransit: 40, reorderLevel: 25, supplier: 'Fournisseur K' },
-    { id: '41', productName: 'XXL Energy (canette)', sku: 'BOISSON005', category: 'Boissons', brand: 'XXL Energy', reference: 'XXL-C', inStock: 100, inTransit: 0, reorderLevel: 20, supplier: 'Fournisseur K' },
-    { id: '42', productName: 'Possotomè (bouteille)', sku: 'BOISSON006', category: 'Boissons', brand: 'Possotomè', reference: 'POSSO-B', inStock: 80, inTransit: 20, reorderLevel: 15, supplier: 'Fournisseur L' },
-    { id: '43', productName: 'Eau (sachet)', sku: 'BOISSON007', category: 'Boissons', brand: 'Aquabelle', reference: 'EAU-AQUA-S', inStock: 500, inTransit: 100, reorderLevel: 100, supplier: 'Fournisseur L' },
-    { id: '44', productName: 'Jus de fruit (brique)', sku: 'BOISSON008', category: 'Boissons', brand: 'Presséa', reference: 'JUS-PRES-BRI', inStock: 120, inTransit: 30, reorderLevel: 20, supplier: 'Fournisseur M' },
-    { id: '45', productName: 'Oignon (kg)', sku: 'LEGUME001', category: 'Légumes', brand: 'Local', reference: 'OIGN-LOC-KG', inStock: 80, inTransit: 0, reorderLevel: 15, supplier: 'Fournisseur N' },
-    { id: '46', productName: 'Tomate fraîche (kg)', sku: 'LEGUME002', category: 'Légumes', brand: 'Local', reference: 'TOMF-LOC-KG', inStock: 60, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur N' },
-    { id: '47', productName: 'Piment frais (kg)', sku: 'LEGUME003', category: 'Légumes', brand: 'Local', reference: 'PIMF-LOC-KG', inStock: 40, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur N' },
-    { id: '48', productName: 'Gombo (kg)', sku: 'LEGUME004', category: 'Légumes', brand: 'Local', reference: 'GOMB-LOC-KG', inStock: 30, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur N' },
-    { id: '49', productName: 'Viande de boeuf (kg)', sku: 'VIANDE001', category: 'Viandes et volailles', brand: 'Boucherie locale', reference: 'VDB-LOC-KG', inStock: 20, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur O' },
-    { id: '50', productName: 'Poulet congelé (unité)', sku: 'VIANDE002', category: 'Viandes et volailles', brand: 'Import', reference: 'POUL-IMP-U', inStock: 40, inTransit: 10, reorderLevel: 10, supplier: 'Fournisseur P' },
-    { id: '51', productName: 'Poisson tilapia (kg)', sku: 'POISSON001', category: 'Poissons et fruits de mer', brand: 'Pêche locale', reference: 'POIT-LOC-KG', inStock: 30, inTransit: 0, reorderLevel: 5, supplier: 'Fournisseur Q' },
-    { id: '52', productName: 'Poisson maquereau (kg)', sku: 'POISSON002', category: 'Poissons et fruits de mer', brand: 'Import', reference: 'POIM-IMP-KG', inStock: 50, inTransit: 15, reorderLevel: 10, supplier: 'Fournisseur P' },
-    { id: '53', productName: 'Oeuf (alvéole)', sku: 'OEUF001', category: 'Oeufs', brand: 'Ferme avicole', reference: 'OEUF-FA-ALV', inStock: 100, inTransit: 20, reorderLevel: 15, supplier: 'Fournisseur R' },
-    { id: '54', productName: 'Savon (morceau)', sku: 'HYGIENE001', category: 'Hygiène et entretien', brand: 'Kdo', reference: 'SAV-KDO-M', inStock: 120, inTransit: 30, reorderLevel: 20, supplier: 'Fournisseur S' },
-    { id: '55', productName: 'Eau de javel (bouteille)', sku: 'HYGIENE002', category: 'Hygiène et entretien', brand: 'La Croix', reference: 'JAVEL-LC-B', inStock: 60, inTransit: 10, reorderLevel: 10, supplier: 'Fournisseur S' },
-    { id: '56', productName: 'Lessive (sachet)', sku: 'HYGIENE003', category: 'Hygiène et entretien', brand: 'Omo', reference: 'LESS-OMO-S', inStock: 150, inTransit: 40, reorderLevel: 25, supplier: 'Fournisseur S' },
-    { id: '57', productName: 'Papier toilette (rouleau)', sku: 'HYGIENE004', category: 'Hygiène et entretien', brand: 'Faso', reference: 'PT-FASO-R', inStock: 200, inTransit: 50, reorderLevel: 30, supplier: 'Fournisseur S' },
-    { id: '58', productName: 'Dentifrice (tube)', sku: 'HYGIENE005', category: 'Hygiène et entretien', brand: 'Signal', reference: 'DENT-SIG-T', inStock: 80, inTransit: 0, reorderLevel: 15, supplier: 'Fournisseur S' },
-    { id: '59', productName: 'Brosse à dents (unité)', sku: 'HYGIENE006', category: 'Hygiène et entretien', brand: 'Oral-B', reference: 'BAD-ORB-U', inStock: 100, inTransit: 20, reorderLevel: 20, supplier: 'Fournisseur S' },
-    { id: '60', productName: 'Cahier (unité)', sku: 'FOURNITURE001', category: 'Fournitures scolaires', brand: 'Clairefontaine', reference: 'CAH-CLA-U', inStock: 150, inTransit: 0, reorderLevel: 25, supplier: 'Fournisseur T' },
-    { id: '61', productName: 'Stylo (unité)', sku: 'FOURNITURE002', category: 'Fournitures scolaires', brand: 'Bic', reference: 'STY-BIC-U', inStock: 300, inTransit: 80, reorderLevel: 50, supplier: 'Fournisseur T' },
-    { id: '62', productName: 'Pile (paquet)', sku: 'ELECTRONIQUE001', category: 'Electronique', brand: 'Duracell', reference: 'PILE-DUR-P', inStock: 70, inTransit: 15, reorderLevel: 10, supplier: 'Fournisseur U' },
-    { id: '63', productName: 'Ampoule (unité)', sku: 'ELECTRONIQUE002', category: 'Electronique', brand: 'Philips', reference: 'AMP-PHI-U', inStock: 90, inTransit: 25, reorderLevel: 15, supplier: 'Fournisseur U' }
-];
-
+export const mockInventory: InventoryItem[] = [];
 
 export const mockStockMovements: StockMovement[] = [
     { id: 'MOV001', productId: 'PROD001', type: 'in', quantity: 50, date: '2024-05-28T10:00:00Z', reason: 'Livraison Fournisseur' },
@@ -266,5 +242,3 @@ export const mockMobileMoneyTransactions: MobileMoneyTransaction[] = [
     { id: 'MM003', transactionId: 'MM-DEP-002', type: 'deposit', provider: 'Wave', amount: 100000, commission: 500, date: '2024-05-29T12:00:00Z' },
     { id: 'MM004', transactionId: 'MM-WDR-002', type: 'withdrawal', provider: 'Moov Money', amount: 30000, commission: 200, date: '2024-05-29T12:30:00Z' },
 ];
-
-    
