@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { StockMovement } from '@/lib/types';

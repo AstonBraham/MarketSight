@@ -36,7 +36,7 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const type = row.original.type;
-      const formatted = new Intl.NumberFormat('de-DE').format(amount);
+      const formatted = new Intl.NumberFormat('fr-FR').format(amount);
 
       const isCredit = type === 'sale';
       const isDebit = type === 'purchase' || type === 'expense';

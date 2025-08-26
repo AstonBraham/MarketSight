@@ -18,7 +18,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Solde de Caisse</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">1.230.500 F</div>
+                <div className="text-2xl font-bold">1 230 500 F</div>
                 <p className="text-xs text-muted-foreground">+5% depuis hier</p>
             </CardContent>
         </Card>
@@ -27,7 +27,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Entrées du Jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-600">+450.000 F</div>
+                <div className="text-2xl font-bold text-green-600">+450 000 F</div>
                  <p className="text-xs text-muted-foreground">Total des ventes</p>
             </CardContent>
         </Card>
@@ -36,7 +36,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Sorties du Jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-red-600">-125.000 F</div>
+                <div className="text-2xl font-bold text-red-600">-125 000 F</div>
                  <p className="text-xs text-muted-foreground">Achats et dépenses</p>
             </CardContent>
         </Card>
@@ -45,7 +45,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Flux Net</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-600">+325.000 F</div>
+                <div className="text-2xl font-bold text-green-600">+325 000 F</div>
                 <p className="text-xs text-muted-foreground">Bénéfice du jour</p>
             </CardContent>
         </Card>

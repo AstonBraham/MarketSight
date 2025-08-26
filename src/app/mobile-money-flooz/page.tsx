@@ -37,7 +37,7 @@ export default function MobileMoneyFloozPage() {
                 <CardTitle className="text-sm font-medium">Solde Flooz</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('de-DE').format(floozBalance)} F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(floozBalance)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -45,7 +45,7 @@ export default function MobileMoneyFloozPage() {
                 <CardTitle className="text-sm font-medium">Dépôts du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-600">+{new Intl.NumberFormat('de-DE').format(dailyDeposits)} F</div>
+                <div className="text-2xl font-bold text-green-600">+{new Intl.NumberFormat('fr-FR').format(dailyDeposits)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -53,7 +53,7 @@ export default function MobileMoneyFloozPage() {
                 <CardTitle className="text-sm font-medium">Retraits du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-red-600">-{new Intl.NumberFormat('de-DE').format(dailyWithdrawals)} F</div>
+                <div className="text-2xl font-bold text-red-600">-{new Intl.NumberFormat('fr-FR').format(dailyWithdrawals)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -61,7 +61,7 @@ export default function MobileMoneyFloozPage() {
                 <CardTitle className="text-sm font-medium">Commissions</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('de-DE').format(dailyCommissions)} F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(dailyCommissions)} F</div>
             </CardContent>
         </Card>
       </div>

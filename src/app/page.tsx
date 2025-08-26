@@ -13,25 +13,25 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Solde de Trésorerie"
-          value="7.845.000 F"
+          value="7 845 000 F"
           icon={<DollarSign className="h-6 w-6 text-primary" />}
           change="+20.1% depuis le mois dernier"
         />
         <StatCard
           title="Ventes du Mois"
-          value="12.560.000 F"
+          value="12 560 000 F"
           icon={<ShoppingCart className="h-6 w-6 text-primary" />}
           change="+15.2% vs M-1"
         />
         <StatCard
           title="Achats du Mois"
-          value="4.515.000 F"
+          value="4 515 000 F"
           icon={<Truck className="h-6 w-6 text-primary" />}
           change="-5.8% vs M-1"
         />
         <StatCard
           title="Dépenses Opérationnelles"
-          value="200.000 F"
+          value="200 000 F"
           icon={<Banknote className="h-6 w-6 text-primary" />}
           change="+2.1% vs M-1"
         />

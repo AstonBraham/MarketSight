@@ -42,7 +42,7 @@ export function CashflowChart() {
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('de-DE').format(value as number)} />
+                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
                 <Tooltip
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{
@@ -50,7 +50,7 @@ export function CashflowChart() {
                     borderColor: 'hsl(var(--border))',
                     borderRadius: 'var(--radius)',
                   }}
-                   formatter={(value: number) => new Intl.NumberFormat('de-DE').format(value) + ' F'}
+                   formatter={(value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F'}
                 />
                 <Legend />
                 <Bar
