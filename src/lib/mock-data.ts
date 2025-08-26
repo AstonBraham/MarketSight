@@ -70,7 +70,13 @@ export const mockExpenses: Expense[] = [
   },
 ];
 
-export const mockInventory: InventoryItem[] = [];
+export const mockInventory: InventoryItem[] = [
+    { id: 'PROD001', productName: 'Lait en Poudre (Sachet)', sku: 'LP001', category: 'Produits Laitiers', brand: 'Belle Hollandaise', reference: 'REF-LP-BH-S', inStock: 120, inTransit: 50, reorderLevel: 20, supplier: 'Fournisseur A' },
+    { id: 'PROD002', productName: 'Huile Végétale (Bouteille 1L)', sku: 'HV002', category: 'Huiles et Graisses', brand: 'Dinor', reference: 'REF-HV-DN-1L', inStock: 80, inTransit: 0, reorderLevel: 15, supplier: 'Fournisseur B' },
+    { id: 'PROD003', productName: 'Riz Parfumé (Sac 25kg)', sku: 'RP003', category: 'Céréales', brand: 'Uncle Sam', reference: 'REF-RP-US-25K', inStock: 45, inTransit: 20, reorderLevel: 10, supplier: 'Fournisseur A' },
+    { id: 'PROD004', productName: 'Sucre en Poudre (1kg)', sku: 'SP004', category: 'Sucreries', brand: 'Princesse Tatie', reference: 'REF-SP-PT-1K', inStock: 200, inTransit: 100, reorderLevel: 50, supplier: 'Fournisseur C' },
+    { id: 'PROD005', productName: 'Spaghetti (Paquet 500g)', sku: 'SPG005', category: 'Pâtes', brand: 'Maman', reference: 'REF-SPG-MM-500G', inStock: 5, inTransit: 0, reorderLevel: 10, supplier: 'Fournisseur B' },
+];
 
 export const mockStockMovements: StockMovement[] = [
     { id: 'MOV001', productId: 'PROD001', type: 'in', quantity: 50, date: '2024-05-28T10:00:00Z', reason: 'Livraison Fournisseur' },
@@ -94,3 +100,4 @@ export const mockMobileMoneyTransactions: MobileMoneyTransaction[] = [
     { id: 'MM003', transactionId: 'MM-DEP-002', type: 'deposit', provider: 'Wave', amount: 100000, commission: 500, date: '2024-05-29T12:00:00Z' },
     { id: 'MM004', transactionId: 'MM-WDR-002', type: 'withdrawal', provider: 'Moov Money', amount: 30000, commission: 200, date: '2024-05-29T12:30:00Z' },
 ];
+
