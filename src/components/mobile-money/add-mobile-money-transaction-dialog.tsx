@@ -33,6 +33,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { addTransaction } = useMobileMoney();
+  const [commission, setCommission] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +45,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         type: data.type as 'deposit' | 'withdrawal' | 'transfer',
         provider: provider,
         amount: parseFloat(data.amount as string),
-        commission: parseFloat(data.commission as string),
+        commission: commission, // Use state for commission
         phoneNumber: data.phoneNumber as string,
     });
     
@@ -53,6 +54,11 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
       description: `La nouvelle opération pour ${provider} a été enregistrée.`,
     });
     setOpen(false);
+    setCommission(0);
+  };
+
+  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
   };
 
   return (
@@ -84,7 +90,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
-              <Input id="transactionId" name="transactionId" className="col-span-3" placeholder="Référence de la transaction" required/>
+              <Input id="transactionId" name="transactionId" onChange={handleNumericInput} className="col-span-3" placeholder="Référence de la transaction" required/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Montant</Label>
@@ -92,11 +98,11 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="commission" className="text-right">Commission</Label>
-              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder="0" required/>
+              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder="Calcul automatique" value={commission} readOnly/>
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-              <Input id="phoneNumber" name="phoneNumber" className="col-span-3" placeholder="Numéro de téléphone" required/>
+              <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
             </div>
           </div>
           <DialogFooter>

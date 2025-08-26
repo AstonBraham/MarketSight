@@ -54,6 +54,10 @@ export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionD
     });
     setOpen(false);
   };
+  
+  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,11 +95,11 @@ export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionD
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-              <Input id="phoneNumber" name="phoneNumber" className="col-span-3" placeholder="Numéro de téléphone" />
+              <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
-              <Input id="transactionId" name="transactionId" className="col-span-3" placeholder="Référence de la transaction" />
+              <Input id="transactionId" name="transactionId" onChange={handleNumericInput} className="col-span-3" placeholder="Référence de la transaction" />
             </div>
           </div>
           <DialogFooter>
