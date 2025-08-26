@@ -11,6 +11,7 @@ import { mockInventory, mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileCheck2 } from 'lucide-react';
 import { useUser } from '@/context/user-context';
+import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 
 export default function InventoryPage() {
   const { user } = useUser();
@@ -67,11 +68,8 @@ export default function InventoryPage() {
             </TabsList>
             {isAdmin && (
               <div className="ml-auto flex items-center gap-2">
+                  <AddInventoryItemDialog />
                   <Button size="sm" variant="outline">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Nouveau Mouvement
-                  </Button>
-                  <Button size="sm">
                       <FileCheck2 className="mr-2 h-4 w-4" />
                       Comptage Physique
                   </Button>

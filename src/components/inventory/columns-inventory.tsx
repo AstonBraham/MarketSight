@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,10 +16,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/context/user-context';
+import { EditInventoryItemDialog } from './edit-inventory-item-dialog';
+import { DeleteInventoryItemDialog } from './delete-inventory-item-dialog';
+
 
 function ActionsCell({ row }: { row: any }) {
     const { user } = useUser();
     const [isClient, setIsClient] = useState(false);
+    const item = row.original as InventoryItem;
 
     useEffect(() => {
         setIsClient(true);
@@ -36,28 +40,10 @@ function ActionsCell({ row }: { row: any }) {
     }
 
     return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Ouvrir le menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>
-              <ArrowUp className="mr-2 h-4 w-4" />
-              Entrée de stock
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <ArrowDown className="mr-2 h-4 w-4" />
-              Sortie de stock
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Modifier le produit</DropdownMenuItem>
-            <DropdownMenuItem>Voir les mouvements</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center justify-end gap-2">
+            <EditInventoryItemDialog item={item} />
+            <DeleteInventoryItemDialog itemId={item.id} />
+        </div>
       );
 }
 
@@ -116,5 +102,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
   {
     id: 'actions',
     cell: ActionsCell,
+    header: () => <div className="text-right">Actions</div>,
   },
 ];
