@@ -1,3 +1,5 @@
+'use client';
+
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -7,8 +9,12 @@ import { columns as movementsColumns } from '@/components/inventory/columns-move
 import { mockInventory, mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileCheck2 } from 'lucide-react';
+import { useUser } from '@/context/user-context';
 
 export default function InventoryPage() {
+  const { user } = useUser();
+  const isAdmin = user?.role === 'admin';
+
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
       <PageHeader title="Gestion de l'Inventaire" />
@@ -58,16 +64,18 @@ export default function InventoryPage() {
                 <TabsTrigger value="inventory">État des Stocks</TabsTrigger>
                 <TabsTrigger value="movements">Mouvements de Stock</TabsTrigger>
             </TabsList>
-            <div className="ml-auto flex items-center gap-2">
-                <Button size="sm" variant="outline">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Nouveau Mouvement
-                </Button>
-                <Button size="sm">
-                    <FileCheck2 className="mr-2 h-4 w-4" />
-                    Comptage Physique
-                </Button>
-            </div>
+            {isAdmin && (
+              <div className="ml-auto flex items-center gap-2">
+                  <Button size="sm" variant="outline">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Nouveau Mouvement
+                  </Button>
+                  <Button size="sm">
+                      <FileCheck2 className="mr-2 h-4 w-4" />
+                      Comptage Physique
+                  </Button>
+              </div>
+            )}
         </div>
         <TabsContent value="inventory">
             <Card>

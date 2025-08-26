@@ -45,3 +45,11 @@ export type StockMovement = {
   date: string;
   reason: string;
 };
+
+export type UserRole = 'admin' | 'user';
+
+export type User = {
+  id: string;
+  name: string;
+  role: UserRole;
+};

@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarInset } from '@/components/ui/sidebar';
+import { UserProvider } from '@/context/user-context';
 
 export const metadata: Metadata = {
   title: 'MarketSight',
@@ -27,13 +28,15 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            {children}
-            <Toaster />
-          </SidebarInset>
-        </SidebarProvider>
+        <UserProvider>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              {children}
+              <Toaster />
+            </SidebarInset>
+          </SidebarProvider>
+        </UserProvider>
       </body>
     </html>
   );

@@ -21,21 +21,37 @@ import {
   Settings,
   Store,
   Boxes,
+  User,
+  Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useUser } from '@/context/user-context';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-const menuItems = [
-  { href: '/', label: 'Tableau de bord', icon: LayoutDashboard },
-  { href: '/sales', label: 'Ventes', icon: ShoppingCart },
-  { href: '/purchases', label: 'Achats', icon: Truck },
-  { href: '/expenses', label: 'Dépenses', icon: Banknote },
-  { href: '/inventory', label: 'Inventaire', icon: Boxes },
-  { href: '/reports', label: 'Rapports', icon: FileDown },
-  { href: '/settings', label: 'Paramètres', icon: Settings },
+const allMenuItems = [
+  { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
+  { href: '/sales', label: 'Ventes', icon: ShoppingCart, roles: ['admin', 'user'] },
+  { href: '/purchases', label: 'Achats', icon: Truck, roles: ['admin'] },
+  { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin'] },
+  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
+  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user, setUser } = useUser();
+
+  const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role));
+  
+  if (!user) return null;
 
   return (
     <Sidebar>
@@ -71,9 +87,33 @@ export function AppSidebar() {
       </SidebarMenu>
 
       <SidebarFooter className="p-4">
-        <Button variant="outline">
-          John Doe
-        </Button>
+         <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full justify-start">
+               {user.role === 'admin' ? <Shield className="mr-2" /> : <User className="mr-2" />}
+              <span className="truncate">{user.name}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user.name}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user.role}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setUser({id: '1', name: 'Admin User', role: 'admin'})}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Changer vers Admin</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setUser({id: '2', name: 'Standard User', role: 'user'})}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Changer vers Utilisateur</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
