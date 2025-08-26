@@ -1,6 +1,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -18,6 +19,16 @@ import { useUser } from '@/context/user-context';
 
 function ActionsCell({ row }: { row: any }) {
     const { user } = useUser();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (!isClient) {
+        return null;
+    }
+
     const isAdmin = user?.role === 'admin';
 
     if (!isAdmin) {
