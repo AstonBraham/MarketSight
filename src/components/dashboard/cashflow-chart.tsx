@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,13 +20,13 @@ import {
 } from '@/components/ui/card';
 
 const data = [
-  { name: 'Jan', Entrées: 4000, Sorties: 2400 },
-  { name: 'Fév', Entrées: 3000, Sorties: 1398 },
-  { name: 'Mar', Entrées: 5000, Sorties: 4800 },
-  { name: 'Avr', Entrées: 2780, Sorties: 3908 },
-  { name: 'Mai', Entrées: 1890, Sorties: 4800 },
-  { name: 'Juin', Entrées: 2390, Sorties: 3800 },
-  { name: 'Juil', Entrées: 3490, Sorties: 4300 },
+  { name: 'Jan', Entrées: 4000000, Sorties: 2400000 },
+  { name: 'Fév', Entrées: 3000000, Sorties: 1398000 },
+  { name: 'Mar', Entrées: 5000000, Sorties: 4800000 },
+  { name: 'Avr', Entrées: 2780000, Sorties: 3908000 },
+  { name: 'Mai', Entrées: 1890000, Sorties: 4800000 },
+  { name: 'Juin', Entrées: 2390000, Sorties: 3800000 },
+  { name: 'Juil', Entrées: 3490000, Sorties: 4300000 },
 ];
 
 export function CashflowChart() {
@@ -41,7 +42,7 @@ export function CashflowChart() {
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} unit="€" />
+                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
                 <Tooltip
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{
@@ -49,6 +50,7 @@ export function CashflowChart() {
                     borderColor: 'hsl(var(--border))',
                     borderRadius: 'var(--radius)',
                   }}
+                   formatter={(value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F'}
                 />
                 <Legend />
                 <Bar

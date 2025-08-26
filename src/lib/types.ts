@@ -1,3 +1,4 @@
+
 export type Transaction = {
   id: string;
   type: 'sale' | 'purchase' | 'expense';
@@ -53,3 +54,22 @@ export type User = {
   name: string;
   role: UserRole;
 };
+
+export type AirtimeTransaction = {
+  id: string;
+  type: 'purchase' | 'sale';
+  provider: 'Moov' | 'Yas';
+  amount: number;
+  commission: number;
+  date: string;
+}
+
+export type MobileMoneyTransaction = {
+    id: string;
+    transactionId: string;
+    type: 'deposit' | 'withdrawal' | 'transfer';
+    provider: 'Moov Money' | 'MTN Money' | 'Wave' | 'Orange Money';
+    amount: number;
+    commission: number;
+    date: string;
+}

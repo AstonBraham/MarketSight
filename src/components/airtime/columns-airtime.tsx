@@ -1,25 +1,42 @@
 
 'use client';
 
-import type { Expense } from '@/lib/types';
+import type { AirtimeTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export const columns: ColumnDef<Expense>[] = [
+export const columns: ColumnDef<AirtimeTransaction>[] = [
   {
-    accessorKey: 'description',
-    header: 'Description',
-    cell: ({ row }) => <div className="font-medium">{row.getValue('description')}</div>,
+    accessorKey: 'date',
+    header: 'Date',
+    cell: ({ row }) => {
+        const date = new Date(row.getValue('date'));
+        return <span>{date.toLocaleString('fr-FR')}</span>
+    }
+  },
+  {
+    accessorKey: 'type',
+    header: 'Type',
+    cell: ({ row }) => {
+        const type = row.getValue('type') as string;
+        if (type === 'purchase') {
+            return <Badge variant="secondary">Achat</Badge>
+        }
+        return <Badge variant="default">Vente</Badge>
+    }
+  },
+  {
+    accessorKey: 'provider',
+    header: 'Fournisseur',
   },
   {
     accessorKey: 'amount',
@@ -29,34 +46,30 @@ export const columns: ColumnDef<Expense>[] = [
       const formatted = new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'XOF',
-        currencyDisplay: 'code',
+        currencyDisplay: 'code'
       }).format(amount).replace('XOF', 'F');
 
       return <div className="text-right font-mono">{formatted}</div>;
     },
   },
   {
-    accessorKey: 'category',
-    header: 'Catégorie',
+    accessorKey: 'commission',
+    header: () => <div className="text-right">Commission</div>,
     cell: ({ row }) => {
-        const category = row.getValue('category') as string;
-        if (!category) return null;
-        return <Badge variant="secondary">{category}</Badge>
-    }
-  },
-  {
-    accessorKey: 'date',
-    header: 'Date',
-    cell: ({ row }) => {
-        const date = new Date(row.getValue('date'));
-        return <span>{date.toLocaleDateString('fr-FR')}</span>
-    }
+      const commission = row.original.commission;
+      if (!commission) return null;
+      const formatted = new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'XOF',
+        currencyDisplay: 'code'
+      }).format(commission).replace('XOF', 'F');
+
+      return <div className="text-right font-mono text-green-600">{formatted}</div>;
+    },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const expense = row.original;
-
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -67,14 +80,8 @@ export const columns: ColumnDef<Expense>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(expense.id)}
-            >
-              Copier l'ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuItem>Voir les détails</DropdownMenuItem>
             <DropdownMenuItem>Modifier</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

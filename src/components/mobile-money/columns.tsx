@@ -1,0 +1,69 @@
+
+'use client';
+
+import type { MobileMoneyTransaction } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import type { ColumnDef } from '@tanstack/react-table';
+import { ArrowUp, ArrowDown } from 'lucide-react';
+
+export const columns: ColumnDef<MobileMoneyTransaction>[] = [
+  {
+    accessorKey: 'date',
+    header: 'Date',
+    cell: ({ row }) => {
+        const date = new Date(row.getValue('date'));
+        return <span>{date.toLocaleString('fr-FR')}</span>
+    }
+  },
+   {
+    accessorKey: 'transactionId',
+    header: 'ID Transaction',
+  },
+  {
+    accessorKey: 'type',
+    header: 'Type',
+    cell: ({ row }) => {
+        const type = row.getValue('type') as string;
+        if (type === 'deposit') {
+            return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700"><ArrowDown className="mr-1 h-3 w-3" /> Dépôt</Badge>
+        }
+        if (type === 'withdrawal') {
+            return <Badge variant="destructive"><ArrowUp className="mr-1 h-3 w-3" /> Retrait</Badge>
+        }
+        return <Badge variant="secondary">Transfert</Badge>
+    }
+  },
+  {
+    accessorKey: 'provider',
+    header: 'Opérateur',
+  },
+  {
+    accessorKey: 'amount',
+    header: () => <div className="text-right">Montant</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue('amount'));
+      const formatted = new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'XOF',
+        currencyDisplay: 'code'
+      }).format(amount).replace('XOF', 'F');
+
+      return <div className="text-right font-mono">{formatted}</div>;
+    },
+  },
+   {
+    accessorKey: 'commission',
+    header: () => <div className="text-right">Commission</div>,
+    cell: ({ row }) => {
+      const commission = row.original.commission;
+      if (!commission) return null;
+      const formatted = new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'XOF',
+        currencyDisplay: 'code'
+      }).format(commission).replace('XOF', 'F');
+
+      return <div className="text-right font-mono text-green-600">{formatted}</div>;
+    },
+  },
+];

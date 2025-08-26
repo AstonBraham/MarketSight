@@ -1,3 +1,4 @@
+
 import {
   Card,
   CardContent,
@@ -8,11 +9,11 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const transactions = [
-  { name: 'Vente #3021', amount: 250.0, type: 'in' },
-  { name: 'Salaire - John Doe', amount: 2500.0, type: 'out' },
-  { name: 'Achat Fournisseur A', amount: 89.99, type: 'out' },
-  { name: 'Vente #3022', amount: 59.5, type: 'in' },
-  { name: 'Facture Électricité', amount: 150.75, type: 'out' },
+  { name: 'Vente #3021', amount: 25000, type: 'in' },
+  { name: 'Salaire - John Doe', amount: 250000, type: 'out' },
+  { name: 'Achat Fournisseur A', amount: 89990, type: 'out' },
+  { name: 'Vente #3022', amount: 59500, type: 'in' },
+  { name: 'Facture Électricité', amount: 15075, type: 'out' },
 ];
 
 export function RecentTransactions() {
@@ -41,7 +42,7 @@ export function RecentTransactions() {
               }`}
             >
               {transaction.type === 'in' ? '+' : '-'}
-              {transaction.amount.toFixed(2)} €
+              {new Intl.NumberFormat('fr-FR').format(transaction.amount)} F
             </div>
           </div>
         ))}

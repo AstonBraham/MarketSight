@@ -23,6 +23,9 @@ import {
   Boxes,
   User,
   Shield,
+  Smartphone,
+  Send,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -41,6 +44,9 @@ const allMenuItems = [
   { href: '/purchases', label: 'Achats', icon: Truck, roles: ['admin'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
+  { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },
+  { href: '/airtime', label: 'Airtime', icon: Smartphone, roles: ['admin'] },
+  { href: '/mobile-money', label: 'Mobile Money', icon: Send, roles: ['admin'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];
@@ -72,16 +78,16 @@ export function AppSidebar() {
       <SidebarMenu className="flex-1 px-4">
         {menuItems.map(({ href, label, icon: Icon }) => (
           <SidebarMenuItem key={href}>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname === href}
-              tooltip={{ children: label, side: 'right' }}
-            >
-              <Link href={href}>
+             <Link href={href} passHref legacyBehavior>
+                <SidebarMenuButton
+                as="a"
+                isActive={pathname === href}
+                tooltip={{ children: label, side: 'right' }}
+              >
                 <Icon />
                 <span>{label}</span>
-              </Link>
-            </SidebarMenuButton>
+              </SidebarMenuButton>
+             </Link>
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
