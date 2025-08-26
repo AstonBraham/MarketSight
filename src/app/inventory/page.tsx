@@ -85,7 +85,7 @@ export default function InventoryPage() {
                 <CardDescription>Consultez les quantités disponibles pour chaque produit.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DataTable data={mockInventory} columns={inventoryColumns} />
+                    <DataTable data={mockInventory} columns={inventoryColumns} filterColumn="productName" filterPlaceholder="Filtrer par produit..."/>
                 </CardContent>
             </Card>
         </TabsContent>
