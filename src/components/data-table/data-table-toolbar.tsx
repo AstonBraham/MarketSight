@@ -12,16 +12,16 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({
   table,
-  filterColumn = 'description',
-  filterPlaceholder = 'Filtrer les descriptions...'
+  filterColumn,
+  filterPlaceholder = 'Filtrer...'
 }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0;
-  const filterColumnExists = table.getColumn(filterColumn);
+
+  const filterColumnExists = filterColumn ? table.getColumn(filterColumn) : undefined;
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex flex-1 items-center space-x-2">
-       {filterColumnExists && (
+       {filterColumnExists && filterColumn && (
           <Input
             placeholder={filterPlaceholder}
             value={
