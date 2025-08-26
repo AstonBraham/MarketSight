@@ -1,4 +1,5 @@
 
+
 export type Transaction = {
   id: string;
   type: 'sale' | 'purchase' | 'expense';
@@ -12,6 +13,10 @@ export type Sale = Transaction & {
   type: 'sale';
   client: string;
   product: string;
+  reference?: string;
+  price?: number;
+  quantity?: number;
+  itemType?: string;
   discount?: number;
 };
 

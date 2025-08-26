@@ -1,4 +1,5 @@
 
+
 import type { Sale, Purchase, Expense, InventoryItem, StockMovement, AirtimeTransaction, MobileMoneyTransaction } from './types';
 
 export const mockSales: Sale[] = [
@@ -11,6 +12,10 @@ export const mockSales: Sale[] = [
     category: 'Vente',
     client: 'Client A',
     product: 'Produit X',
+    reference: 'REF-001',
+    price: 1255,
+    quantity: 10,
+    itemType: 'Type A'
   },
   {
     id: 'SALE002',
@@ -21,6 +26,10 @@ export const mockSales: Sale[] = [
     category: 'Vente',
     client: 'Client B',
     product: 'Produit Y',
+    reference: 'REF-002',
+    price: 25000,
+    quantity: 10,
+    itemType: 'Type B'
   },
 ];
 
@@ -100,4 +109,3 @@ export const mockMobileMoneyTransactions: MobileMoneyTransaction[] = [
     { id: 'MM003', transactionId: 'MM-DEP-002', type: 'deposit', provider: 'Wave', amount: 100000, commission: 500, date: '2024-05-29T12:00:00Z' },
     { id: 'MM004', transactionId: 'MM-WDR-002', type: 'withdrawal', provider: 'Moov Money', amount: 30000, commission: 200, date: '2024-05-29T12:30:00Z' },
 ];
-

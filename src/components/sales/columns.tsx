@@ -23,20 +23,37 @@ export const columns: ColumnDef<Sale>[] = [
     }
   },
   {
-    accessorKey: 'description',
-    header: 'Description',
+    accessorKey: 'product',
+    header: 'Désignation',
   },
   {
     accessorKey: 'client',
     header: 'Client',
   },
   {
-    accessorKey: 'product',
-    header: 'Produit',
+    accessorKey: 'reference',
+    header: 'Référence article',
+  },
+  {
+    accessorKey: 'price',
+    header: () => <div className="text-right">Prix</div>,
+    cell: ({ row }) => {
+      const price = parseFloat(row.getValue('price'));
+      const formatted = new Intl.NumberFormat('fr-FR').format(price);
+      return <div className="text-right font-mono">{formatted} F</div>;
+    },
+  },
+  {
+    accessorKey: 'quantity',
+    header: () => <div className="text-right">Quantité</div>,
+    cell: ({ row }) => {
+      const quantity = parseInt(row.getValue('quantity'));
+      return <div className="text-right font-mono">{quantity}</div>;
+    }
   },
   {
     accessorKey: 'amount',
-    header: () => <div className="text-right">Montant</div>,
+    header: () => <div className="text-right">Montant Total</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const formatted = new Intl.NumberFormat('fr-FR', {
@@ -47,6 +64,10 @@ export const columns: ColumnDef<Sale>[] = [
 
       return <div className="text-right font-mono text-green-600">{formatted}</div>;
     },
+  },
+    {
+    accessorKey: 'itemType',
+    header: 'Type d\'article',
   },
   {
     id: 'actions',
