@@ -69,6 +69,8 @@ export type AirtimeTransaction = {
   amount: number;
   commission: number;
   date: string;
+  phoneNumber?: string;
+  transactionId?: string;
 }
 
 export type MobileMoneyTransaction = {
@@ -79,4 +81,5 @@ export type MobileMoneyTransaction = {
     amount: number;
     commission: number;
     date: string;
+    phoneNumber?: string;
 }

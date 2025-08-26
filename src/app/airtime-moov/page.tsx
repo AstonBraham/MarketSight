@@ -1,20 +1,31 @@
 
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
-import { mockAirtimeTransactions } from '@/lib/mock-data';
+import { useAirtime } from '@/context/airtime-context';
+import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
 
 export default function AirtimeMoovPage() {
-  const moovTransactions = mockAirtimeTransactions.filter(t => t.provider === 'Moov');
+  const { transactions, getStock } = useAirtime();
+  const moovTransactions = transactions.filter(t => t.provider === 'Moov');
+  const moovStock = getStock('Moov');
+
+  const dailySales = moovTransactions
+    .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
+    .reduce((acc, t) => acc + t.amount, 0);
+  
+  const dailyMargin = moovTransactions
+    .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
+    .reduce((acc, t) => acc + t.commission, 0);
+
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Airtime Moov" action={<Button><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Transaction</Button>} />
+      <PageHeader title="Gestion Airtime Moov" action={<AddAirtimeTransactionDialog provider="Moov" />} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -22,7 +33,7 @@ export default function AirtimeMoovPage() {
                 <CardTitle className="text-sm font-medium">Stock Airtime Moov</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">5,500,000 F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(moovStock)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -30,7 +41,7 @@ export default function AirtimeMoovPage() {
                 <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">450,000 F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(dailySales)} F</div>
             </CardContent>
         </Card>
          <Card>
@@ -38,7 +49,7 @@ export default function AirtimeMoovPage() {
                 <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">22,500 F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(dailyMargin)} F</div>
             </CardContent>
         </Card>
       </div>

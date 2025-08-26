@@ -28,10 +28,10 @@ import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 
 
-export function AddSaleDialog() {
+export function AddPurchaseDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { addSale } = useTransactions();
+  const { addPurchase } = useTransactions();
   const { inventory, updateItem } = useInventory();
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -53,40 +53,27 @@ export function AddSaleDialog() {
         return;
     }
     
-    if (quantity > selectedItem.inStock) {
-         toast({
-            title: "Stock insuffisant",
-            description: `Le stock pour ${selectedItem.productName} est de ${selectedItem.inStock}.`,
-            variant: "destructive"
-        });
-        return;
-    }
-
     const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const saleData = Object.fromEntries(formData.entries());
-    const price = parseFloat(saleData.price as string);
-    const amount = price * quantity;
+    const purchaseData = Object.fromEntries(formData.entries());
+    const amount = parseFloat(purchaseData.amount as string);
 
-    // Add sale to transactions
-    addSale({
-      client: saleData.client as string,
+    // Add purchase to transactions
+    addPurchase({
+      supplier: purchaseData.supplier as string,
       product: selectedItem.productName,
-      reference: selectedItem.reference,
-      itemType: selectedItem.category,
-      price: price,
-      quantity: quantity,
+      description: `Achat de ${quantity} x ${selectedItem.productName}`,
       amount: amount
     });
 
     // Update inventory
     updateItem(selectedItem.id, {
         ...selectedItem,
-        inStock: selectedItem.inStock - quantity
+        inStock: selectedItem.inStock + quantity
     });
     
     toast({
-      title: 'Vente Ajoutée',
-      description: 'La nouvelle vente a été enregistrée avec succès.',
+      title: 'Achat Ajouté',
+      description: 'Le nouvel achat a été enregistré avec succès.',
     });
 
     // Reset form and close
@@ -100,15 +87,15 @@ export function AddSaleDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Nouvelle Vente
+          Nouvel Achat
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Nouvelle Vente</DialogTitle>
+            <DialogTitle>Nouvel Achat</DialogTitle>
             <DialogDescription>
-              Saisissez les détails de la transaction de vente.
+              Saisissez les détails de la commande fournisseur.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -123,7 +110,7 @@ export function AddSaleDialog() {
                 <SelectContent>
                     {inventory.map((item) => (
                         <SelectItem key={item.id} value={item.id}>
-                            {item.productName} ({item.inStock} en stock)
+                            {item.productName}
                         </SelectItem>
                     ))}
                 </SelectContent>
@@ -132,44 +119,31 @@ export function AddSaleDialog() {
             {selectedItem && (
                  <>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="reference" className="text-right">
-                            Référence
+                        <Label htmlFor="supplier" className="text-right">
+                            Fournisseur
                         </Label>
-                        <Input id="reference" name="reference" value={selectedItem.reference} className="col-span-3" readOnly />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="itemType" className="text-right">
-                            Famille
-                        </Label>
-                        <Input id="itemType" name="itemType" value={selectedItem.category} className="col-span-3" readOnly />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="price" className="text-right">
-                            Prix
-                        </Label>
-                        <Input id="price" name="price" type="number" className="col-span-3" placeholder="0" required/>
+                        <Input id="supplier" name="supplier" defaultValue={selectedItem.supplier} className="col-span-3" required />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="quantity" className="text-right">
                             Quantité
                         </Label>
-                        <Input id="quantity" name="quantity" type="number" className="col-span-3" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10))} min="1" max={selectedItem.inStock} required/>
+                        <Input id="quantity" name="quantity" type="number" className="col-span-3" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10))} min="1" required/>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="client" className="text-right">
-                            Client
+                        <Label htmlFor="amount" className="text-right">
+                            Montant Total
                         </Label>
-                        <Input id="client" name="client" className="col-span-3" placeholder="Nom du client" defaultValue="Client Comptant" required/>
+                        <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required/>
                     </div>
                  </>
             )}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={!selectedItem}>Enregistrer la Vente</Button>
+            <Button type="submit" disabled={!selectedItem}>Enregistrer l'Achat</Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
-

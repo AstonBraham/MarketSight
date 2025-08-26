@@ -1,20 +1,30 @@
 
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
-import { mockAirtimeTransactions } from '@/lib/mock-data';
+import { useAirtime } from '@/context/airtime-context';
+import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
 
 export default function AirtimeYasPage() {
-    const yasTransactions = mockAirtimeTransactions.filter(t => t.provider === 'Yas');
+    const { transactions, getStock } = useAirtime();
+    const yasTransactions = transactions.filter(t => t.provider === 'Yas');
+    const yasStock = getStock('Yas');
+
+    const dailySales = yasTransactions
+      .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const dailyMargin = yasTransactions
+      .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
+      .reduce((acc, t) => acc + t.commission, 0);
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Airtime Yas" action={<Button><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Transaction</Button>} />
+      <PageHeader title="Gestion Airtime Yas" action={<AddAirtimeTransactionDialog provider="Yas"/>} />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -22,7 +32,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Stock Airtime Yas</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">3,250,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(yasStock)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -30,7 +40,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">300,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(dailySales)} F</div>
             </CardContent>
         </Card>
          <Card>
@@ -38,7 +48,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">15,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(dailyMargin)} F</div>
             </CardContent>
         </Card>
       </div>
