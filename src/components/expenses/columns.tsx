@@ -26,13 +26,9 @@ export const columns: ColumnDef<Expense>[] = [
     header: () => <div className="text-right">Montant</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'XOF',
-        currencyDisplay: 'code',
-      }).format(amount).replace('XOF', 'F');
+      const formatted = new Intl.NumberFormat('de-DE').format(amount);
 
-      return <div className="text-right font-mono">{formatted}</div>;
+      return <div className="text-right font-mono">{formatted} F</div>;
     },
   },
   {

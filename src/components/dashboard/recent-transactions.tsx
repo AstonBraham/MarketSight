@@ -42,7 +42,7 @@ export function RecentTransactions() {
               }`}
             >
               {transaction.type === 'in' ? '+' : '-'}
-              {new Intl.NumberFormat('fr-FR').format(transaction.amount)} F
+              {new Intl.NumberFormat('de-DE').format(transaction.amount)} F
             </div>
           </div>
         ))}

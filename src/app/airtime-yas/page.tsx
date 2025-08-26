@@ -32,7 +32,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Stock Airtime Yas</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(yasStock)} F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('de-DE').format(yasStock)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -40,7 +40,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(dailySales)} F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('de-DE').format(dailySales)} F</div>
             </CardContent>
         </Card>
          <Card>
@@ -48,7 +48,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(dailyMargin)} F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('de-DE').format(dailyMargin)} F</div>
             </CardContent>
         </Card>
       </div>

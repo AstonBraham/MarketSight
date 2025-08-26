@@ -36,16 +36,12 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const type = row.original.type;
-      const formatted = new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'XOF',
-        currencyDisplay: 'code'
-      }).format(amount).replace('XOF', 'F');
+      const formatted = new Intl.NumberFormat('de-DE').format(amount);
 
       const isCredit = type === 'sale';
       const isDebit = type === 'purchase' || type === 'expense';
 
-      return <div className={`text-right font-mono ${isCredit ? 'text-green-600' : ''} ${isDebit ? 'text-red-600' : ''}`}>{isDebit ? '-' : ''}{formatted}</div>;
+      return <div className={`text-right font-mono ${isCredit ? 'text-green-600' : ''} ${isDebit ? 'text-red-600' : ''}`}>{isDebit ? '-' : ''}{formatted} F</div>;
     },
   },
 ];

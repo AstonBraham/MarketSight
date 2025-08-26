@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -29,7 +30,7 @@ export default function InventoryPage() {
                 <CardTitle className="text-sm font-medium">Valeur du Stock</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">12,450,000 F</div>
+                <div className="text-2xl font-bold">12.450.000 F</div>
                 <p className="text-xs text-muted-foreground">Basé sur le coût d'achat</p>
             </CardContent>
         </Card>

@@ -26,6 +26,7 @@ import {
   Smartphone,
   Send,
   Wallet,
+  Receipt,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -40,8 +41,7 @@ import {
 
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
-  { href: '/sales', label: 'Ventes', icon: ShoppingCart, roles: ['admin', 'user'] },
-  { href: '/purchases', label: 'Achats', icon: Truck, roles: ['admin'] },
+  { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
   { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },

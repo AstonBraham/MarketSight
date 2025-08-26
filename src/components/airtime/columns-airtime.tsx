@@ -49,13 +49,9 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     header: () => <div className="text-right">Montant</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'XOF',
-        currencyDisplay: 'code'
-      }).format(amount).replace('XOF', 'F');
+      const formatted = new Intl.NumberFormat('de-DE').format(amount);
 
-      return <div className="text-right font-mono">{formatted}</div>;
+      return <div className="text-right font-mono">{formatted} F</div>;
     },
   },
   {
@@ -64,13 +60,9 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     cell: ({ row }) => {
       const commission = row.original.commission;
       if (!commission) return null;
-      const formatted = new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'XOF',
-        currencyDisplay: 'code'
-      }).format(commission).replace('XOF', 'F');
+      const formatted = new Intl.NumberFormat('de-DE').format(commission);
 
-      return <div className="text-right font-mono text-green-600">{formatted}</div>;
+      return <div className="text-right font-mono text-green-600">{formatted} F</div>;
     },
   },
   {
