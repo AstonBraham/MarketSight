@@ -1,99 +1,126 @@
-
 'use client';
 
-import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DataTable } from '@/components/data-table/data-table';
-import { columns } from '@/components/mobile-money/columns';
-import { mockMobileMoneyTransactions } from '@/lib/mock-data';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import {
+  LayoutDashboard,
+  ShoppingCart,
+  Truck,
+  Banknote,
+  FileDown,
+  Settings,
+  Store,
+  Boxes,
+  User,
+  Shield,
+  Smartphone,
+  Send,
+  Wallet,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useUser } from '@/context/user-context';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-export default function MobileMoneyPage() {
+const allMenuItems = [
+  { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
+  { href: '/sales', label: 'Ventes', icon: ShoppingCart, roles: ['admin', 'user'] },
+  { href: '/purchases', label: 'Achats', icon: Truck, roles: ['admin'] },
+  { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin'] },
+  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
+  { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },
+  { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin'] },
+  { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin'] },
+  { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin'] },
+  { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin'] },
+  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
+];
+
+export function AppSidebar() {
+  const pathname = usePathname();
+  const { user, setUser } = useUser();
+
+  const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role));
+  
+  if (!user) return null;
+
   return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Mobile Money" action={<Button><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Opération</Button>}/>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Solde Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">1,850,000 F</div>
-                <p className="text-xs text-muted-foreground">Tous comptes confondus</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Dépôts du jour</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-green-600">+350,000 F</div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Retraits du jour</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold text-red-600">-120,000 F</div>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Commissions</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">12,500 F</div>
-                <p className="text-xs text-muted-foreground">Gains de la journée</p>
-            </CardContent>
-        </Card>
-      </div>
-
-       <Tabs defaultValue="all">
-        <div className="flex items-center">
-            <TabsList>
-                <TabsTrigger value="all">Toutes les opérations</TabsTrigger>
-                <TabsTrigger value="mixx">Mixx</TabsTrigger>
-                <TabsTrigger value="flooz">Flooz</TabsTrigger>
-            </TabsList>
+    <Sidebar>
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Store className="h-6 w-6" />
+          </div>
+          <h1 className="font-headline text-xl font-semibold text-primary">
+            MarketSight
+          </h1>
+          <div className="ml-auto">
+             <SidebarTrigger />
+          </div>
         </div>
-        <TabsContent value="all">
-          <Card>
-            <CardHeader>
-                <CardTitle>Opérations Mobile Money</CardTitle>
-                <CardDescription>Liste des dépôts, retraits et transferts.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <DataTable data={mockMobileMoneyTransactions} columns={columns} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="mixx">
-           <Card>
-            <CardHeader>
-                <CardTitle>Opérations Mixx</CardTitle>
-                <CardDescription>Historique des transactions pour Mixx.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <DataTable data={mockMobileMoneyTransactions.filter(t => t.provider === 'Mixx')} columns={columns} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="flooz">
-           <Card>
-            <CardHeader>
-                <CardTitle>Opérations Flooz</CardTitle>
-                <CardDescription>Historique des transactions pour Flooz.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <DataTable data={mockMobileMoneyTransactions.filter(t => t.provider === 'Flooz')} columns={columns} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-       </Tabs>
-    </div>
+      </SidebarHeader>
+
+      <SidebarMenu className="flex-1 px-4">
+        {menuItems.map(({ href, label, icon: Icon }) => (
+          <SidebarMenuItem key={href}>
+             <Link href={href}>
+                <SidebarMenuButton
+                isActive={pathname === href}
+                tooltip={{ children: label, side: 'right' }}
+              >
+                <Icon />
+                <span>{label}</span>
+              </SidebarMenuButton>
+             </Link>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+
+      <SidebarFooter className="p-4">
+         <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full justify-start">
+               {user.role === 'admin' ? <Shield className="mr-2" /> : <User className="mr-2" />}
+              <span className="truncate">{user.name}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{user.name}</p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user.role}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setUser({id: '1', name: 'Admin User', role: 'admin'})}>
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Changer vers Admin</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setUser({id: '2', name: 'Standard User', role: 'user'})}>
+              <User className="mr-2 h-4 w-4" />
+              <span>Changer vers Utilisateur</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

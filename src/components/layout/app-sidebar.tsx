@@ -45,8 +45,10 @@ const allMenuItems = [
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
   { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },
-  { href: '/airtime', label: 'Airtime', icon: Smartphone, roles: ['admin'] },
-  { href: '/mobile-money', label: 'Mobile Money', icon: Send, roles: ['admin'] },
+  { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin'] },
+  { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin'] },
+  { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin'] },
+  { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];
