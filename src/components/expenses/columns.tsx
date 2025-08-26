@@ -1,0 +1,81 @@
+'use client';
+
+import type { Expense } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import type { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+export const columns: ColumnDef<Expense>[] = [
+  {
+    accessorKey: 'description',
+    header: 'Description',
+    cell: ({ row }) => <div className="font-medium">{row.getValue('description')}</div>,
+  },
+  {
+    accessorKey: 'amount',
+    header: () => <div className="text-right">Montant</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue('amount'));
+      const formatted = new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'EUR',
+      }).format(amount);
+
+      return <div className="text-right font-mono">{formatted}</div>;
+    },
+  },
+  {
+    accessorKey: 'category',
+    header: 'Catégorie',
+    cell: ({ row }) => {
+        const category = row.getValue('category') as string;
+        if (!category) return null;
+        return <Badge variant="secondary">{category}</Badge>
+    }
+  },
+  {
+    accessorKey: 'date',
+    header: 'Date',
+    cell: ({ row }) => {
+        const date = new Date(row.getValue('date'));
+        return <span>{date.toLocaleDateString('fr-FR')}</span>
+    }
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => {
+      const expense = row.original;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Ouvrir le menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(expense.id)}
+            >
+              Copier l'ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Modifier</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
