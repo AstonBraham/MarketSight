@@ -12,7 +12,7 @@ import { AirtimeProvider } from '@/context/airtime-context';
 import { MobileMoneyProvider } from '@/context/mobile-money-context';
 
 export const metadata: Metadata = {
-  title: 'MarketSight',
+  title: 'JokerMarket',
   description: 'Application web de gestion de supermarché',
 };
 

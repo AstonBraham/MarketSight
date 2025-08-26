@@ -69,7 +69,7 @@ export function AppSidebar() {
             <Store className="h-6 w-6" />
           </div>
           <h1 className="font-headline text-xl font-semibold text-primary">
-            MarketSight
+            JokerMarket
           </h1>
           <div className="ml-auto">
              <SidebarTrigger />
