@@ -22,7 +22,7 @@ export default function AirtimeMoovPage() {
                 <CardTitle className="text-sm font-medium">Stock Airtime Moov</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">5,500,000 F</div>
+                <div className="text-2xl font-bold text-blue-600">5,500,000 F</div>
             </CardContent>
         </Card>
         <Card>
@@ -30,7 +30,7 @@ export default function AirtimeMoovPage() {
                 <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">450,000 F</div>
+                <div className="text-2xl font-bold text-blue-600">450,000 F</div>
             </CardContent>
         </Card>
          <Card>
@@ -38,7 +38,7 @@ export default function AirtimeMoovPage() {
                 <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">22,500 F</div>
+                <div className="text-2xl font-bold text-blue-600">22,500 F</div>
             </CardContent>
         </Card>
       </div>

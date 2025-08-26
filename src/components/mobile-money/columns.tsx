@@ -5,6 +5,7 @@ import type { MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUp, ArrowDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const columns: ColumnDef<MobileMoneyTransaction>[] = [
   {
@@ -25,7 +26,7 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
     cell: ({ row }) => {
         const type = row.getValue('type') as string;
         if (type === 'deposit') {
-            return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700"><ArrowDown className="mr-1 h-3 w-3" /> Dépôt</Badge>
+            return <Badge variant="default" className="bg-green-600 hover:bg-green-700"><ArrowDown className="mr-1 h-3 w-3" /> Dépôt</Badge>
         }
         if (type === 'withdrawal') {
             return <Badge variant="destructive"><ArrowUp className="mr-1 h-3 w-3" /> Retrait</Badge>
@@ -36,6 +37,11 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
   {
     accessorKey: 'provider',
     header: 'Opérateur',
+    cell: ({ row }) => {
+        const provider = row.getValue('provider') as string;
+        const isFlooz = provider === 'Flooz';
+        return <Badge variant="outline" className={cn(isFlooz ? "border-blue-500 text-blue-600" : "border-yellow-500 text-yellow-600")}>{provider}</Badge>
+    }
   },
   {
     accessorKey: 'amount',

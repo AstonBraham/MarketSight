@@ -22,7 +22,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Stock Airtime Yas</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">3,250,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">3,250,000 F</div>
             </CardContent>
         </Card>
         <Card>
@@ -30,7 +30,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">300,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">300,000 F</div>
             </CardContent>
         </Card>
          <Card>
@@ -38,7 +38,7 @@ export default function AirtimeYasPage() {
                 <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">15,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">15,000 F</div>
             </CardContent>
         </Card>
       </div>

@@ -21,7 +21,7 @@ export default function MobileMoneyFloozPage() {
                 <CardTitle className="text-sm font-medium">Solde Flooz</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">850,000 F</div>
+                <div className="text-2xl font-bold text-blue-600">850,000 F</div>
             </CardContent>
         </Card>
         <Card>
@@ -45,7 +45,7 @@ export default function MobileMoneyFloozPage() {
                 <CardTitle className="text-sm font-medium">Commissions</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">7,500 F</div>
+                <div className="text-2xl font-bold text-blue-600">7,500 F</div>
             </CardContent>
         </Card>
       </div>

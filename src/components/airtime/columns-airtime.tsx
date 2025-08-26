@@ -13,6 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 export const columns: ColumnDef<AirtimeTransaction>[] = [
   {
@@ -37,6 +38,11 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
   {
     accessorKey: 'provider',
     header: 'Fournisseur',
+     cell: ({ row }) => {
+        const provider = row.getValue('provider') as string;
+        const isMoov = provider === 'Moov';
+        return <Badge variant="outline" className={cn(isMoov ? "border-blue-500 text-blue-600" : "border-yellow-500 text-yellow-600")}>{provider}</Badge>
+    }
   },
   {
     accessorKey: 'amount',

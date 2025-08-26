@@ -22,7 +22,7 @@ export default function MobileMoneyMixxPage() {
                 <CardTitle className="text-sm font-medium">Solde Mixx</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">1,000,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">1,000,000 F</div>
             </CardContent>
         </Card>
         <Card>
@@ -46,7 +46,7 @@ export default function MobileMoneyMixxPage() {
                 <CardTitle className="text-sm font-medium">Commissions</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">5,000 F</div>
+                <div className="text-2xl font-bold text-yellow-600">5,000 F</div>
             </CardContent>
         </Card>
       </div>
