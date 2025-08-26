@@ -7,6 +7,9 @@ import { Toaster } from '@/components/ui/toaster';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { UserProvider } from '@/context/user-context';
 import { InventoryProvider } from '@/context/inventory-context';
+import { TransactionProvider } from '@/context/transaction-context';
+import { AirtimeProvider } from '@/context/airtime-context';
+import { MobileMoneyProvider } from '@/context/mobile-money-context';
 
 export const metadata: Metadata = {
   title: 'MarketSight',
@@ -30,15 +33,21 @@ export default function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <UserProvider>
-          <InventoryProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                {children}
-                <Toaster />
-              </SidebarInset>
-            </SidebarProvider>
-          </InventoryProvider>
+          <TransactionProvider>
+            <InventoryProvider>
+              <AirtimeProvider>
+                <MobileMoneyProvider>
+                  <SidebarProvider>
+                    <AppSidebar />
+                    <SidebarInset>
+                      {children}
+                      <Toaster />
+                    </SidebarInset>
+                  </SidebarProvider>
+                </MobileMoneyProvider>
+              </AirtimeProvider>
+            </InventoryProvider>
+          </TransactionProvider>
         </UserProvider>
       </body>
     </html>
