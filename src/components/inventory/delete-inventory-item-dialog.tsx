@@ -16,13 +16,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useInventory } from '@/context/inventory-context';
 
 export function DeleteInventoryItemDialog({ itemId }: { itemId: string }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { removeItem } = useInventory();
 
   const handleDelete = () => {
-    console.log('Suppression de l\'article :', itemId);
+    removeItem(itemId);
     toast({
       title: 'Article Supprimé',
       description: `L'article avec l'ID ${itemId} a été supprimé.`,

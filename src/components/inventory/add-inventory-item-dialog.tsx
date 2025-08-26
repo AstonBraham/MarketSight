@@ -16,17 +16,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useInventory } from '@/context/inventory-context';
 
 export function AddInventoryItemDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { addItem } = useInventory();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const newItem = Object.fromEntries(formData.entries());
     
-    console.log('Nouvel article:', newItem);
+    addItem({
+      id: `manual-${Date.now()}`,
+      productName: newItem.productName as string,
+      sku: newItem.sku as string,
+      category: newItem.category as string,
+      brand: newItem.brand as string,
+      reference: newItem.reference as string,
+      inStock: parseInt(newItem.inStock as string, 10),
+      inTransit: 0,
+      reorderLevel: 10, // Default reorder level
+      supplier: newItem.supplier as string,
+    });
     
     toast({
       title: 'Article Ajouté',

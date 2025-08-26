@@ -7,14 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from '@/components/data-table/data-table';
 import { columns as inventoryColumns } from '@/components/inventory/columns-inventory';
 import { columns as movementsColumns } from '@/components/inventory/columns-movements';
-import { mockInventory, mockStockMovements } from '@/lib/mock-data';
+import { mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileCheck2 } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
+import { useInventory } from '@/context/inventory-context';
 
 export default function InventoryPage() {
   const { user } = useUser();
+  const { inventory } = useInventory();
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -83,7 +85,7 @@ export default function InventoryPage() {
                 <CardDescription>Consultez les quantités disponibles pour chaque produit.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DataTable data={mockInventory} columns={inventoryColumns} filterColumn="productName" filterPlaceholder="Filtrer par produit..."/>
+                    <DataTable data={inventory} columns={inventoryColumns} filterColumn="productName" filterPlaceholder="Filtrer par produit..."/>
                 </CardContent>
             </Card>
         </TabsContent>

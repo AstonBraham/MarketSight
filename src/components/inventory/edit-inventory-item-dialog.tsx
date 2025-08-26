@@ -17,17 +17,27 @@ import { Label } from '@/components/ui/label';
 import { Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
+import { useInventory } from '@/context/inventory-context';
 
 export function EditInventoryItemDialog({ item }: { item: InventoryItem }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { updateItem } = useInventory();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const updatedData = Object.fromEntries(formData.entries());
     
-    console.log('Article mis à jour:', { id: item.id, ...updatedData });
+    // Convert string numbers to actual numbers
+    const numericFields = ['inStock', 'inTransit', 'reorderLevel'];
+    numericFields.forEach(field => {
+      if (updatedData[field]) {
+        updatedData[field] = parseInt(updatedData[field] as string, 10);
+      }
+    });
+    
+    updateItem(item.id, updatedData);
     
     toast({
       title: 'Article Modifié',
