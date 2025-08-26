@@ -19,6 +19,7 @@ import {
   FileDown,
   Settings,
   Store,
+  Boxes,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +28,7 @@ const menuItems = [
   { href: '/sales', label: 'Ventes', icon: ShoppingCart },
   { href: '/purchases', label: 'Achats', icon: Truck },
   { href: '/expenses', label: 'Dépenses', icon: Banknote },
+  { href: '/inventory', label: 'Inventaire', icon: Boxes },
   { href: '/reports', label: 'Rapports', icon: FileDown },
   { href: '/settings', label: 'Paramètres', icon: Settings },
 ];

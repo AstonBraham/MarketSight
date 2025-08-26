@@ -25,3 +25,23 @@ export type Expense = Transaction & {
   currency: string;
   tags?: string[];
 };
+
+export type InventoryItem = {
+  id: string;
+  productName: string;
+  sku: string;
+  category: string;
+  inStock: number;
+  inTransit: number;
+  reorderLevel: number;
+  supplier: string;
+};
+
+export type StockMovement = {
+  id: string;
+  productId: string;
+  type: 'in' | 'out' | 'adjustment';
+  quantity: number;
+  date: string;
+  reason: string;
+};
