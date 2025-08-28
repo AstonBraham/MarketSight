@@ -24,6 +24,9 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileMoney } from '@/context/mobile-money-context';
+import type { MobileMoneyTransactionType } from '@/lib/types';
+import { Switch } from '@/components/ui/switch';
+import { cn } from '@/lib/utils';
 
 type AddMobileMoneyTransactionDialogProps = {
     provider: 'Mixx' | 'Flooz';
@@ -34,14 +37,15 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const { toast } = useToast();
   const { addTransaction } = useMobileMoney();
   
-  const [type, setType] = useState<'deposit' | 'withdrawal' | 'transfer' | ''>('');
+  const [type, setType] = useState<MobileMoneyTransactionType | ''>('');
   const [amount, setAmount] = useState(0);
   const [commission, setCommission] = useState(0);
   const [isCommissionManual, setIsCommissionManual] = useState(false);
+  const [affectsCash, setAffectsCash] = useState(false);
 
 
   useEffect(() => {
-    if (provider !== 'Mixx' || type === 'transfer' || type === '' || amount <= 0) {
+    if (provider !== 'Mixx' || type === 'transfer' || type === '' || amount <= 0 || type === 'purchase' || type === 'pos_transfer' || type === 'virtual_return') {
         setCommission(0);
         setIsCommissionManual(false);
         return;
@@ -59,7 +63,8 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount <= 100000) calculatedCommission = 146;
         else if (amount <= 200000) calculatedCommission = 219;
     } else if (type === 'withdrawal') {
-        if (amount <= 499) calculatedCommission = 21;
+        if (amount <= 0) calculatedCommission = 0;
+        else if (amount <= 499) calculatedCommission = 21;
         else if (amount <= 5000) calculatedCommission = 21;
         else if (amount <= 15000) calculatedCommission = 65;
         else if (amount <= 20000) calculatedCommission = 65;
@@ -92,11 +97,12 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
 
     addTransaction({
         transactionId: data.transactionId as string,
-        type: data.type as 'deposit' | 'withdrawal' | 'transfer',
+        type: type as MobileMoneyTransactionType,
         provider: provider,
         amount: parseFloat(data.amount as string),
-        commission: parseFloat(data.commission as string),
+        commission: parseFloat(data.commission as string) || 0,
         phoneNumber: data.phoneNumber as string,
+        affectsCash: affectsCash
     });
     
     toast({
@@ -109,11 +115,14 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     setCommission(0);
     setType('');
     setIsCommissionManual(false);
+    setAffectsCash(false);
   };
 
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.target.value = e.target.value.replace(/[^0-9]/g, '');
   };
+
+  const showCommissionField = type === 'deposit' || type === 'withdrawal';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -139,6 +148,13 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                         <SelectItem value="deposit">Dépôt</SelectItem>
                         <SelectItem value="withdrawal">Retrait</SelectItem>
                         <SelectItem value="transfer">Transfert</SelectItem>
+                        <SelectItem value="purchase">Achat de virtuel</SelectItem>
+                        {provider === 'Mixx' && (
+                            <>
+                                <SelectItem value="pos_transfer">Transfert PDV</SelectItem>
+                                <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
+                            </>
+                        )}
                     </SelectContent>
                 </Select>
             </div>
@@ -150,14 +166,20 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
               <Label htmlFor="amount" className="text-right">Montant</Label>
               <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} min="0"/>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className={cn("grid grid-cols-4 items-center gap-4", showCommissionField ? "grid" : "hidden")}>
               <Label htmlFor="commission" className="text-right">Commission</Label>
-              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required/>
+              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required={showCommissionField}/>
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
               <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
             </div>
+            {type === 'pos_transfer' && provider === 'Mixx' && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="affectsCash" className="text-right col-span-3">Mouvement de trésorerie?</Label>
+                    <Switch id="affectsCash" checked={affectsCash} onCheckedChange={setAffectsCash} />
+                </div>
+            )}
           </div>
           <DialogFooter>
             <Button type="submit">Enregistrer</Button>

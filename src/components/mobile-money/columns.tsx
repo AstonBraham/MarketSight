@@ -4,7 +4,7 @@
 import type { MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const columns: ColumnDef<MobileMoneyTransaction>[] = [
@@ -25,13 +25,22 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
     header: 'Type',
     cell: ({ row }) => {
         const type = row.getValue('type') as string;
-        if (type === 'deposit') {
-            return <Badge variant="default" className="bg-green-600 hover:bg-green-700"><ArrowDown className="mr-1 h-3 w-3" /> Dépôt</Badge>
+        switch (type) {
+            case 'deposit':
+                return <Badge variant="default" className="bg-green-600 hover:bg-green-700"><ArrowDown className="mr-1 h-3 w-3" /> Dépôt</Badge>
+            case 'withdrawal':
+                return <Badge variant="destructive"><ArrowUp className="mr-1 h-3 w-3" /> Retrait</Badge>
+            case 'transfer':
+                 return <Badge variant="secondary"><Repeat className="mr-1 h-3 w-3" /> Transfert</Badge>
+            case 'purchase':
+                return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700"><ShoppingCart className="mr-1 h-3 w-3" /> Achat virtuel</Badge>
+            case 'pos_transfer':
+                return <Badge variant="secondary" className="bg-orange-500 hover:bg-orange-600"><Send className="mr-1 h-3 w-3" /> Transfert PDV</Badge>
+            case 'virtual_return':
+                 return <Badge variant="secondary" className="bg-purple-500 hover:bg-purple-600"><Undo2 className="mr-1 h-3 w-3" /> Retour virtuel</Badge>
+            default:
+                return <Badge variant="secondary">{type}</Badge>
         }
-        if (type === 'withdrawal') {
-            return <Badge variant="destructive"><ArrowUp className="mr-1 h-3 w-3" /> Retrait</Badge>
-        }
-        return <Badge variant="secondary">Transfert</Badge>
     }
   },
   {

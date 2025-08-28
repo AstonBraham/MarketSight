@@ -73,13 +73,16 @@ export type AirtimeTransaction = {
   transactionId?: string;
 }
 
+export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return';
+
 export type MobileMoneyTransaction = {
     id: string;
     transactionId: string;
-    type: 'deposit' | 'withdrawal' | 'transfer';
+    type: MobileMoneyTransactionType;
     provider: 'Mixx' | 'Flooz';
     amount: number;
     commission: number;
     date: string;
     phoneNumber?: string;
+    affectsCash?: boolean; // For POS transfers
 }
