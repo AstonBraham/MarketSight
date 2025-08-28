@@ -37,14 +37,19 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [type, setType] = useState<'deposit' | 'withdrawal' | 'transfer' | ''>('');
   const [amount, setAmount] = useState(0);
   const [commission, setCommission] = useState(0);
+  const [isCommissionManual, setIsCommissionManual] = useState(false);
+
 
   useEffect(() => {
     if (provider !== 'Mixx' || type === 'transfer' || type === '') {
         setCommission(0);
+        setIsCommissionManual(false);
         return;
     }
 
     let calculatedCommission = 0;
+    let manual = false;
+
     if (type === 'deposit') {
         if (amount <= 499) calculatedCommission = 0;
         else if (amount <= 5000) calculatedCommission = 14;
@@ -60,16 +65,22 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount <= 20000) calculatedCommission = 65;
         else if (amount <= 50000) calculatedCommission = 146;
         else if (amount <= 100000) calculatedCommission = 329;
-        else if (amount <= 200000) {
-            calculatedCommission = 0; // Or handle as invalid
+        else { 
+            manual = true;
             toast({
-                title: "Opération non autorisée",
-                description: "Les retraits de plus de 100 000 F et jusqu'à 200 000 F ne sont pas gérés.",
-                variant: "destructive"
+                title: "Commission manuelle requise",
+                description: "Veuillez renseigner manuellement le montant de la commission.",
+                variant: "default"
             });
         }
     }
-    setCommission(calculatedCommission);
+    
+    setIsCommissionManual(manual);
+    if (!manual) {
+        setCommission(calculatedCommission);
+    } else {
+        setCommission(0);
+    }
 
   }, [amount, type, provider, toast]);
 
@@ -84,7 +95,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         type: data.type as 'deposit' | 'withdrawal' | 'transfer',
         provider: provider,
         amount: parseFloat(data.amount as string),
-        commission: commission, // Use state for commission
+        commission: parseFloat(data.commission as string),
         phoneNumber: data.phoneNumber as string,
     });
     
@@ -97,6 +108,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     setAmount(0);
     setCommission(0);
     setType('');
+    setIsCommissionManual(false);
   };
 
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +152,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="commission" className="text-right">Commission</Label>
-              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder="Calcul automatique" value={commission} readOnly/>
+              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required/>
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
