@@ -41,7 +41,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
 
 
   useEffect(() => {
-    if (provider !== 'Mixx' || type === 'transfer' || type === '') {
+    if (provider !== 'Mixx' || type === 'transfer' || type === '' || amount <= 0) {
         setCommission(0);
         setIsCommissionManual(false);
         return;
