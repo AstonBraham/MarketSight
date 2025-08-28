@@ -11,25 +11,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Check, ChevronsUpDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 
 export function AddSaleDialog() {
   const [open, setOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast();
   const { addSale } = useTransactions();
   const { inventory, updateItem } = useInventory();
@@ -37,9 +45,9 @@ export function AddSaleDialog() {
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
 
-  const handleItemSelect = (itemId: string) => {
-    const item = inventory.find(i => i.id === itemId);
-    setSelectedItem(item || null);
+  const handleItemSelect = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setPopoverOpen(false);
   };
   
   const handleNumericInput = (setter: (value: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,21 +131,47 @@ export function AddSaleDialog() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
              <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="product" className="text-right">
-                Produit
-              </Label>
-               <Select onValueChange={handleItemSelect}>
-                <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Sélectionner un produit" />
-                </SelectTrigger>
-                <SelectContent>
-                    {inventory.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                            {item.productName} ({item.inStock} en stock)
-                        </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                <Label htmlFor="product" className="text-right">Produit</Label>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={popoverOpen}
+                        className="col-span-3 justify-between"
+                        >
+                        {selectedItem
+                            ? selectedItem.productName
+                            : "Sélectionner un produit..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                        <Command>
+                            <CommandInput placeholder="Rechercher un produit..." />
+                            <CommandList>
+                                <CommandEmpty>Aucun produit trouvé.</CommandEmpty>
+                                <CommandGroup>
+                                    {inventory.map((item) => (
+                                    <CommandItem
+                                        key={item.id}
+                                        value={item.productName}
+                                        onSelect={() => handleItemSelect(item)}
+                                    >
+                                        <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            selectedItem?.id === item.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                        />
+                                        {item.productName} ({item.inStock})
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
             </div>
             {selectedItem && (
                  <>
@@ -170,4 +204,3 @@ export function AddSaleDialog() {
     </Dialog>
   );
 }
-
