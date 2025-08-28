@@ -14,6 +14,7 @@ import type { InventoryItem } from '@/lib/types';
 import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 
@@ -28,6 +29,8 @@ export default function NewInvoicePage() {
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
     const [selectedItem, setSelectedItem] = useState<string>('');
     const [popoverOpen, setPopoverOpen] = useState(false);
+    const [applyTax, setApplyTax] = useState(true);
+
 
     const handleAddItem = () => {
         const itemToAdd = inventory.find(i => i.id === selectedItem);
@@ -57,7 +60,7 @@ export default function NewInvoicePage() {
     };
 
     const subtotal = invoiceItems.reduce((acc, item) => acc + item.total, 0);
-    const tax = subtotal * 0.18; // Assuming 18% tax
+    const tax = applyTax ? subtotal * 0.18 : 0;
     const total = subtotal + tax;
     
     const selectedProduct = inventory.find((item) => item.id === selectedItem);
@@ -179,10 +182,18 @@ export default function NewInvoicePage() {
                                 <span className="text-muted-foreground">Sous-total</span>
                                 <span>{new Intl.NumberFormat('fr-FR').format(subtotal)} F</span>
                             </div>
-                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">TVA (18%)</span>
-                                <span>{new Intl.NumberFormat('fr-FR').format(tax)} F</span>
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="apply-tax" className="flex items-center gap-2 text-muted-foreground">
+                                    Appliquer la TVA (18%)
+                                </Label>
+                                <Switch id="apply-tax" checked={applyTax} onCheckedChange={setApplyTax} />
                             </div>
+                             {applyTax && (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">TVA (18%)</span>
+                                    <span>{new Intl.NumberFormat('fr-FR').format(tax)} F</span>
+                                </div>
+                             )}
                              <div className="flex justify-between font-bold text-lg">
                                 <span >Total</span>
                                 <span>{new Intl.NumberFormat('fr-FR').format(total)} F</span>
