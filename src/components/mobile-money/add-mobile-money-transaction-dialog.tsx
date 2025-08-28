@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,46 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { addTransaction } = useMobileMoney();
+  
+  const [type, setType] = useState<'deposit' | 'withdrawal' | 'transfer' | ''>('');
+  const [amount, setAmount] = useState(0);
   const [commission, setCommission] = useState(0);
+
+  useEffect(() => {
+    if (provider !== 'Mixx' || type === 'transfer' || type === '') {
+        setCommission(0);
+        return;
+    }
+
+    let calculatedCommission = 0;
+    if (type === 'deposit') {
+        if (amount <= 499) calculatedCommission = 0;
+        else if (amount <= 5000) calculatedCommission = 14;
+        else if (amount <= 15000) calculatedCommission = 36;
+        else if (amount <= 20000) calculatedCommission = 73;
+        else if (amount <= 50000) calculatedCommission = 73;
+        else if (amount <= 100000) calculatedCommission = 146;
+        else if (amount <= 200000) calculatedCommission = 219;
+    } else if (type === 'withdrawal') {
+        if (amount <= 499) calculatedCommission = 21;
+        else if (amount <= 5000) calculatedCommission = 21;
+        else if (amount <= 15000) calculatedCommission = 65;
+        else if (amount <= 20000) calculatedCommission = 65;
+        else if (amount <= 50000) calculatedCommission = 146;
+        else if (amount <= 100000) calculatedCommission = 329;
+        else if (amount <= 200000) {
+            calculatedCommission = 0; // Or handle as invalid
+            toast({
+                title: "Opération non autorisée",
+                description: "Les retraits de plus de 100 000 F et jusqu'à 200 000 F ne sont pas gérés.",
+                variant: "destructive"
+            });
+        }
+    }
+    setCommission(calculatedCommission);
+
+  }, [amount, type, provider, toast]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +93,10 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
       description: `La nouvelle opération pour ${provider} a été enregistrée.`,
     });
     setOpen(false);
+    // Reset form state
+    setAmount(0);
     setCommission(0);
+    setType('');
   };
 
   const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +119,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
           <div className="grid gap-4 py-4">
              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="type" className="text-right">Type</Label>
-                <Select name="type" required>
+                <Select name="type" required value={type} onValueChange={(value) => setType(value as any)}>
                     <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Sélectionner un type" />
                     </SelectTrigger>
@@ -94,7 +136,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Montant</Label>
-              <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required/>
+              <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} min="0"/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="commission" className="text-right">Commission</Label>
