@@ -179,7 +179,7 @@ export function AddSaleDialog() {
                         <Label htmlFor="price" className="text-right">
                             Prix
                         </Label>
-                        <Input id="price" name="price" type="number" className="col-span-3" value={price} onChange={handleNumericInput(setPrice)} placeholder="0" required/>
+                        <Input id="price" name="price" type="number" className="col-span-3" value={price} onChange={handleNumericInput(setPrice)} min="0" placeholder="0" required/>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="quantity" className="text-right">

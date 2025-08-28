@@ -7,12 +7,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Trash2, Save } from 'lucide-react';
+import { PlusCircle, Trash2, Save, Check, ChevronsUpDown } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 import Link from 'next/link';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+
 
 interface InvoiceItem extends InventoryItem {
     quantity: number;
@@ -24,11 +27,13 @@ export default function NewInvoicePage() {
     const { inventory } = useInventory();
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
     const [selectedItem, setSelectedItem] = useState<string>('');
+    const [popoverOpen, setPopoverOpen] = useState(false);
 
     const handleAddItem = () => {
         const itemToAdd = inventory.find(i => i.id === selectedItem);
         if (itemToAdd && !invoiceItems.some(i => i.id === itemToAdd.id)) {
             setInvoiceItems([...invoiceItems, { ...itemToAdd, quantity: 1, price: 0, total: 0 }]);
+            setSelectedItem(''); // Reset for next selection
         }
     };
 
@@ -54,6 +59,8 @@ export default function NewInvoicePage() {
     const subtotal = invoiceItems.reduce((acc, item) => acc + item.total, 0);
     const tax = subtotal * 0.18; // Assuming 18% tax
     const total = subtotal + tax;
+    
+    const selectedProduct = inventory.find((item) => item.id === selectedItem);
 
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -79,18 +86,50 @@ export default function NewInvoicePage() {
                     <div className="space-y-4">
                         <Label>Articles de la facture</Label>
                         <div className="flex items-center gap-2">
-                             <Select onValueChange={setSelectedItem}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionner un article" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {inventory.map((item) => (
-                                        <SelectItem key={item.id} value={item.id} disabled={invoiceItems.some(i => i.id === item.id)}>
-                                            {item.productName} ({item.inStock} en stock)
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={popoverOpen}
+                                    className="w-[300px] justify-between"
+                                    >
+                                    {selectedProduct
+                                        ? selectedProduct.productName
+                                        : "Sélectionner un article..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[300px] p-0">
+                                    <Command>
+                                        <CommandInput placeholder="Rechercher un article..." />
+                                        <CommandList>
+                                            <CommandEmpty>Aucun article trouvé.</CommandEmpty>
+                                            <CommandGroup>
+                                                {inventory.map((item) => (
+                                                <CommandItem
+                                                    key={item.id}
+                                                    value={item.productName}
+                                                    onSelect={() => {
+                                                        setSelectedItem(item.id)
+                                                        setPopoverOpen(false)
+                                                    }}
+                                                    disabled={invoiceItems.some(i => i.id === item.id)}
+                                                >
+                                                    <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        selectedItem === item.id ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                    />
+                                                    {item.productName} ({item.inStock})
+                                                </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                             <Button onClick={handleAddItem} disabled={!selectedItem}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</Button>
                         </div>
                         
@@ -114,7 +153,7 @@ export default function NewInvoicePage() {
                                                     <Input type="number" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', parseInt(e.target.value))} min="1" max={item.inStock} className="h-8 w-20"/>
                                                 </TableCell>
                                                 <TableCell>
-                                                     <Input type="number" value={item.price} onChange={(e) => handleItemChange(item.id, 'price', parseFloat(e.target.value))} className="h-8 w-24"/>
+                                                     <Input type="number" value={item.price} onChange={(e) => handleItemChange(item.id, 'price', parseFloat(e.target.value))} min="0" className="h-8 w-24"/>
                                                 </TableCell>
                                                 <TableCell className="text-right">{new Intl.NumberFormat('fr-FR').format(item.total)} F</TableCell>
                                                 <TableCell>
