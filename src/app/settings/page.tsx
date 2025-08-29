@@ -117,15 +117,25 @@ export default function SettingsPage() {
   const handleWifiSalesImport = (data: any[]) => {
     try {
       data.forEach((row, index) => {
+        const line = index + 2;
         if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
-          throw new Error(`Ligne ${index + 2}: Les colonnes date, productName, quantity et price sont obligatoires.`);
+          throw new Error(`Ligne ${line}: Les colonnes date, productName, quantity et price sont obligatoires.`);
         }
+        
+        const quantity = parseFloat(row['quantity']);
+        const price = parseFloat(row['price']);
+        const amount = row['amount'] ? parseFloat(row['amount']) : quantity * price;
+
+        if (isNaN(quantity) || isNaN(price) || isNaN(amount)) {
+            throw new Error(`Ligne ${line}: quantity, price, ou amount contiennent des valeurs non valides.`);
+        }
+
         addSale({
           date: new Date(row['date']).toISOString(),
           product: row['productName'],
-          quantity: parseFloat(row['quantity']),
-          price: parseFloat(row['price']),
-          amount: parseFloat(row['quantity']) * parseFloat(row['price']),
+          quantity: quantity,
+          price: price,
+          amount: amount,
           client: row['client'] || 'Client Wifi',
           itemType: 'Ticket Wifi',
         });
