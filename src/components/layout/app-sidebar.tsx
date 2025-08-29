@@ -12,7 +12,8 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarMenuSub,
-  SidebarMenuSubButton
+  SidebarMenuSubButton,
+  SidebarMenuSubItem
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -76,9 +77,11 @@ export function AppSidebar() {
     setIsClient(true)
   }, [])
 
+  if (!isClient) return null;
+
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role));
   
-  if (!isClient || !user) return null;
+  if (!user) return null;
 
   return (
     <Sidebar>
