@@ -4,7 +4,7 @@
 import type { AirtimeTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,8 +12,42 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { DeleteTransactionDialog } from '../delete-transaction-dialog';
+import { useAirtime } from '@/context/airtime-context';
+
+
+function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
+    const { removeTransaction } = useAirtime();
+    const transaction = row.original;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Ouvrir le menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem disabled>
+            Voir les détails
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            Modifier
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DeleteTransactionDialog 
+            transactionId={transaction.id} 
+            onDelete={() => removeTransaction(transaction.id)} 
+          />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+}
 
 export const columns: ColumnDef<AirtimeTransaction>[] = [
   {
@@ -94,22 +128,6 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Ouvrir le menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Voir les détails</DropdownMenuItem>
-            <DropdownMenuItem>Modifier</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ActionsCell,
   },
 ];

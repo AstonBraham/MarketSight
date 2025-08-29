@@ -4,8 +4,50 @@
 import type { MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useMobileMoney } from '@/context/mobile-money-context';
+import { DeleteTransactionDialog } from '../delete-transaction-dialog';
+
+
+function ActionsCell({ row }: { row: { original: MobileMoneyTransaction }}) {
+    const { removeTransaction } = useMobileMoney();
+    const transaction = row.original;
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Ouvrir le menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuItem disabled>
+            Voir les détails
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            Modifier
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DeleteTransactionDialog 
+            transactionId={transaction.id} 
+            onDelete={() => removeTransaction(transaction.id)} 
+          />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+}
 
 export const columns: ColumnDef<MobileMoneyTransaction>[] = [
   {
@@ -93,4 +135,8 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
       return <div className="text-right font-mono font-semibold">{formatted} F</div>;
     },
   },
+  {
+      id: 'actions',
+      cell: ActionsCell
+  }
 ];

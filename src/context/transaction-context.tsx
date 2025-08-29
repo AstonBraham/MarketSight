@@ -19,6 +19,7 @@ interface TransactionContextType {
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   payPurchase: (purchaseId: string) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
+  removeExpense: (id: string) => void;
   addExpenseCategory: (category: string) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
@@ -122,6 +123,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => [newExpense, ...prev]);
   }, []);
 
+  const removeExpense = useCallback((id: string) => {
+    setTransactions(prev => prev.filter(t => t.id !== id && t.type === 'expense'));
+  }, []);
+
   const addAdjustment = useCallback((adjustment: { amount: number; description: string }) => {
     const newAdjustment: Transaction = {
       ...adjustment,
@@ -195,6 +200,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addPurchase,
     payPurchase,
     addExpense,
+    removeExpense,
     addExpenseCategory,
     addAdjustment,
     addInvoice,
@@ -202,7 +208,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     getAllTransactions,
     addCashClosing,
     clearWifiSales
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, removeExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
 
   return (
     <TransactionContext.Provider value={value}>

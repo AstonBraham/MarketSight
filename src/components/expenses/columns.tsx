@@ -14,6 +14,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { DeleteTransactionDialog } from '../delete-transaction-dialog';
+import { useTransactions } from '@/context/transaction-context';
+
+function ActionsCell({ row }: { row: { original: Expense }}) {
+    const { removeExpense } = useTransactions();
+    const expense = row.original;
+
+    return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Ouvrir le menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => navigator.clipboard.writeText(expense.id)}
+            >
+              Copier l'ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem disabled>Modifier</DropdownMenuItem>
+            <DeleteTransactionDialog 
+                transactionId={expense.id}
+                onDelete={() => removeExpense(expense.id)}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+}
 
 export const columns: ColumnDef<Expense>[] = [
   {
@@ -50,30 +82,6 @@ export const columns: ColumnDef<Expense>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      const expense = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Ouvrir le menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(expense.id)}
-            >
-              Copier l'ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Modifier</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ActionsCell,
   },
 ];
