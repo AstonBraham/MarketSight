@@ -1,4 +1,6 @@
 
+'use client';
+
 import {
   Card,
   CardContent,
@@ -7,16 +9,46 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useTransactions } from '@/context/transaction-context';
+import type { Transaction } from '@/lib/types';
+import { useMemo } from 'react';
 
-const transactions = [
-  { name: 'Vente #3021', amount: 25000, type: 'in' },
-  { name: 'Salaire - John Doe', amount: 250000, type: 'out' },
-  { name: 'Achat Fournisseur A', amount: 89990, type: 'out' },
-  { name: 'Vente #3022', amount: 59500, type: 'in' },
-  { name: 'Facture Électricité', amount: 15075, type: 'out' },
-];
+const getInitials = (type: string, description: string): string => {
+    switch (type) {
+        case 'sale': return 'V';
+        case 'purchase': return 'A';
+        case 'expense': return 'D';
+        case 'adjustment': return 'AJ';
+        default: return description.charAt(0).toUpperCase();
+    }
+}
+
+const getTransactionDetails = (transaction: Transaction) => {
+    let name = transaction.description;
+    let isCredit = false;
+
+    if (transaction.type === 'sale') {
+        isCredit = true;
+    } else if (transaction.type === 'purchase') {
+        isCredit = false;
+    } else if (transaction.type === 'expense') {
+        isCredit = false;
+    } else if (transaction.type === 'adjustment') {
+        isCredit = transaction.amount > 0;
+    }
+    
+    return { name, isCredit };
+}
+
 
 export function RecentTransactions() {
+  const { getAllTransactions } = useTransactions();
+  
+  const recentTransactions = useMemo(() => {
+    return getAllTransactions().slice(0, 5);
+  }, [getAllTransactions]);
+
+
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
@@ -26,26 +58,34 @@ export function RecentTransactions() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {transactions.map((transaction, index) => (
-          <div key={index} className="flex items-center">
-            <Avatar className="h-9 w-9">
-              <AvatarFallback className={transaction.type === 'in' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
-                {transaction.type === 'in' ? 'E' : 'S'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="ml-4 space-y-1">
-              <p className="text-sm font-medium leading-none">{transaction.name}</p>
-            </div>
-            <div
-              className={`ml-auto font-medium ${
-                transaction.type === 'in' ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {transaction.type === 'in' ? '+' : '-'}
-              {new Intl.NumberFormat('fr-FR').format(transaction.amount)} F
-            </div>
-          </div>
-        ))}
+        {recentTransactions.length > 0 ? recentTransactions.map((transaction) => {
+            const { name, isCredit } = getTransactionDetails(transaction);
+            const amount = Math.abs(transaction.amount);
+
+            return (
+              <div key={transaction.id} className="flex items-center">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className={isCredit ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+                    {getInitials(transaction.type, name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="ml-4 space-y-1">
+                  <p className="text-sm font-medium leading-none">{name}</p>
+                   <p className="text-xs text-muted-foreground">{new Date(transaction.date).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div
+                  className={`ml-auto font-medium ${
+                    isCredit ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {isCredit ? '+' : '-'}
+                  {new Intl.NumberFormat('fr-FR').format(amount)} F
+                </div>
+              </div>
+            )
+        }) : (
+            <p className="text-sm text-muted-foreground text-center py-4">Aucune transaction pour le moment.</p>
+        )}
       </CardContent>
     </Card>
   );
