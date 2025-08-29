@@ -2,17 +2,20 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
-import type { Sale, Purchase, Expense, Transaction } from '@/lib/types';
+import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem } from '@/lib/types';
 import { mockSales, mockPurchases, mockExpenses } from '@/lib/mock-data';
 
 interface TransactionContextType {
   sales: Sale[];
   purchases: Purchase[];
   expenses: Expense[];
+  invoices: Invoice[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'date' | 'category'>) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
+  addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
+  getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
 }
 
@@ -20,6 +23,7 @@ const TransactionContext = createContext<TransactionContextType | undefined>(und
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<(Sale | Purchase | Expense | Transaction)[]>([...mockSales, ...mockPurchases, ...mockExpenses]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => {
     const newSale: Sale = {
@@ -65,6 +69,20 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     };
     setTransactions(prev => [newAdjustment, ...prev]);
   }, []);
+  
+  const addInvoice = useCallback((invoiceData: Omit<Invoice, 'id'>): string => {
+    const newId = `INV-${Date.now()}`;
+    const newInvoice: Invoice = {
+      ...invoiceData,
+      id: newId,
+    };
+    setInvoices(prev => [newInvoice, ...prev]);
+    return newId;
+  }, []);
+  
+  const getInvoice = useCallback((id: string) => {
+    return invoices.find(invoice => invoice.id === id);
+  }, [invoices]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
     return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
@@ -78,12 +96,15 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     sales,
     purchases,
     expenses,
+    invoices,
     addSale,
     addPurchase,
     addExpense,
     addAdjustment,
+    addInvoice,
+    getInvoice,
     getAllTransactions
-  }), [sales, purchases, expenses, addSale, addPurchase, addExpense, addAdjustment, getAllTransactions]);
+  }), [sales, purchases, expenses, invoices, addSale, addPurchase, addExpense, addAdjustment, addInvoice, getInvoice, getAllTransactions]);
 
   return (
     <TransactionContext.Provider value={value}>

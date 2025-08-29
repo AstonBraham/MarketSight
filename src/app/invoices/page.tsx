@@ -7,8 +7,45 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AddSaleDialog } from '@/components/sales/add-sale-dialog';
 import Link from 'next/link';
+import { useTransactions } from '@/context/transaction-context';
+import { DataTable } from '@/components/data-table/data-table';
+import type { Invoice } from '@/lib/types';
+import type { ColumnDef } from '@tanstack/react-table';
+import { useRouter } from 'next/navigation';
+
+export const columns: ColumnDef<Invoice>[] = [
+    {
+        accessorKey: 'id',
+        header: 'N° Facture',
+    },
+    {
+        accessorKey: 'date',
+        header: 'Date',
+        cell: ({ row }) => new Date(row.original.date).toLocaleDateString('fr-FR'),
+    },
+    {
+        accessorKey: 'clientName',
+        header: 'Client',
+    },
+    {
+        accessorKey: 'total',
+        header: () => <div className="text-right">Montant Total</div>,
+        cell: ({ row }) => (
+            <div className="text-right font-medium">
+                {new Intl.NumberFormat('fr-FR').format(row.original.total)} F
+            </div>
+        ),
+    },
+];
 
 export default function InvoicesPage() {
+    const { invoices } = useTransactions();
+    const router = useRouter();
+
+    const handleRowClick = (row: any) => {
+        router.push(`/invoices/${row.original.id}`);
+    }
+
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
         <PageHeader title="Ventes et Facturation" />
@@ -26,11 +63,16 @@ export default function InvoicesPage() {
 
         <Card>
             <CardHeader>
-                <CardTitle>Ventes Récentes</CardTitle>
+                <CardTitle>Factures Récentes</CardTitle>
                 <CardDescription>Liste des dernières factures et ventes au comptant.</CardDescription>
             </CardHeader>
             <CardContent>
-                <p>Le module de facturation est en cours de développement.</p>
+               <DataTable
+                    columns={columns}
+                    data={invoices}
+                    filterColumn="clientName"
+                    filterPlaceholder="Filtrer par client..."
+                />
             </CardContent>
         </Card>
     </div>

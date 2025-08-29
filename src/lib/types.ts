@@ -19,6 +19,7 @@ export type Sale = Transaction & {
   quantity?: number;
   itemType?: string;
   discount?: number;
+  invoiceId?: string; // Ajout de la référence à la facture
 };
 
 export type Purchase = Transaction & {
@@ -90,4 +91,22 @@ export type MobileMoneyTransaction = {
     affectsCash?: boolean; // For POS transfers
     balance?: number;
     description?: string;
+}
+
+export interface InvoiceItem {
+  id: string;
+  productName: string;
+  quantity: number;
+  price: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  clientName: string;
+  date: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
 }

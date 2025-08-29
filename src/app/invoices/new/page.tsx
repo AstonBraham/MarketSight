@@ -1,14 +1,15 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Trash2, Save, Check, ChevronsUpDown } from 'lucide-react';
+import { PlusCircle, Trash2, Save, Check, ChevronsUpDown, Download } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 import Link from 'next/link';
@@ -28,13 +29,17 @@ interface InvoiceItem extends InventoryItem {
 
 export default function NewInvoicePage() {
     const { inventory, updateItem } = useInventory();
-    const { addSale } = useTransactions();
+    const { addSale, addInvoice } = useTransactions();
     const { toast } = useToast();
+    const router = useRouter();
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
     const [selectedItemId, setSelectedItemId] = useState<string>('');
     const [popoverOpen, setPopoverOpen] = useState(false);
     const [applyTax, setApplyTax] = useState(true);
+    const [clientName, setClientName] = useState('');
+    const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().substring(0, 10));
 
+    const invoiceId = useMemo(() => `INV-${Date.now()}`, []);
 
     const handleAddItem = () => {
         const itemToAdd = inventory.find(i => i.id === selectedItemId);
@@ -77,7 +82,7 @@ export default function NewInvoicePage() {
 
         // Basic validation
         for(const item of invoiceItems) {
-            if (item.quantity <= 0 || item.price <= 0) {
+            if (item.quantity <= 0 || item.price < 0) {
                 toast({ title: 'Données invalides', description: `Veuillez vérifier la quantité et le prix pour ${item.productName}.`, variant: 'destructive'});
                 return;
             }
@@ -86,11 +91,21 @@ export default function NewInvoicePage() {
                 return;
             }
         }
+        
+        const finalInvoiceId = addInvoice({
+            clientName: clientName || 'Client Facturé',
+            date: invoiceDate,
+            items: invoiceItems.map(i => ({ id: i.id, productName: i.productName, quantity: i.quantity, price: i.price, total: i.total })),
+            subtotal,
+            tax,
+            total,
+        });
 
         // Process transactions and update inventory
         invoiceItems.forEach(item => {
             addSale({
-                client: (document.getElementById('clientName') as HTMLInputElement)?.value || 'Client Facturé',
+                invoiceId: finalInvoiceId,
+                client: clientName || 'Client Facturé',
                 product: item.productName,
                 reference: item.reference,
                 itemType: item.category,
@@ -101,9 +116,8 @@ export default function NewInvoicePage() {
             updateItem(item.id, { inStock: item.inStock - item.quantity });
         });
 
-        toast({ title: 'Facture Enregistrée', description: 'La facture a été enregistrée avec succès.'});
-        // Here you would typically redirect the user or clear the form
-        setInvoiceItems([]);
+        toast({ title: 'Facture Enregistrée', description: `La facture ${finalInvoiceId} a été enregistrée avec succès.`});
+        router.push(`/invoices/${finalInvoiceId}`);
     }
 
     return (
@@ -116,14 +130,18 @@ export default function NewInvoicePage() {
                     <CardDescription>Remplissez les informations ci-dessous pour créer une nouvelle facture.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="clientName">Nom du client</Label>
-                            <Input id="clientName" placeholder="Entrez le nom du client" />
+                            <Input id="clientName" placeholder="Entrez le nom du client" value={clientName} onChange={e => setClientName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="invoiceDate">Date de la facture</Label>
-                            <Input id="invoiceDate" type="date" defaultValue={new Date().toISOString().substring(0, 10)} />
+                            <Input id="invoiceDate" type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="invoiceId">N° de Facture</Label>
+                            <Input id="invoiceId" type="text" value={invoiceId} readOnly />
                         </div>
                     </div>
 
