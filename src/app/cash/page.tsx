@@ -9,6 +9,7 @@ import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
 import type { Transaction } from '@/lib/types';
 import { AdjustCashBalanceDialog } from '@/components/cash/adjust-cash-balance-dialog';
+import { AddCashEntryDialog } from '@/components/cash/add-cash-entry-dialog';
 
 export default function CashPage() {
   const { getAllTransactions } = useTransactions();
@@ -47,7 +48,15 @@ export default function CashPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion de la Trésorerie" action={<AdjustCashBalanceDialog currentBalance={currentBalance || 0} />} />
+      <PageHeader 
+        title="Gestion de la Trésorerie" 
+        action={
+            <div className="flex items-center gap-2">
+                <AddCashEntryDialog />
+                <AdjustCashBalanceDialog currentBalance={currentBalance || 0} />
+            </div>
+        } 
+      />
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
