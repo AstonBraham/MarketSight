@@ -14,6 +14,7 @@ import { PlusCircle, FileCheck2 } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
+import { AddPurchaseDialog } from '@/components/purchases/add-purchase-dialog';
 
 export default function InventoryPage() {
   const { user } = useUser();
@@ -71,6 +72,7 @@ export default function InventoryPage() {
             </TabsList>
             {isAdmin && (
               <div className="ml-auto flex items-center gap-2">
+                  <AddPurchaseDialog />
                   <AddInventoryItemDialog />
                   <Button size="sm" variant="outline">
                       <FileCheck2 className="mr-2 h-4 w-4" />

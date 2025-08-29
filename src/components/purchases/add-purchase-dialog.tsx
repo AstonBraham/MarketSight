@@ -67,7 +67,6 @@ export function AddPurchaseDialog() {
 
     // Update inventory
     updateItem(selectedItem.id, {
-        ...selectedItem,
         inStock: selectedItem.inStock + quantity
     });
     

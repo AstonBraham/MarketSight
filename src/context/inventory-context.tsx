@@ -1,6 +1,7 @@
+
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { InventoryItem } from '@/lib/types';
 import { mockInventory as initialInventory } from '@/lib/mock-data';
 
@@ -9,7 +10,7 @@ interface InventoryContextType {
   setInventory: (inventory: InventoryItem[]) => void;
   addItem: (item: InventoryItem) => void;
   addItems: (items: InventoryItem[]) => void;
-  updateItem: (id: string, updatedItem: Partial<InventoryItem>) => void;
+  updateItem: (id: string, updatedFields: Partial<InventoryItem>) => void;
   removeItem: (id: string) => void;
   clearInventory: () => void;
 }
@@ -19,25 +20,25 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
 
-  const addItem = (item: InventoryItem) => {
+  const addItem = useCallback((item: InventoryItem) => {
     setInventory(prev => [...prev, item]);
-  };
+  }, []);
   
-  const addItems = (items: InventoryItem[]) => {
+  const addItems = useCallback((items: InventoryItem[]) => {
     setInventory(prev => [...prev, ...items]);
-  }
+  }, [])
 
-  const updateItem = (id: string, updatedItem: Partial<InventoryItem>) => {
-    setInventory(prev => prev.map(item => item.id === id ? { ...item, ...updatedItem } : item));
-  };
+  const updateItem = useCallback((id: string, updatedFields: Partial<InventoryItem>) => {
+    setInventory(prev => prev.map(item => item.id === id ? { ...item, ...updatedFields } : item));
+  }, []);
 
-  const removeItem = (id: string) => {
+  const removeItem = useCallback((id: string) => {
     setInventory(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
-  const clearInventory = () => {
+  const clearInventory = useCallback(() => {
     setInventory([]);
-  };
+  }, []);
 
   const value = useMemo(() => ({
     inventory,
@@ -47,7 +48,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     updateItem,
     removeItem,
     clearInventory,
-  }), [inventory]);
+  }), [inventory, addItem, addItems, updateItem, removeItem, clearInventory]);
 
   return (
     <InventoryContext.Provider value={value}>

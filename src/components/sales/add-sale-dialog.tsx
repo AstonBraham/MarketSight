@@ -45,17 +45,22 @@ export function AddSaleDialog() {
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
 
-  const handleItemSelect = (item: InventoryItem) => {
-    setSelectedItem(item);
+  const handleItemSelect = (itemId: string) => {
+    const item = inventory.find(i => i.id === itemId);
+    setSelectedItem(item || null);
     setPopoverOpen(false);
   };
   
   const handleNumericInput = (setter: (value: number) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (/^\d*\.?\d*$/.test(value)) {
-      setter(parseFloat(value));
-    } else if (value === '') {
+    // Allow empty string to clear the input, otherwise parse as float
+    if (value === '') {
         setter(0);
+    } else {
+        const parsedValue = parseFloat(value);
+        if (!isNaN(parsedValue) && parsedValue >= 0) {
+            setter(parsedValue);
+        }
     }
   };
 
@@ -97,7 +102,6 @@ export function AddSaleDialog() {
 
     // Update inventory
     updateItem(selectedItem.id, {
-        ...selectedItem,
         inStock: selectedItem.inStock - quantity
     });
     
@@ -155,8 +159,10 @@ export function AddSaleDialog() {
                                     {inventory.map((item) => (
                                     <CommandItem
                                         key={item.id}
-                                        value={item.productName}
-                                        onSelect={() => handleItemSelect(item)}
+                                        value={item.id}
+                                        onSelect={(currentValue) => {
+                                            handleItemSelect(currentValue === selectedItem?.id ? '' : currentValue)
+                                        }}
                                     >
                                         <Check
                                         className={cn(

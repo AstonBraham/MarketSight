@@ -16,6 +16,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { useTransactions } from '@/context/transaction-context';
 
 
 interface InvoiceItem extends InventoryItem {
@@ -25,18 +27,20 @@ interface InvoiceItem extends InventoryItem {
 }
 
 export default function NewInvoicePage() {
-    const { inventory } = useInventory();
+    const { inventory, updateItem } = useInventory();
+    const { addSale } = useTransactions();
+    const { toast } = useToast();
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-    const [selectedItem, setSelectedItem] = useState<string>('');
+    const [selectedItemId, setSelectedItemId] = useState<string>('');
     const [popoverOpen, setPopoverOpen] = useState(false);
     const [applyTax, setApplyTax] = useState(true);
 
 
     const handleAddItem = () => {
-        const itemToAdd = inventory.find(i => i.id === selectedItem);
+        const itemToAdd = inventory.find(i => i.id === selectedItemId);
         if (itemToAdd && !invoiceItems.some(i => i.id === itemToAdd.id)) {
             setInvoiceItems([...invoiceItems, { ...itemToAdd, quantity: 1, price: 0, total: 0 }]);
-            setSelectedItem(''); // Reset for next selection
+            setSelectedItemId(''); // Reset for next selection
         }
     };
 
@@ -63,7 +67,44 @@ export default function NewInvoicePage() {
     const tax = applyTax ? subtotal * 0.18 : 0;
     const total = subtotal + tax;
     
-    const selectedProduct = inventory.find((item) => item.id === selectedItem);
+    const selectedProduct = inventory.find((item) => item.id === selectedItemId);
+
+    const handleSaveInvoice = () => {
+        if (invoiceItems.length === 0) {
+            toast({ title: 'Facture vide', description: 'Veuillez ajouter au moins un article.', variant: 'destructive'});
+            return;
+        }
+
+        // Basic validation
+        for(const item of invoiceItems) {
+            if (item.quantity <= 0 || item.price <= 0) {
+                toast({ title: 'Données invalides', description: `Veuillez vérifier la quantité et le prix pour ${item.productName}.`, variant: 'destructive'});
+                return;
+            }
+            if (item.quantity > item.inStock) {
+                toast({ title: 'Stock insuffisant', description: `Le stock pour ${item.productName} est de ${item.inStock}.`, variant: 'destructive'});
+                return;
+            }
+        }
+
+        // Process transactions and update inventory
+        invoiceItems.forEach(item => {
+            addSale({
+                client: (document.getElementById('clientName') as HTMLInputElement)?.value || 'Client Facturé',
+                product: item.productName,
+                reference: item.reference,
+                itemType: item.category,
+                price: item.price,
+                quantity: item.quantity,
+                amount: item.total
+            });
+            updateItem(item.id, { inStock: item.inStock - item.quantity });
+        });
+
+        toast({ title: 'Facture Enregistrée', description: 'La facture a été enregistrée avec succès.'});
+        // Here you would typically redirect the user or clear the form
+        setInvoiceItems([]);
+    }
 
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -112,9 +153,9 @@ export default function NewInvoicePage() {
                                                 {inventory.map((item) => (
                                                 <CommandItem
                                                     key={item.id}
-                                                    value={item.productName}
-                                                    onSelect={() => {
-                                                        setSelectedItem(item.id)
+                                                    value={item.id}
+                                                    onSelect={(currentValue) => {
+                                                        setSelectedItemId(currentValue === selectedItemId ? '' : currentValue)
                                                         setPopoverOpen(false)
                                                     }}
                                                     disabled={invoiceItems.some(i => i.id === item.id)}
@@ -122,7 +163,7 @@ export default function NewInvoicePage() {
                                                     <Check
                                                     className={cn(
                                                         "mr-2 h-4 w-4",
-                                                        selectedItem === item.id ? "opacity-100" : "opacity-0"
+                                                        selectedItemId === item.id ? "opacity-100" : "opacity-0"
                                                     )}
                                                     />
                                                     {item.productName} ({item.inStock})
@@ -133,7 +174,7 @@ export default function NewInvoicePage() {
                                     </Command>
                                 </PopoverContent>
                             </Popover>
-                            <Button onClick={handleAddItem} disabled={!selectedItem}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</Button>
+                            <Button onClick={handleAddItem} disabled={!selectedItemId}><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</Button>
                         </div>
                         
                         <div className="rounded-md border">
@@ -206,10 +247,9 @@ export default function NewInvoicePage() {
                     <Link href="/invoices">
                         <Button variant="outline">Annuler</Button>
                     </Link>
-                    <Button><Save className="mr-2 h-4 w-4" /> Enregistrer la facture</Button>
+                    <Button onClick={handleSaveInvoice}><Save className="mr-2 h-4 w-4" /> Enregistrer la facture</Button>
                 </CardFooter>
             </Card>
         </div>
     );
 }
-
