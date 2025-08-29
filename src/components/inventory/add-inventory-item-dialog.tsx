@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,29 +14,51 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ChevronsUpDown, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useInventory } from '@/context/inventory-context';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem } from '@/components/ui/command';
+import { cn } from '@/lib/utils';
+
 
 export function AddInventoryItemDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { addItem } = useInventory();
+  const { inventory, addItem } = useInventory();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
+  const [category, setCategory] = useState('');
+
+  const existingCategories = useMemo(() => {
+    const categories = inventory.map(item => item.category);
+    return [...new Set(categories)].sort(); // Unique, sorted list of categories
+  }, [inventory]);
+
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const formData = new FormData(e.currentTarget);
     const newItem = Object.fromEntries(formData.entries());
     
+    if (!category) {
+        toast({
+            title: 'Champ manquant',
+            description: 'Veuillez sélectionner ou saisir une famille pour l\'article.',
+            variant: 'destructive',
+        });
+        return;
+    }
+
     addItem({
       id: `manual-${Date.now()}`,
       productName: newItem.productName as string,
       sku: newItem.sku as string,
-      category: newItem.category as string,
+      category: category,
       brand: newItem.brand as string,
       reference: newItem.reference as string,
-      inStock: parseInt(newItem.inStock as string, 10),
-      defaultPrice: parseFloat(newItem.defaultPrice as string),
+      inStock: parseInt(newItem.inStock as string, 10) || 0,
+      defaultPrice: parseFloat(newItem.defaultPrice as string) || 0,
       inTransit: 0,
       reorderLevel: 10, // Default reorder level
       supplier: newItem.supplier as string,
@@ -46,6 +68,8 @@ export function AddInventoryItemDialog() {
       title: 'Article Ajouté',
       description: 'Le nouvel article a été ajouté à l\'inventaire.',
     });
+    
+    setCategory('');
     setOpen(false);
   };
 
@@ -68,7 +92,7 @@ export function AddInventoryItemDialog() {
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="productName" className="text-right">Nom</Label>
-              <Input id="productName" name="productName" className="col-span-3" placeholder="Nom du produit" />
+              <Input id="productName" name="productName" className="col-span-3" placeholder="Nom du produit" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="sku" className="text-right">SKU</Label>
@@ -78,9 +102,60 @@ export function AddInventoryItemDialog() {
               <Label htmlFor="reference" className="text-right">Référence</Label>
               <Input id="reference" name="reference" className="col-span-3" placeholder="Référence fournisseur" />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right">Famille</Label>
-              <Input id="category" name="category" className="col-span-3" placeholder="Catégorie de l'article" />
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">Famille</Label>
+                 <Popover open={categoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={categoryPopoverOpen}
+                        className="col-span-3 justify-between font-normal"
+                      >
+                        {category || "Sélectionner ou créer..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0">
+                      <Command>
+                        <CommandInput 
+                            placeholder="Chercher ou créer une famille..."
+                            value={category}
+                            onValueChange={setCategory}
+                        />
+                        <CommandList>
+                            <CommandEmpty>
+                                <div className="p-4 text-sm">
+                                    Aucune famille trouvée.
+                                    <Button size="sm" className="mt-2 w-full" onClick={() => setCategoryPopoverOpen(false)}>
+                                        Créer "{category}"
+                                    </Button>
+                                </div>
+                            </CommandEmpty>
+                            <CommandGroup>
+                            {existingCategories.map((cat) => (
+                                <CommandItem
+                                    key={cat}
+                                    value={cat}
+                                    onSelect={(currentValue) => {
+                                        setCategory(currentValue === category ? "" : currentValue)
+                                        setCategoryPopoverOpen(false)
+                                    }}
+                                >
+                                <Check
+                                    className={cn(
+                                    "mr-2 h-4 w-4",
+                                    category === cat ? "opacity-100" : "opacity-0"
+                                    )}
+                                />
+                                {cat}
+                                </CommandItem>
+                            ))}
+                            </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="brand" className="text-right">Marque</Label>
@@ -91,7 +166,7 @@ export function AddInventoryItemDialog() {
               <Input id="supplier" name="supplier" className="col-span-3" placeholder="Nom du fournisseur" />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="inStock" className="text-right">Stock</Label>
+              <Label htmlFor="inStock" className="text-right">Stock Initial</Label>
               <Input id="inStock" name="inStock" type="number" defaultValue="0" className="col-span-3" />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
