@@ -13,7 +13,8 @@ import type { Invoice, InventoryItem } from '@/lib/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import { useInventory } from '@/context/inventory-context';
-import { useToast } from '@/hooks/use-toast';
+import { QuickSaleDialog } from '@/components/sales/quick-sale-dialog';
+
 
 export const columns: ColumnDef<Invoice>[] = [
     {
@@ -41,52 +42,17 @@ export const columns: ColumnDef<Invoice>[] = [
 ];
 
 const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
-    const { addSale } = useTransactions();
-    const { updateItem } = useInventory();
-    const { toast } = useToast();
-
-    const handleQuickSale = () => {
-        if (item.inStock < 1) {
-            toast({
-                title: "Stock insuffisant",
-                description: `Le stock pour ${item.productName} est épuisé.`,
-                variant: "destructive"
-            });
-            return;
-        }
-
-        const saleAmount = item.defaultPrice || 0;
-
-        addSale({
-            client: 'Client Rapide',
-            product: item.productName,
-            reference: item.reference,
-            itemType: item.category,
-            price: saleAmount,
-            quantity: 1,
-            amount: saleAmount,
-        });
-
-        updateItem(item.id, {
-            inStock: item.inStock - 1
-        });
-
-        toast({
-            title: "Vente Rapide Réussie",
-            description: `1 x ${item.productName} vendu pour ${saleAmount} F.`
-        });
-    }
-
     return (
-        <Button 
-            variant="outline" 
-            className="h-auto flex flex-col items-center justify-center p-2 gap-2"
-            onClick={handleQuickSale}
-        >
-            <Zap className="w-5 h-5 text-yellow-500" />
-            <span className="text-center text-xs leading-tight">{item.productName}</span>
-            <span className="text-xs font-bold">{item.defaultPrice ? `${new Intl.NumberFormat('fr-FR').format(item.defaultPrice)} F` : 'Prix non défini'}</span>
-        </Button>
+        <QuickSaleDialog item={item}>
+            <Button 
+                variant="outline" 
+                className="h-auto flex flex-col items-center justify-center p-3 gap-2 shadow-sm hover:shadow-md transition-shadow"
+            >
+                <Zap className="w-6 h-6 text-yellow-500" />
+                <span className="text-center text-sm leading-tight font-medium">{item.productName}</span>
+                <span className="text-xs font-bold">{item.defaultPrice ? `${new Intl.NumberFormat('fr-FR').format(item.defaultPrice)} F` : 'Prix non défini'}</span>
+            </Button>
+        </QuickSaleDialog>
     )
 }
 
@@ -122,7 +88,7 @@ export default function InvoicesPage() {
                     <CardTitle>Ventes Rapides</CardTitle>
                     <CardDescription>Cliquez sur un article pour enregistrer une vente rapide au comptant.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                <CardContent className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4">
                    {quickSaleItems.map(item => (
                        <QuickSaleItem key={item.id} item={item} />
                    ))}
