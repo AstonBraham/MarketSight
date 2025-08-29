@@ -41,7 +41,17 @@ export const columns: ColumnDef<Transaction>[] = [
       const isCredit = type === 'sale';
       const isDebit = type === 'purchase' || type === 'expense';
 
-      return <div className={`text-right font-mono ${isCredit ? 'text-green-600' : ''} ${isDebit ? 'text-red-600' : ''}`}>{isDebit ? '-' : ''}{formatted} F</div>;
+      return <div className={`text-right font-mono ${isCredit ? 'text-green-600' : ''} ${isDebit ? 'text-red-600' : ''}`}>{isDebit ? '-' : '+'}{formatted} F</div>;
+    },
+  },
+  {
+    accessorKey: 'balance',
+    header: () => <div className="text-right">Solde Caisse</div>,
+    cell: ({ row }) => {
+      const balance = row.original.balance;
+      if (balance === undefined) return null;
+      const formatted = new Intl.NumberFormat('fr-FR').format(balance);
+      return <div className="text-right font-mono font-semibold">{formatted} F</div>;
     },
   },
 ];

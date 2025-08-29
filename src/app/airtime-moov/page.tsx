@@ -8,6 +8,8 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
 import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
+import type { AirtimeTransaction } from '@/lib/types';
+import { useMemo } from 'react';
 
 export default function AirtimeMoovPage() {
   const { transactions, getStock } = useAirtime();
@@ -21,6 +23,22 @@ export default function AirtimeMoovPage() {
   const dailyMargin = moovTransactions
     .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
     .reduce((acc, t) => acc + t.commission, 0);
+
+  const processedTransactions = useMemo(() => {
+    let balance = 0;
+    const sorted = [...moovTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const withBalance = sorted.map(t => {
+        if (t.type === 'purchase') {
+            balance += t.amount;
+        } else if (t.type === 'sale') {
+            balance -= t.amount;
+        }
+        return { ...t, balance };
+    });
+
+    return withBalance.reverse();
+  }, [moovTransactions]);
 
 
   return (
@@ -60,7 +78,7 @@ export default function AirtimeMoovPage() {
             <CardDescription>Historique des transactions pour Moov.</CardDescription>
             </CardHeader>
             <CardContent>
-                <DataTable data={moovTransactions} columns={airtimeColumns} />
+                <DataTable data={processedTransactions} columns={airtimeColumns} />
             </CardContent>
         </Card>
     </div>

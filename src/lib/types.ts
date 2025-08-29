@@ -7,6 +7,7 @@ export type Transaction = {
   amount: number;
   date: string;
   category?: string;
+  balance?: number;
 };
 
 export type Sale = Transaction & {
@@ -71,6 +72,7 @@ export type AirtimeTransaction = {
   date: string;
   phoneNumber?: string;
   transactionId?: string;
+  balance?: number;
 }
 
 export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission';
@@ -85,4 +87,5 @@ export type MobileMoneyTransaction = {
     date: string;
     phoneNumber?: string;
     affectsCash?: boolean; // For POS transfers
+    balance?: number;
 }

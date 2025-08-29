@@ -50,8 +50,9 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const formatted = new Intl.NumberFormat('fr-FR').format(amount);
+      const isPurchase = row.original.type === 'purchase';
 
-      return <div className="text-right font-mono">{formatted} F</div>;
+      return <div className={cn("text-right font-mono", isPurchase ? 'text-green-600' : 'text-red-600')}>{isPurchase ? '+' : '-'}{formatted} F</div>;
     },
   },
   {
@@ -63,6 +64,16 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
       const formatted = new Intl.NumberFormat('fr-FR').format(commission);
 
       return <div className="text-right font-mono text-green-600">{formatted} F</div>;
+    },
+  },
+  {
+    accessorKey: 'balance',
+    header: () => <div className="text-right">Solde</div>,
+    cell: ({ row }) => {
+      const balance = row.original.balance;
+      if (balance === undefined) return null;
+      const formatted = new Intl.NumberFormat('fr-FR').format(balance);
+      return <div className="text-right font-mono font-semibold">{formatted} F</div>;
     },
   },
   {

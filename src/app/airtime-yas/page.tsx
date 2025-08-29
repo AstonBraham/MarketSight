@@ -8,6 +8,8 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
 import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
+import { useMemo } from 'react';
+
 
 export default function AirtimeYasPage() {
     const { transactions, getStock } = useAirtime();
@@ -21,6 +23,22 @@ export default function AirtimeYasPage() {
     const dailyMargin = yasTransactions
       .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
       .reduce((acc, t) => acc + t.commission, 0);
+
+    const processedTransactions = useMemo(() => {
+        let balance = 0;
+        const sorted = [...yasTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        const withBalance = sorted.map(t => {
+            if (t.type === 'purchase') {
+                balance += t.amount;
+            } else if (t.type === 'sale') {
+                balance -= t.amount;
+            }
+            return { ...t, balance };
+        });
+
+        return withBalance.reverse();
+    }, [yasTransactions]);
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -59,7 +77,7 @@ export default function AirtimeYasPage() {
             <CardDescription>Historique des transactions pour Yas.</CardDescription>
             </CardHeader>
             <CardContent>
-                <DataTable data={yasTransactions} columns={airtimeColumns} />
+                <DataTable data={processedTransactions} columns={airtimeColumns} />
             </CardContent>
         </Card>
     </div>

@@ -63,12 +63,12 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return transactions
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {
-            if (t.type === 'deposit') return acc + t.amount;
-            if (t.type === 'withdrawal') return acc - t.amount;
-            if (t.type === 'purchase') return acc + t.amount; // Achat de virtuel augmente le solde
-            if (t.type === 'virtual_return') return acc - t.amount; // Retour de virtuel diminue le solde
-            if (t.type === 'pos_transfer') return acc - t.amount; // Transfert PDV diminue le solde
-            if (t.type === 'collect_commission') return acc + t.amount; // Collecte de commission augmente le solde
+            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission') {
+                return acc + t.amount;
+            }
+            if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer' || t.type === 'transfer') {
+                return acc - t.amount;
+            }
             return acc;
         }, 0);
   }, [transactions]);

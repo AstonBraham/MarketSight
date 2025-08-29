@@ -8,6 +8,7 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns } from '@/components/mobile-money/columns';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
+import { useMemo } from 'react';
 
 export default function MobileMoneyMixxPage() {
     const { transactions, getBalance } = useMobileMoney();
@@ -25,6 +26,22 @@ export default function MobileMoneyMixxPage() {
     const dailyCommissions = mixxTransactions
         .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
         .reduce((acc, t) => acc + t.commission, 0);
+    
+    const processedTransactions = useMemo(() => {
+        let balance = 0;
+        const sorted = [...mixxTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        const withBalance = sorted.map(t => {
+            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission') {
+                balance += t.amount;
+            } else if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer') {
+                balance -= t.amount;
+            }
+            return { ...t, balance };
+        });
+
+        return withBalance.reverse();
+    }, [mixxTransactions]);
 
 
   return (
@@ -72,7 +89,7 @@ export default function MobileMoneyMixxPage() {
             <CardDescription>Historique des transactions pour Mixx.</CardDescription>
         </CardHeader>
         <CardContent>
-            <DataTable data={mixxTransactions} columns={columns} />
+            <DataTable data={processedTransactions} columns={columns} />
         </CardContent>
       </Card>
     </div>

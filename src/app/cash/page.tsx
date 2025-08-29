@@ -1,14 +1,48 @@
 
+'use client';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns } from '@/components/cash/columns';
 import { mockSales, mockPurchases, mockExpenses } from '@/lib/mock-data';
 import { CashflowChart } from '@/components/dashboard/cashflow-chart';
+import { useTransactions } from '@/context/transaction-context';
+import { useMemo } from 'react';
+import type { Transaction } from '@/lib/types';
 
 export default function CashPage() {
-  const allTransactions = [...mockSales, ...mockPurchases, ...mockExpenses];
+  const { getAllTransactions } = useTransactions();
+  const allTransactions = getAllTransactions();
   
+  const processedTransactions = useMemo(() => {
+    let balance = 0;
+    const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const withBalance: Transaction[] = sorted.map(t => {
+      if (t.type === 'sale') {
+        balance += t.amount;
+      } else if (t.type === 'purchase' || t.type === 'expense') {
+        balance -= t.amount;
+      }
+      return { ...t, balance };
+    });
+
+    return withBalance.reverse();
+  }, [allTransactions]);
+
+  const currentBalance = processedTransactions.length > 0 ? processedTransactions[0].balance : 0;
+  
+  const today = new Date().toDateString();
+  const dailyIncome = allTransactions
+    .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === today)
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const dailyOutcome = allTransactions
+    .filter(t => (t.type === 'purchase' || t.type === 'expense') && new Date(t.date).toDateString() === today)
+    .reduce((acc, t) => acc + t.amount, 0);
+  
+  const netFlow = dailyIncome - dailyOutcome;
+
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
       <PageHeader title="Gestion de la Trésorerie" />
@@ -18,8 +52,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Solde de Caisse</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">1 230 500 F</div>
-                <p className="text-xs text-muted-foreground">+5% depuis hier</p>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(currentBalance || 0)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -27,7 +60,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Entrées du Jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-600">+450 000 F</div>
+                <div className="text-2xl font-bold text-green-600">+{new Intl.NumberFormat('fr-FR').format(dailyIncome)} F</div>
                  <p className="text-xs text-muted-foreground">Total des ventes</p>
             </CardContent>
         </Card>
@@ -36,7 +69,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Sorties du Jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-red-600">-125 000 F</div>
+                <div className="text-2xl font-bold text-red-600">-{new Intl.NumberFormat('fr-FR').format(dailyOutcome)} F</div>
                  <p className="text-xs text-muted-foreground">Achats et dépenses</p>
             </CardContent>
         </Card>
@@ -45,7 +78,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Flux Net</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-green-600">+325 000 F</div>
+                <div className={`text-2xl font-bold ${netFlow >= 0 ? 'text-green-600' : 'text-red-600'}`}>{netFlow >= 0 ? '+' : ''}{new Intl.NumberFormat('fr-FR').format(netFlow)} F</div>
                 <p className="text-xs text-muted-foreground">Bénéfice du jour</p>
             </CardContent>
         </Card>
@@ -61,7 +94,7 @@ export default function CashPage() {
                 <CardDescription>Liste de toutes les transactions de caisse.</CardDescription>
             </CardHeader>
             <CardContent>
-                <DataTable data={allTransactions} columns={columns} />
+                <DataTable data={processedTransactions} columns={columns} />
             </CardContent>
        </Card>
       </div>

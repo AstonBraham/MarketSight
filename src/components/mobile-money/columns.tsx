@@ -75,4 +75,14 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
       return <div className="text-right font-mono text-green-600">{formatted} F</div>;
     },
   },
+  {
+    accessorKey: 'balance',
+    header: () => <div className="text-right">Solde</div>,
+    cell: ({ row }) => {
+      const balance = row.original.balance;
+      if (balance === undefined) return null;
+      const formatted = new Intl.NumberFormat('fr-FR').format(balance);
+      return <div className="text-right font-mono font-semibold">{formatted} F</div>;
+    },
+  },
 ];
