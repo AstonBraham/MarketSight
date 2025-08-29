@@ -47,6 +47,7 @@ export type InventoryItem = {
   supplier: string;
   defaultPrice?: number;
   isQuickSale?: boolean;
+  costPrice?: number; // Coût unitaire moyen pondéré (CUMP)
 };
 
 export type StockMovement = {

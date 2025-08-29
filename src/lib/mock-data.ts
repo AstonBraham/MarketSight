@@ -231,6 +231,7 @@ export const mockInventory: InventoryItem[] = [
     "reorderLevel": 20,
     "supplier": "Fournisseur A",
     "defaultPrice": 250,
+    "costPrice": 200,
     "isQuickSale": true
   },
   {
@@ -245,6 +246,7 @@ export const mockInventory: InventoryItem[] = [
     "reorderLevel": 100,
     "supplier": "Fournisseur B",
     "defaultPrice": 50,
+    "costPrice": 20,
     "isQuickSale": true
   },
   {
@@ -259,6 +261,7 @@ export const mockInventory: InventoryItem[] = [
     "reorderLevel": 15,
     "supplier": "Fournisseur A",
     "defaultPrice": 200,
+    "costPrice": 150,
     "isQuickSale": true
   },
   {
@@ -273,6 +276,7 @@ export const mockInventory: InventoryItem[] = [
     "reorderLevel": 200,
     "supplier": "Fournisseur B",
     "defaultPrice": 25,
+    "costPrice": 10,
     "isQuickSale": true
   },
   {
@@ -285,7 +289,8 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 30,
     "inTransit": 10,
     "reorderLevel": 5,
-    "supplier": "Fournisseur C"
+    "supplier": "Fournisseur C",
+    "costPrice": 900,
   },
   {
     "id": "6",
@@ -298,7 +303,8 @@ export const mockInventory: InventoryItem[] = [
     "inTransit": 0,
     "reorderLevel": 25,
     "supplier": "Fournisseur A",
-    "defaultPrice": 400
+    "defaultPrice": 400,
+    "costPrice": 320,
   },
   {
     "id": "7",
@@ -311,7 +317,8 @@ export const mockInventory: InventoryItem[] = [
     "inTransit": 30,
     "reorderLevel": 10,
     "supplier": "Fournisseur D",
-    "defaultPrice": 875
+    "defaultPrice": 875,
+    "costPrice": 750
   },
   {
     "id": "8",
@@ -324,7 +331,8 @@ export const mockInventory: InventoryItem[] = [
     "inTransit": 0,
     "reorderLevel": 50,
     "supplier": "Fournisseur E",
-    "defaultPrice": 125
+    "defaultPrice": 125,
+    "costPrice": 80,
   }
 ];
 

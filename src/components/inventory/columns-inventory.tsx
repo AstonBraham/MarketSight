@@ -57,16 +57,8 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: 'SKU',
   },
   {
-    accessorKey: 'reference',
-    header: 'Référence',
-  },
-  {
     accessorKey: 'category',
     header: 'Famille',
-  },
-    {
-    accessorKey: 'brand',
-    header: 'Marque',
   },
   {
     accessorKey: 'inStock',
@@ -84,15 +76,23 @@ export const columns: ColumnDef<InventoryItem>[] = [
     }
   },
   {
-    accessorKey: 'inTransit',
-    header: 'En Transit',
+    accessorKey: 'costPrice',
+    header: () => <div className="text-right">Coût Unitaire (CUMP)</div>,
+    cell: ({ row }) => {
+        const costPrice = row.original.costPrice;
+        if (costPrice === undefined || costPrice === null) return null;
+        const formatted = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(costPrice);
+        return <div className="text-right font-mono">{formatted} F</div>
+    }
   },
   {
-    id: 'available',
-    header: 'Disponible',
+    id: 'stockValue',
+    header: () => <div className="text-right">Valeur Stock</div>,
     cell: ({ row }) => {
-        const available = row.original.inStock + row.original.inTransit;
-        return <div className="font-semibold">{available}</div>
+        const item = row.original;
+        const value = item.inStock * (item.costPrice || 0);
+        const formatted = new Intl.NumberFormat('fr-FR').format(value);
+        return <div className="text-right font-mono font-semibold">{formatted} F</div>
     }
   },
   {

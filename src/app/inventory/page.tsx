@@ -15,11 +15,22 @@ import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
 import { AddPurchaseDialog } from '@/components/purchases/add-purchase-dialog';
+import { useMemo } from 'react';
+import Link from 'next/link';
 
 export default function InventoryPage() {
   const { user } = useUser();
   const { inventory } = useInventory();
   const isAdmin = user?.role === 'admin';
+  
+  const stockValue = useMemo(() => {
+    return inventory.reduce((acc, item) => acc + (item.inStock * (item.costPrice || 0)), 0);
+  }, [inventory]);
+
+  const outOfStockItems = useMemo(() => {
+    return inventory.filter(item => item.inStock <= 0).length;
+  }, [inventory]);
+
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -28,11 +39,11 @@ export default function InventoryPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Valeur du Stock</CardTitle>
+                <CardTitle className="text-sm font-medium">Valeur du Stock (CUMP)</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">12 450 000 F</div>
-                <p className="text-xs text-muted-foreground">Basé sur le coût d'achat</p>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(stockValue)} F</div>
+                <p className="text-xs text-muted-foreground">Basé sur le coût d'achat moyen</p>
             </CardContent>
         </Card>
         <Card>
@@ -40,7 +51,7 @@ export default function InventoryPage() {
                 <CardTitle className="text-sm font-medium">Produits en rupture</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">3</div>
+                <div className="text-2xl font-bold">{outOfStockItems}</div>
                 <p className="text-xs text-muted-foreground">Articles à commander</p>
             </CardContent>
         </Card>
@@ -74,10 +85,12 @@ export default function InventoryPage() {
               <div className="ml-auto flex items-center gap-2">
                   <AddPurchaseDialog />
                   <AddInventoryItemDialog />
-                  <Button size="sm" variant="outline">
-                      <FileCheck2 className="mr-2 h-4 w-4" />
-                      Comptage Physique
-                  </Button>
+                   <Link href="/inventory/physical-count">
+                    <Button size="sm" variant="outline">
+                        <FileCheck2 className="mr-2 h-4 w-4" />
+                        Comptage Physique
+                    </Button>
+                  </Link>
               </div>
             )}
         </div>
