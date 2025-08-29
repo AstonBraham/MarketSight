@@ -39,6 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useEffect, useState } from 'react';
 
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
@@ -58,10 +59,15 @@ const allMenuItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, setUser } = useUser();
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role));
   
-  if (!user) return null;
+  if (!user || !isClient) return null;
 
   return (
     <Sidebar>
