@@ -27,6 +27,7 @@ import {
   Send,
   Wallet,
   Receipt,
+  Landmark,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
