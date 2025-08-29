@@ -32,7 +32,7 @@ export default function RootLayout({
   }, []);
 
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
         <title>JokerMarket</title>
         <meta name="description" content="Application web de gestion de supermarché" />
