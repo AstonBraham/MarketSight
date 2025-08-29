@@ -16,6 +16,11 @@ const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 export function AirtimeProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<AirtimeTransaction[]>([]);
 
+  const filteredTransactions = useMemo(() => {
+    // This will effectively clear 'Yas' data on the client
+    return transactions.filter(t => t.provider !== 'Yas');
+  }, [transactions]);
+
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
     const newTransaction: AirtimeTransaction = {
       ...transaction,
@@ -37,11 +42,11 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
   
 
   const value = useMemo(() => ({
-    transactions,
+    transactions: filteredTransactions,
     setTransactions,
     addTransaction,
     getStock,
-  }), [transactions, setTransactions, addTransaction, getStock]);
+  }), [filteredTransactions, setTransactions, addTransaction, getStock]);
 
   return (
     <AirtimeContext.Provider value={value}>
