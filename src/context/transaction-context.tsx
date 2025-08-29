@@ -3,14 +3,17 @@
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
-import { mockSales, mockPurchases, mockExpenses } from '@/lib/mock-data';
 
 interface TransactionContextType {
+  transactions: (Sale | Purchase | Expense | Transaction)[];
+  setTransactions: (transactions: (Sale | Purchase | Expense | Transaction)[]) => void;
   sales: Sale[];
   purchases: Purchase[];
   expenses: Expense[];
   invoices: Invoice[];
+  setInvoices: (invoices: Invoice[]) => void;
   cashClosings: CashClosing[];
+  setCashClosings: (cashClosings: CashClosing[]) => void;
   expenseCategories: string[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
@@ -27,7 +30,7 @@ interface TransactionContextType {
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<(Sale | Purchase | Expense | Transaction)[]>([...mockSales, ...mockPurchases, ...mockExpenses]);
+  const [transactions, setTransactions] = useState<(Sale | Purchase | Expense | Transaction)[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [cashClosings, setCashClosings] = useState<CashClosing[]>([]);
 
@@ -167,11 +170,15 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const expenses = useMemo(() => transactions.filter(t => t.type === 'expense') as Expense[], [transactions]);
 
   const value = useMemo(() => ({
+    transactions,
+    setTransactions,
     sales,
     purchases,
     expenses,
     invoices,
+    setInvoices,
     cashClosings,
+    setCashClosings,
     expenseCategories,
     addSale,
     addPurchase,
@@ -183,7 +190,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     getInvoice,
     getAllTransactions,
     addCashClosing
-  }), [sales, purchases, expenses, invoices, cashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing]);
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing]);
 
   return (
     <TransactionContext.Provider value={value}>

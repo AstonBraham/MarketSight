@@ -3,11 +3,11 @@
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
-import { mockMobileMoneyTransactions } from '@/lib/mock-data';
 import { useTransactions } from './transaction-context';
 
 interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
+  setTransactions: (transactions: MobileMoneyTransaction[]) => void;
   addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => void;
   getBalance: (provider: MobileMoneyProvider) => number;
 }
@@ -15,7 +15,7 @@ interface MobileMoneyContextType {
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<MobileMoneyTransaction[]>(mockMobileMoneyTransactions);
+  const [transactions, setTransactions] = useState<MobileMoneyTransaction[]>([]);
   const { addPurchase, addSale } = useTransactions();
 
 
@@ -68,9 +68,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({
     transactions,
+    setTransactions,
     addTransaction,
     getBalance,
-  }), [transactions, addTransaction, getBalance]);
+  }), [transactions, setTransactions, addTransaction, getBalance]);
 
   return (
     <MobileMoneyContext.Provider value={value}>

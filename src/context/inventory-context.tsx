@@ -3,7 +3,6 @@
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { InventoryItem } from '@/lib/types';
-import { mockInventory as initialInventory } from '@/lib/mock-data';
 
 interface InventoryContextType {
   inventory: InventoryItem[];
@@ -20,7 +19,7 @@ interface InventoryContextType {
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
 export function InventoryProvider({ children }: { children: ReactNode }) {
-  const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   
   const itemCategories = useMemo(() => {
     const categories = inventory.map(item => item.category);
@@ -79,7 +78,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     clearInventory,
     itemCategories,
     addCategory,
-  }), [inventory, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory]);
+  }), [inventory, setInventory, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory]);
 
   return (
     <InventoryContext.Provider value={value}>

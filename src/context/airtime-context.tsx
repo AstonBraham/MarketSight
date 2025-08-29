@@ -1,11 +1,12 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { AirtimeTransaction } from '@/lib/types';
-import { mockAirtimeTransactions } from '@/lib/mock-data';
 
 interface AirtimeContextType {
   transactions: AirtimeTransaction[];
+  setTransactions: (transactions: AirtimeTransaction[]) => void;
   addTransaction: (transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => void;
   getStock: (provider: 'Moov' | 'Yas') => number;
 }
@@ -13,7 +14,7 @@ interface AirtimeContextType {
 const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 
 export function AirtimeProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<AirtimeTransaction[]>(mockAirtimeTransactions);
+  const [transactions, setTransactions] = useState<AirtimeTransaction[]>([]);
 
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
     const newTransaction: AirtimeTransaction = {
@@ -37,9 +38,10 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({
     transactions,
+    setTransactions,
     addTransaction,
     getStock,
-  }), [transactions, addTransaction, getStock]);
+  }), [transactions, setTransactions, addTransaction, getStock]);
 
   return (
     <AirtimeContext.Provider value={value}>
