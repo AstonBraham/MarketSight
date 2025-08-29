@@ -4,7 +4,8 @@
 import type { Transaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUp, ArrowDown, ShoppingCart, Truck, Banknote } from 'lucide-react';
+import { ArrowUp, ArrowDown, ShoppingCart, Truck, Banknote, SlidersHorizontal } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const columns: ColumnDef<Transaction>[] = [
   {
@@ -27,6 +28,7 @@ export const columns: ColumnDef<Transaction>[] = [
         if (type === 'sale') return <Badge variant='default' className="bg-green-100 text-green-700 hover:bg-green-200"><ShoppingCart className="mr-1 h-3 w-3" />Vente</Badge>;
         if (type === 'purchase') return <Badge variant='destructive'><Truck className="mr-1 h-3 w-3" />Achat</Badge>;
         if (type === 'expense') return <Badge variant='secondary'><Banknote className="mr-1 h-3 w-3" />Dépense</Badge>;
+        if (type === 'adjustment') return <Badge variant="outline" className="border-orange-500 text-orange-600"><SlidersHorizontal className="mr-1 h-3 w-3"/>Ajustement</Badge>
         return <span>{type}</span>
     }
   },
@@ -36,12 +38,19 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
       const type = row.original.type;
-      const formatted = new Intl.NumberFormat('fr-FR').format(amount);
+      const formatted = new Intl.NumberFormat('fr-FR').format(Math.abs(amount));
 
-      const isCredit = type === 'sale';
-      const isDebit = type === 'purchase' || type === 'expense';
+      const isCredit = type === 'sale' || (type === 'adjustment' && amount > 0);
+      const isDebit = type === 'purchase' || type === 'expense' || (type === 'adjustment' && amount < 0);
+      
+      let colorClass = '';
+      if(isCredit) colorClass = 'text-green-600';
+      if(isDebit) colorClass = 'text-red-600';
+      if(row.original.type === 'adjustment') colorClass = 'text-orange-600';
 
-      return <div className={`text-right font-mono ${isCredit ? 'text-green-600' : ''} ${isDebit ? 'text-red-600' : ''}`}>{isDebit ? '-' : '+'}{formatted} F</div>;
+      const sign = amount >= 0 ? '+' : '-';
+
+      return <div className={cn("text-right font-mono", colorClass)}>{sign}{formatted} F</div>;
     },
   },
   {

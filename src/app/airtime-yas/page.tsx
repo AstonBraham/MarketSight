@@ -9,6 +9,7 @@ import { columns as airtimeColumns } from '@/components/airtime/columns-airtime'
 import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
 import { useMemo } from 'react';
+import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog';
 
 
 export default function AirtimeYasPage() {
@@ -29,7 +30,7 @@ export default function AirtimeYasPage() {
         const sorted = [...yasTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         const withBalance = sorted.map(t => {
-            if (t.type === 'purchase') {
+            if (t.type === 'purchase' || t.type === 'adjustment') {
                 balance += t.amount;
             } else if (t.type === 'sale') {
                 balance -= t.amount;
@@ -42,7 +43,15 @@ export default function AirtimeYasPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Airtime Yas" action={<AddAirtimeTransactionDialog provider="Yas"/>} />
+      <PageHeader 
+        title="Gestion Airtime Yas" 
+        action={
+            <div className="flex items-center gap-2">
+                <AdjustBalanceDialog provider="Yas" currentBalance={yasStock} />
+                <AddAirtimeTransactionDialog provider="Yas" />
+            </div>
+        } 
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

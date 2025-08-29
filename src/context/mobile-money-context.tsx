@@ -27,7 +27,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     };
     setTransactions(prev => [newTransaction, ...prev]);
 
-    // Handle cash flow impact
+    // Handle cash flow impact for specific transactions
     if (transaction.type === 'purchase') {
       addPurchase({
         description: `Achat virtuel ${transaction.provider}`,
@@ -35,14 +35,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         supplier: transaction.provider,
         product: 'Virtuel'
       });
-    } else if (transaction.type === 'virtual_return' && transaction.provider === 'Mixx') {
-       addSale({
-        description: `Retour virtuel ${transaction.provider}`,
-        amount: transaction.amount,
-        client: transaction.provider,
-        product: 'Virtuel'
-      });
-    } else if (transaction.type === 'virtual_return' && transaction.provider === 'Flooz') {
+    } else if (transaction.type === 'virtual_return') {
         addSale({
           description: `Retour virtuel ${transaction.provider}`,
           amount: transaction.amount,
@@ -63,7 +56,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return transactions
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {
-            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission') {
+            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'adjustment') {
                 return acc + t.amount;
             }
             if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer' || t.type === 'transfer') {

@@ -4,11 +4,11 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns } from '@/components/cash/columns';
-import { mockSales, mockPurchases, mockExpenses } from '@/lib/mock-data';
 import { CashflowChart } from '@/components/dashboard/cashflow-chart';
 import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
 import type { Transaction } from '@/lib/types';
+import { AdjustCashBalanceDialog } from '@/components/cash/adjust-cash-balance-dialog';
 
 export default function CashPage() {
   const { getAllTransactions } = useTransactions();
@@ -23,6 +23,8 @@ export default function CashPage() {
         balance += t.amount;
       } else if (t.type === 'purchase' || t.type === 'expense') {
         balance -= t.amount;
+      } else if (t.type === 'adjustment') {
+        balance += t.amount;
       }
       return { ...t, balance };
     });
@@ -45,7 +47,7 @@ export default function CashPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion de la Trésorerie" />
+      <PageHeader title="Gestion de la Trésorerie" action={<AdjustCashBalanceDialog currentBalance={currentBalance || 0} />} />
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

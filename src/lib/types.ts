@@ -2,7 +2,7 @@
 
 export type Transaction = {
   id: string;
-  type: 'sale' | 'purchase' | 'expense';
+  type: 'sale' | 'purchase' | 'expense' | 'adjustment';
   description: string;
   amount: number;
   date: string;
@@ -76,11 +76,11 @@ export type AirtimeTransaction = {
   description?: string;
 }
 
-export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission';
+export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission' | 'adjustment';
 
 export type MobileMoneyTransaction = {
     id: string;
-    transactionId: string;
+    transactionId?: string;
     type: MobileMoneyTransactionType;
     provider: 'Mixx' | 'Flooz';
     amount: number;
@@ -89,4 +89,5 @@ export type MobileMoneyTransaction = {
     phoneNumber?: string;
     affectsCash?: boolean; // For POS transfers
     balance?: number;
+    description?: string;
 }

@@ -8,10 +8,11 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns } from '@/components/mobile-money/columns';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
+import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo } from 'react';
 
 export default function MobileMoneyFloozPage() {
-    const { transactions, getBalance, getFloozBalanceAt } = useMobileMoney();
+    const { transactions, getBalance } = useMobileMoney();
     const floozTransactions = transactions.filter(t => t.provider === 'Flooz');
     const floozBalance = getBalance('Flooz');
 
@@ -32,7 +33,7 @@ export default function MobileMoneyFloozPage() {
         const sorted = [...floozTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         const withBalance = sorted.map(t => {
-            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission') {
+            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'adjustment') {
                 balance += t.amount;
             } else if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer') {
                 balance -= t.amount;
@@ -46,7 +47,15 @@ export default function MobileMoneyFloozPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Mobile Money Flooz" action={<AddMobileMoneyTransactionDialog provider="Flooz" />}/>
+      <PageHeader 
+        title="Gestion Mobile Money Flooz" 
+        action={
+            <div className="flex items-center gap-2">
+                <AdjustMobileMoneyBalanceDialog provider="Flooz" currentBalance={floozBalance} />
+                <AddMobileMoneyTransactionDialog provider="Flooz" />
+            </div>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

@@ -8,6 +8,7 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns } from '@/components/mobile-money/columns';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
+import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo } from 'react';
 
 export default function MobileMoneyMixxPage() {
@@ -21,7 +22,7 @@ export default function MobileMoneyMixxPage() {
 
     const dailyWithdrawals = mixxTransactions
         .filter(t => t.type === 'withdrawal' && new Date(t.date).toDateString() === new Date().toDateString())
-        .reduce((acc, t) => acc + t.amount, 0);
+        .reduce((acc, t) => acc + t.commission, 0);
 
     const dailyCommissions = mixxTransactions
         .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
@@ -32,9 +33,9 @@ export default function MobileMoneyMixxPage() {
         const sorted = [...mixxTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         const withBalance = sorted.map(t => {
-            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission') {
+            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'adjustment') {
                 balance += t.amount;
-            } else if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer') {
+            } else if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer' || t.type === 'transfer') {
                 balance -= t.amount;
             }
             return { ...t, balance };
@@ -46,7 +47,15 @@ export default function MobileMoneyMixxPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Mobile Money Mixx" action={<AddMobileMoneyTransactionDialog provider="Mixx"/>}/>
+      <PageHeader 
+        title="Gestion Mobile Money Mixx" 
+        action={
+            <div className="flex items-center gap-2">
+                <AdjustMobileMoneyBalanceDialog provider="Mixx" currentBalance={mixxBalance} />
+                <AddMobileMoneyTransactionDialog provider="Mixx"/>
+            </div>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>

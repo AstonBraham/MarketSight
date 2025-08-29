@@ -1,10 +1,9 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
-import type { Sale, Purchase, Expense } from '@/lib/types';
+import type { Sale, Purchase, Expense, Transaction } from '@/lib/types';
 import { mockSales, mockPurchases, mockExpenses } from '@/lib/mock-data';
-
-type Transaction = Sale | Purchase | Expense;
 
 interface TransactionContextType {
   sales: Sale[];
@@ -13,15 +12,14 @@ interface TransactionContextType {
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'date' | 'category'>) => void;
+  addAdjustment: (adjustment: { amount: number; description: string }) => void;
   getAllTransactions: () => Transaction[];
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
-  const [sales, setSales] = useState<Sale[]>(mockSales);
-  const [purchases, setPurchases] = useState<Purchase[]>(mockPurchases);
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+  const [transactions, setTransactions] = useState<(Sale | Purchase | Expense | Transaction)[]>([...mockSales, ...mockPurchases, ...mockExpenses]);
 
   const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => {
     const newSale: Sale = {
@@ -31,7 +29,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
       category: 'Vente',
     };
-    setSales(prev => [newSale, ...prev]);
+    setTransactions(prev => [newSale, ...prev]);
   }, []);
 
   const addPurchase = useCallback((purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => {
@@ -42,7 +40,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
       category: 'Achat',
     };
-    setPurchases(prev => [newPurchase, ...prev]);
+    setTransactions(prev => [newPurchase, ...prev]);
   }, []);
   
   const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'date' | 'category'>) => {
@@ -52,13 +50,29 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       type: 'expense',
       date: new Date().toISOString(),
       category: expense.category || 'Dépense',
+      currency: 'F'
     };
-    setExpenses(prev => [newExpense, ...prev]);
+    setTransactions(prev => [newExpense, ...prev]);
   }, []);
 
-  const getAllTransactions = useCallback(() => {
-    return [...sales, ...purchases, ...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [sales, purchases, expenses]);
+  const addAdjustment = useCallback((adjustment: { amount: number; description: string }) => {
+    const newAdjustment: Transaction = {
+      ...adjustment,
+      id: `ADJ${Date.now()}`,
+      type: 'adjustment',
+      date: new Date().toISOString(),
+      category: 'Ajustement'
+    };
+    setTransactions(prev => [newAdjustment, ...prev]);
+  }, []);
+
+  const getAllTransactions = useCallback((): Transaction[] => {
+    return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
+  }, [transactions]);
+  
+  const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
+  const purchases = useMemo(() => transactions.filter(t => t.type === 'purchase') as Purchase[], [transactions]);
+  const expenses = useMemo(() => transactions.filter(t => t.type === 'expense') as Expense[], [transactions]);
 
   const value = useMemo(() => ({
     sales,
@@ -67,8 +81,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addSale,
     addPurchase,
     addExpense,
+    addAdjustment,
     getAllTransactions
-  }), [sales, purchases, expenses, addSale, addPurchase, addExpense, getAllTransactions]);
+  }), [sales, purchases, expenses, addSale, addPurchase, addExpense, addAdjustment, getAllTransactions]);
 
   return (
     <TransactionContext.Provider value={value}>

@@ -4,7 +4,7 @@
 import type { MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins } from 'lucide-react';
+import { ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const columns: ColumnDef<MobileMoneyTransaction>[] = [
@@ -19,6 +19,10 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
    {
     accessorKey: 'transactionId',
     header: 'ID Transaction',
+  },
+    {
+    accessorKey: 'description',
+    header: 'Description',
   },
   {
     accessorKey: 'type',
@@ -40,6 +44,8 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
                  return <Badge variant="secondary" className="bg-purple-500 hover:bg-purple-600"><Undo2 className="mr-1 h-3 w-3" /> Retour virtuel</Badge>
             case 'collect_commission':
                  return <Badge variant="secondary" className="bg-teal-500 hover:bg-teal-600"><HandCoins className="mr-1 h-3 w-3" /> Collecte Commission</Badge>
+            case 'adjustment':
+                 return <Badge variant="outline" className="border-orange-500 text-orange-600"><SlidersHorizontal className="mr-1 h-3 w-3"/>Ajustement</Badge>
             default:
                 return <Badge variant="secondary">{type}</Badge>
         }

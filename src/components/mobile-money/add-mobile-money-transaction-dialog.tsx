@@ -45,7 +45,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
 
 
   useEffect(() => {
-    if (provider !== 'Mixx' || type === 'transfer' || type === '' || amount <= 0 || type === 'purchase' || type === 'pos_transfer' || type === 'virtual_return' || type === 'collect_commission') {
+    if (provider !== 'Mixx' || type === '' || amount <= 0 || !['deposit', 'withdrawal'].includes(type)) {
         setCommission(0);
         setIsCommissionManual(false);
         return;
@@ -63,8 +63,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount <= 100000) calculatedCommission = 146;
         else if (amount <= 200000) calculatedCommission = 219;
     } else if (type === 'withdrawal') {
-        if (amount <= 0) calculatedCommission = 0;
-        else if (amount <= 499) calculatedCommission = 21;
+        if (amount > 0 && amount <= 499) calculatedCommission = 21;
         else if (amount <= 5000) calculatedCommission = 21;
         else if (amount <= 15000) calculatedCommission = 65;
         else if (amount <= 20000) calculatedCommission = 65;
