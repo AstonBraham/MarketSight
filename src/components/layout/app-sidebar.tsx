@@ -43,14 +43,15 @@ import {
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
-  { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin'] },
-  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
+  { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
+  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin'] },
   { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },
-  { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin'] },
-  { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin'] },
-  { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin'] },
-  { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin'] },
-  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
+  { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin', 'user'] },
+  { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin', 'user'] },
+  { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin', 'user'] },
+  { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin', 'user'] },
+  { href: '/mobile-money-cauris', label: 'Mobile Money Cauris', icon: Send, roles: ['admin', 'user'] },
+  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];
 

@@ -56,8 +56,10 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
     header: 'Opérateur',
     cell: ({ row }) => {
         const provider = row.getValue('provider') as string;
-        const isFlooz = provider === 'Flooz';
-        return <Badge variant="outline" className={cn(isFlooz ? "border-blue-500 text-blue-600" : "border-yellow-500 text-yellow-600")}>{provider}</Badge>
+        if (provider === 'Flooz') return <Badge variant="outline" className="border-blue-500 text-blue-600">{provider}</Badge>
+        if (provider === 'Mixx') return <Badge variant="outline" className="border-yellow-500 text-yellow-600">{provider}</Badge>
+        if (provider === 'Cauris') return <Badge variant="outline" className="border-red-500 text-red-600">{provider}</Badge>
+        return <Badge variant="outline">{provider}</Badge>
     }
   },
   {

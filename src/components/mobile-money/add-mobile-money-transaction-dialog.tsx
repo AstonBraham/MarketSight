@@ -24,12 +24,12 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileMoney } from '@/context/mobile-money-context';
-import type { MobileMoneyTransactionType } from '@/lib/types';
+import type { MobileMoneyTransactionType, MobileMoneyProvider } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 
 type AddMobileMoneyTransactionDialogProps = {
-    provider: 'Mixx' | 'Flooz';
+    provider: MobileMoneyProvider;
 }
 
 export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTransactionDialogProps) {
@@ -149,7 +149,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                         <SelectItem value="withdrawal">Retrait</SelectItem>
                         <SelectItem value="purchase">Achat de virtuel</SelectItem>
                         <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
-                        {provider === 'Mixx' && (
+                        {(provider === 'Mixx' || provider === 'Cauris') && (
                             <>
                                 <SelectItem value="transfer">Transfert</SelectItem>
                                 <SelectItem value="pos_transfer">Transfert PDV</SelectItem>
@@ -179,7 +179,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                 <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
               </div>
              )}
-            {type === 'pos_transfer' && provider === 'Mixx' && (
+            {type === 'pos_transfer' && (provider === 'Mixx' || provider === 'Cauris') && (
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="affectsCash" className="text-right col-span-3">Mouvement de trésorerie?</Label>
                     <Switch id="affectsCash" checked={affectsCash} onCheckedChange={setAffectsCash} />

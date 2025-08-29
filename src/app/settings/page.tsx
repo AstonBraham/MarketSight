@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExcelImport } from '@/components/excel-import';
 import { useInventory } from '@/context/inventory-context';
-import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
+import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { Button } from '@/components/ui/button';
@@ -156,7 +156,7 @@ export default function SettingsPage() {
     }
   }
   
-  const handleMobileMoneyImport = (provider: 'Mixx' | 'Flooz') => (data: any[]) => {
+  const handleMobileMoneyImport = (provider: MobileMoneyProvider) => (data: any[]) => {
        try {
         data.forEach((row, index) => {
              if (!row['date'] || !row['type'] || !row['amount']) {
@@ -222,6 +222,7 @@ export default function SettingsPage() {
           <ExcelImport title="Importer Airtime Yas" onImport={handleAirtimeImport('Yas')} />
           <ExcelImport title="Importer Mobile Money Flooz" onImport={handleMobileMoneyImport('Flooz')} />
           <ExcelImport title="Importer Mobile Money Mixx" onImport={handleMobileMoneyImport('Mixx')} />
+          <ExcelImport title="Importer Mobile Money Cauris" onImport={handleMobileMoneyImport('Cauris')} />
         </CardContent>
        </Card>
     </div>

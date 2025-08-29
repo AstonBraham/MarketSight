@@ -2,14 +2,14 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
-import type { MobileMoneyTransaction } from '@/lib/types';
+import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
 import { mockMobileMoneyTransactions } from '@/lib/mock-data';
 import { useTransactions } from './transaction-context';
 
 interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
   addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => void;
-  getBalance: (provider: 'Mixx' | 'Flooz') => number;
+  getBalance: (provider: MobileMoneyProvider) => number;
 }
 
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
@@ -52,7 +52,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     }
   }, [addPurchase, addSale]);
 
-  const getBalance = useCallback((provider: 'Mixx' | 'Flooz') => {
+  const getBalance = useCallback((provider: MobileMoneyProvider) => {
     return transactions
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {

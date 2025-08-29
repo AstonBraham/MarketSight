@@ -17,9 +17,10 @@ import { Label } from '@/components/ui/label';
 import { SlidersHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileMoney } from '@/context/mobile-money-context';
+import type { MobileMoneyProvider } from '@/lib/types';
 
 type AdjustMobileMoneyBalanceDialogProps = {
-    provider: 'Mixx' | 'Flooz';
+    provider: MobileMoneyProvider;
     currentBalance: number;
 }
 
