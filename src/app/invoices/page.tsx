@@ -46,10 +46,10 @@ const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
         <QuickSaleDialog item={item}>
             <Button 
                 variant="outline" 
-                className="h-auto flex flex-col items-center justify-center p-3 gap-2 shadow-sm hover:shadow-md transition-shadow"
+                className="h-auto flex flex-col items-center justify-center p-3 gap-2 shadow-sm hover:shadow-md transition-shadow whitespace-normal text-center"
             >
                 <Zap className="w-6 h-6 text-yellow-500" />
-                <span className="text-center text-sm leading-tight font-medium">{item.productName}</span>
+                <span className="text-sm leading-tight font-medium">{item.productName}</span>
                 <span className="text-xs font-bold">{item.defaultPrice ? `${new Intl.NumberFormat('fr-FR').format(item.defaultPrice)} F` : 'Prix non défini'}</span>
             </Button>
         </QuickSaleDialog>
