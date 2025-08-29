@@ -132,14 +132,13 @@ export default function SettingsPage() {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }
   }
-
-  const handleVirtualTransactionsImport = (data: any[]) => {
-     try {
+  
+  const handleAirtimeImport = (provider: 'Moov' | 'Yas') => (data: any[]) => {
+      try {
         data.forEach((row, index) => {
-             if (!row['date'] || !row['provider'] || !row['type'] || !row['amount']) {
-                throw new Error(`Ligne ${index + 2}: Les colonnes date, provider, type et amount sont obligatoires.`);
+             if (!row['date'] || !row['type'] || !row['amount']) {
+                throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
             }
-            const provider = row['provider'];
             const transactionData = {
                 date: new Date(row['date']).toISOString(),
                 provider: provider,
@@ -147,19 +146,39 @@ export default function SettingsPage() {
                 amount: parseFloat(row['amount']),
                 commission: parseFloat(row['commission'] || '0'),
                 phoneNumber: row['phoneNumber'] || '',
+                transactionId: row['transactionId'] || '',
             };
-
-            if (['Moov', 'Yas'].includes(provider)) {
-                addAirtimeTransaction(transactionData as Omit<AirtimeTransaction, 'id'>);
-            } else if (['Mixx', 'Flooz'].includes(provider)) {
-                addMobileMoneyTransaction(transactionData as Omit<MobileMoneyTransaction, 'id'>);
-            }
+            addAirtimeTransaction(transactionData as Omit<AirtimeTransaction, 'id'>);
         });
-        toast({ title: 'Importation Réussie', description: `${data.length} transactions virtuelles ont été ajoutées.` });
+        toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées.` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }
   }
+  
+  const handleMobileMoneyImport = (provider: 'Mixx' | 'Flooz') => (data: any[]) => {
+       try {
+        data.forEach((row, index) => {
+             if (!row['date'] || !row['type'] || !row['amount']) {
+                throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
+            }
+            const transactionData = {
+                date: new Date(row['date']).toISOString(),
+                provider: provider,
+                type: row['type'],
+                amount: parseFloat(row['amount']),
+                commission: parseFloat(row['commission'] || '0'),
+                phoneNumber: row['phoneNumber'] || '',
+                transactionId: row['transactionId'] || '',
+            };
+            addMobileMoneyTransaction(transactionData as Omit<MobileMoneyTransaction, 'id'>);
+        });
+        toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées.` });
+    } catch (error: any) {
+         toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  }
+
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -195,11 +214,14 @@ export default function SettingsPage() {
             <CardTitle>Importation de Données</CardTitle>
             <CardDescription>Importez l'historique depuis un fichier Excel (.csv, .xlsx). Assurez-vous que les en-têtes de colonnes correspondent au format attendu.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
+        <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
           <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
           <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
-          <ExcelImport title="Importer des Opérations Virtuelles (Airtime & Mobile Money)" onImport={handleVirtualTransactionsImport} />
+          <ExcelImport title="Importer Airtime Moov" onImport={handleAirtimeImport('Moov')} />
+          <ExcelImport title="Importer Airtime Yas" onImport={handleAirtimeImport('Yas')} />
+          <ExcelImport title="Importer Mobile Money Flooz" onImport={handleMobileMoneyImport('Flooz')} />
+          <ExcelImport title="Importer Mobile Money Mixx" onImport={handleMobileMoneyImport('Mixx')} />
         </CardContent>
        </Card>
     </div>
