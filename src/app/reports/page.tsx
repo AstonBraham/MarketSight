@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
+import { useMemo } from 'react';
 
 export default function ReportsPage() {
   const { toast } = useToast();
@@ -19,6 +20,9 @@ export default function ReportsPage() {
   const { transactions: airtimeTransactions } = useAirtime();
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
 
+  const wifiSales = useMemo(() => {
+    return sales.filter(s => s.itemType === 'Ticket Wifi');
+  }, [sales]);
 
   const handleExport = (name: string, data: any[]) => {
     if (data.length === 0) {
@@ -60,6 +64,10 @@ export default function ReportsPage() {
            <Button variant="outline" onClick={() => handleExport('etat_inventaire', inventory)}>
             <FileDown className="mr-2 h-4 w-4" />
             Exporter l'État de l'Inventaire
+          </Button>
+          <Button variant="outline" onClick={() => handleExport('rapport_ventes_wifi', wifiSales)}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Exporter les Ventes Wifi
           </Button>
            <Button variant="outline" onClick={() => handleExport('transactions_airtime', airtimeTransactions)}>
             <FileDown className="mr-2 h-4 w-4" />

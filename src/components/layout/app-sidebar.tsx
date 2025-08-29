@@ -28,6 +28,7 @@ import {
   Wallet,
   Receipt,
   Landmark,
+  Wifi,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -44,6 +45,7 @@ import { useEffect, useState } from 'react';
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
+  { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin'] },
   { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },

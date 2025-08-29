@@ -114,6 +114,28 @@ export default function SettingsPage() {
     }
   }
 
+  const handleWifiSalesImport = (data: any[]) => {
+    try {
+      data.forEach((row, index) => {
+        if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
+          throw new Error(`Ligne ${index + 2}: Les colonnes date, productName, quantity et price sont obligatoires.`);
+        }
+        addSale({
+          date: new Date(row['date']).toISOString(),
+          product: row['productName'],
+          quantity: parseFloat(row['quantity']),
+          price: parseFloat(row['price']),
+          amount: parseFloat(row['quantity']) * parseFloat(row['price']),
+          client: row['client'] || 'Client Wifi',
+          itemType: 'Ticket Wifi',
+        });
+      });
+      toast({ title: 'Importation Réussie', description: `${data.length} ventes Wifi ont été ajoutées.` });
+    } catch (error: any) {
+      toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  }
+
   const handleExpensesImport = (data: any[]) => {
       try {
         data.forEach((row, index) => {
@@ -218,6 +240,7 @@ export default function SettingsPage() {
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
           <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
           <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
+          <ExcelImport title="Importer Ventes Wifi" onImport={handleWifiSalesImport} />
           <ExcelImport title="Importer Airtime Moov" onImport={handleAirtimeImport('Moov')} />
           <ExcelImport title="Importer Airtime Yas" onImport={handleAirtimeImport('Yas')} />
           <ExcelImport title="Importer Mobile Money Flooz" onImport={handleMobileMoneyImport('Flooz')} />
