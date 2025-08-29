@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
-import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem } from '@/lib/types';
+import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
 import { mockSales, mockPurchases, mockExpenses } from '@/lib/mock-data';
 
 interface TransactionContextType {
@@ -10,6 +10,7 @@ interface TransactionContextType {
   purchases: Purchase[];
   expenses: Expense[];
   invoices: Invoice[];
+  cashClosings: CashClosing[];
   expenseCategories: string[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
@@ -20,6 +21,7 @@ interface TransactionContextType {
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
+  addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ const TransactionContext = createContext<TransactionContextType | undefined>(und
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<(Sale | Purchase | Expense | Transaction)[]>([...mockSales, ...mockPurchases, ...mockExpenses]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [cashClosings, setCashClosings] = useState<CashClosing[]>([]);
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -130,6 +133,22 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     return invoices.find(invoice => invoice.id === id);
   }, [invoices]);
 
+  const addCashClosing = useCallback((closing: Omit<CashClosing, 'id' | 'date'>) => {
+    const newClosing: CashClosing = {
+      ...closing,
+      id: `CC${Date.now()}`,
+      date: new Date().toISOString(),
+    };
+    setCashClosings(prev => [newClosing, ...prev]);
+
+    if (newClosing.variance !== 0) {
+      addAdjustment({
+        amount: newClosing.variance,
+        description: `Ajustement suite à l'arrêté de caisse du ${new Date(newClosing.date).toLocaleDateString()}`,
+      });
+    }
+  }, [addAdjustment]);
+
   const getAllTransactions = useCallback((): Transaction[] => {
      const cashTransactions = transactions.filter(t => {
         if (t.type === 'purchase') {
@@ -152,6 +171,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     purchases,
     expenses,
     invoices,
+    cashClosings,
     expenseCategories,
     addSale,
     addPurchase,
@@ -161,8 +181,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addAdjustment,
     addInvoice,
     getInvoice,
-    getAllTransactions
-  }), [sales, purchases, expenses, invoices, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions]);
+    getAllTransactions,
+    addCashClosing
+  }), [sales, purchases, expenses, invoices, cashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing]);
 
   return (
     <TransactionContext.Provider value={value}>

@@ -11,6 +11,8 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarTrigger,
+  SidebarMenuSub,
+  SidebarMenuSubButton
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -29,6 +31,7 @@ import {
   Receipt,
   Landmark,
   Wifi,
+  Archive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -41,6 +44,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useEffect, useState } from 'react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
@@ -48,7 +52,12 @@ const allMenuItems = [
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin'] },
-  { href: '/cash', label: 'Trésorerie', icon: Wallet, roles: ['admin'] },
+  { 
+    label: 'Trésorerie', icon: Wallet, roles: ['admin'], subItems: [
+      { href: '/cash', label: 'Mouvements de caisse' },
+      { href: '/cash-closing', label: 'Arrêtés de caisse' },
+    ]
+  },
   { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin', 'user'] },
   { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin', 'user'] },
   { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin', 'user'] },
@@ -69,7 +78,7 @@ export function AppSidebar() {
 
   const menuItems = allMenuItems.filter(item => user && item.roles.includes(user.role));
   
-  if (!user || !isClient) return null;
+  if (!isClient || !user) return null;
 
   return (
     <Sidebar>
@@ -88,18 +97,44 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarMenu className="flex-1 px-4">
-        {menuItems.map(({ href, label, icon: Icon }) => (
-          <SidebarMenuItem key={href}>
-             <Link href={href}>
-                <SidebarMenuButton
-                isActive={pathname === href}
-                tooltip={{ children: label, side: 'right' }}
-              >
-                <Icon />
-                <span>{label}</span>
-              </SidebarMenuButton>
-             </Link>
-          </SidebarMenuItem>
+        {menuItems.map((item, index) => (
+          item.subItems ? (
+             <Collapsible key={item.label} className="w-full">
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                   <SidebarMenuButton>
+                      <item.icon />
+                      <span>{item.label}</span>
+                   </SidebarMenuButton>
+                </CollapsibleTrigger>
+              </SidebarMenuItem>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.subItems.map(subItem => (
+                     <SidebarMenuSubItem key={subItem.href}>
+                      <Link href={subItem.href}>
+                         <SidebarMenuSubButton isActive={pathname === subItem.href}>
+                          {subItem.label}
+                        </SidebarMenuSubButton>
+                      </Link>
+                     </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <SidebarMenuItem key={item.href}>
+              <Link href={item.href!}>
+                  <SidebarMenuButton
+                  isActive={pathname === item.href}
+                  tooltip={{ children: item.label, side: 'right' }}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          )
         ))}
       </SidebarMenu>
 

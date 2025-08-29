@@ -116,3 +116,13 @@ export interface Invoice {
   tax: number;
   total: number;
 }
+
+export interface CashClosing {
+    id: string;
+    date: string;
+    theoreticalBalance: number;
+    realBalance: number;
+    variance: number;
+    notes?: string;
+    closedBy: string;
+}
