@@ -1,8 +1,10 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
 import { useTransactions } from './transaction-context';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
@@ -15,7 +17,7 @@ interface MobileMoneyContextType {
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<MobileMoneyTransaction[]>([]);
+  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
   const { addPurchase, addSale } = useTransactions();
 
 
@@ -51,11 +53,11 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         product: 'Virtuel'
       });
     }
-  }, [addPurchase, addSale]);
+  }, [addPurchase, addSale, setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
-  }, []);
+  }, [setTransactions]);
 
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     return transactions

@@ -1,8 +1,9 @@
 
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { AirtimeTransaction } from '@/lib/types';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface AirtimeContextType {
   transactions: AirtimeTransaction[];
@@ -15,7 +16,7 @@ interface AirtimeContextType {
 const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 
 export function AirtimeProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<AirtimeTransaction[]>([]);
+  const [transactions, setTransactions] = useLocalStorage<AirtimeTransaction[]>('airtimeTransactions', []);
 
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
     const newTransaction: AirtimeTransaction = {
@@ -24,11 +25,11 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev]);
-  }, []);
+  }, [setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
-  }, []);
+  }, [setTransactions]);
 
   const getStock = useCallback((provider: 'Moov' | 'Yas') => {
     return transactions

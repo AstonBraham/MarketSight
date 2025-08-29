@@ -3,6 +3,7 @@
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -32,9 +33,9 @@ interface TransactionContextType {
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useState<(Sale | Purchase | Expense | Transaction)[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [cashClosings, setCashClosings] = useState<CashClosing[]>([]);
+  const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
+  const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
+  const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -56,11 +57,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Vente',
     };
     setTransactions(prev => [newSale, ...prev]);
-  }, []);
+  }, [setTransactions]);
   
   const clearWifiSales = useCallback(() => {
     setTransactions(prev => prev.filter(t => (t as Sale).itemType !== 'Ticket Wifi'));
-  }, []);
+  }, [setTransactions]);
 
   const addPurchase = useCallback((purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => {
     const newPurchase: Purchase = {
@@ -74,13 +75,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (newPurchase.status === 'paid') {
         setTransactions(prev => [newPurchase, ...prev]);
     } else {
-        // Unpaid purchases are not added to the main transaction flow immediately
-        // They are stored and will be converted to a transaction upon payment
         const allPurchases = transactions.filter(t => t.type === 'purchase');
         const otherTransactions = transactions.filter(t => t.type !== 'purchase');
         setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
     }
-  }, [transactions]);
+  }, [transactions, setTransactions]);
   
   const payPurchase = useCallback((purchaseId: string) => {
     let purchaseToPay: Purchase | undefined;
@@ -88,7 +87,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     const updatedTransactions = transactions.map(t => {
         if (t.id === purchaseId && t.type === 'purchase') {
             purchaseToPay = { ...(t as Purchase), status: 'paid' };
-            // We don't return it here, instead we add a new transaction for payment
             return purchaseToPay;
         }
         return t;
@@ -103,12 +101,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             description: `Paiement achat ${purchaseToPay.id} - ${purchaseToPay.description}`,
             category: 'Paiement Achat',
         };
-        // Add the payment transaction to the flow and update the state of the original purchase
         setTransactions([paymentTransaction, ...updatedTransactions]);
     } else {
         setTransactions(updatedTransactions);
     }
-  }, [transactions]);
+  }, [transactions, setTransactions]);
 
 
   const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'currency'>) => {
@@ -121,11 +118,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: expense.category || 'Dépense',
     };
     setTransactions(prev => [newExpense, ...prev]);
-  }, []);
+  }, [setTransactions]);
 
   const removeExpense = useCallback((id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id && t.type === 'expense'));
-  }, []);
+  }, [setTransactions]);
 
   const addAdjustment = useCallback((adjustment: { amount: number; description: string }) => {
     const newAdjustment: Transaction = {
@@ -136,7 +133,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Ajustement'
     };
     setTransactions(prev => [newAdjustment, ...prev]);
-  }, []);
+  }, [setTransactions]);
   
   const addInvoice = useCallback((invoiceData: Omit<Invoice, 'id'>): string => {
     const newId = `INV-${Date.now()}`;
@@ -146,7 +143,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     };
     setInvoices(prev => [newInvoice, ...prev]);
     return newId;
-  }, []);
+  }, [setInvoices]);
   
   const getInvoice = useCallback((id: string) => {
     return invoices.find(invoice => invoice.id === id);
@@ -166,15 +163,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         description: `Ajustement suite à l'arrêté de caisse du ${new Date(newClosing.date).toLocaleDateString()}`,
       });
     }
-  }, [addAdjustment]);
+  }, [addAdjustment, setCashClosings]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
      const cashTransactions = transactions.filter(t => {
-        // For purchases, only 'paid' ones immediately affect cash flow at the time of purchase.
         if (t.type === 'purchase') {
             return (t as Purchase).status === 'paid';
         }
-        // Other types that affect cash flow
         return t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment';
     });
 
