@@ -4,7 +4,7 @@
 import type { AirtimeTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,8 +32,15 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
         if (type === 'purchase') {
             return <Badge variant="secondary">Achat</Badge>
         }
+        if (type === 'adjustment') {
+            return <Badge variant="outline" className="border-orange-500 text-orange-600"><SlidersHorizontal className="mr-1 h-3 w-3"/>Ajustement</Badge>
+        }
         return <Badge variant="default">Vente</Badge>
     }
+  },
+  {
+    accessorKey: 'description',
+    header: 'Description',
   },
   {
     accessorKey: 'provider',
@@ -49,10 +56,19 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     header: () => <div className="text-right">Montant</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('fr-FR').format(amount);
-      const isPurchase = row.original.type === 'purchase';
+      const formatted = new Intl.NumberFormat('fr-FR').format(Math.abs(amount));
+      const isCredit = row.original.type === 'purchase' || (row.original.type === 'adjustment' && amount > 0);
+      const isDebit = row.original.type === 'sale' || (row.original.type === 'adjustment' && amount < 0);
 
-      return <div className={cn("text-right font-mono", isPurchase ? 'text-green-600' : 'text-red-600')}>{isPurchase ? '+' : '-'}{formatted} F</div>;
+      const sign = isCredit ? '+' : '-';
+      
+      let colorClass = '';
+      if(isCredit) colorClass = 'text-green-600';
+      if(isDebit) colorClass = 'text-red-600';
+      if(row.original.type === 'adjustment') colorClass = 'text-orange-600';
+
+
+      return <div className={cn("text-right font-mono", colorClass)}>{sign}{formatted} F</div>;
     },
   },
   {

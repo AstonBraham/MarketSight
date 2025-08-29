@@ -65,7 +65,7 @@ export type User = {
 
 export type AirtimeTransaction = {
   id: string;
-  type: 'purchase' | 'sale';
+  type: 'purchase' | 'sale' | 'adjustment';
   provider: 'Moov' | 'Yas';
   amount: number;
   commission: number;
@@ -73,6 +73,7 @@ export type AirtimeTransaction = {
   phoneNumber?: string;
   transactionId?: string;
   balance?: number;
+  description?: string;
 }
 
 export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission';

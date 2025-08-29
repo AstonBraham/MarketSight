@@ -28,7 +28,7 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     return transactions
       .filter(t => t.provider === provider)
       .reduce((acc, t) => {
-        if (t.type === 'purchase') return acc + t.amount;
+        if (t.type === 'purchase' || t.type === 'adjustment') return acc + t.amount;
         if (t.type === 'sale') return acc - t.amount;
         return acc;
       }, 0);

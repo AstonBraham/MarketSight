@@ -10,6 +10,7 @@ import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
 import type { AirtimeTransaction } from '@/lib/types';
 import { useMemo } from 'react';
+import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog';
 
 export default function AirtimeMoovPage() {
   const { transactions, getStock } = useAirtime();
@@ -29,7 +30,7 @@ export default function AirtimeMoovPage() {
     const sorted = [...moovTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     const withBalance = sorted.map(t => {
-        if (t.type === 'purchase') {
+        if (t.type === 'purchase' || t.type === 'adjustment') {
             balance += t.amount;
         } else if (t.type === 'sale') {
             balance -= t.amount;
@@ -43,7 +44,15 @@ export default function AirtimeMoovPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Gestion Airtime Moov" action={<AddAirtimeTransactionDialog provider="Moov" />} />
+      <PageHeader 
+        title="Gestion Airtime Moov" 
+        action={
+            <div className="flex items-center gap-2">
+                <AdjustBalanceDialog provider="Moov" currentBalance={moovStock} />
+                <AddAirtimeTransactionDialog provider="Moov" />
+            </div>
+        } 
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
