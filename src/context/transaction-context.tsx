@@ -11,10 +11,10 @@ interface TransactionContextType {
   expenses: Expense[];
   invoices: Invoice[];
   expenseCategories: string[];
-  addSale: (sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => void;
+  addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   payPurchase: (purchaseId: string) => void;
-  addExpense: (expense: Omit<Expense, 'id' | 'type' | 'date' | 'currency'>) => void;
+  addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
   addExpenseCategory: (category: string) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
@@ -39,12 +39,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     console.log(`Expense category "${category}" will be available for selection.`);
   }, []);
 
-  const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => {
+  const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>) => {
     const newSale: Sale = {
       ...sale,
       id: `SALE${Date.now()}`,
       type: 'sale',
-      date: new Date().toISOString(),
+      date: sale.date || new Date().toISOString(),
       category: 'Vente',
     };
     setTransactions(prev => [newSale, ...prev]);
@@ -93,12 +93,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
-  const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'date' | 'currency'>) => {
+  const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'currency'>) => {
     const newExpense: Expense = {
       ...expense,
       id: `EXP${Date.now()}`,
       type: 'expense',
-      date: new Date().toISOString(),
+      date: expense.date || new Date().toISOString(),
       currency: 'F',
       category: expense.category || 'Dépense',
     };

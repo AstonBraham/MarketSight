@@ -5,13 +5,15 @@ import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExcelImport } from '@/components/excel-import';
 import { useInventory } from '@/context/inventory-context';
-import type { InventoryItem } from '@/lib/types';
+import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { useAirtime } from '@/context/airtime-context';
+import { useMobileMoney } from '@/context/mobile-money-context';
 
 function CategoryManager({ title, categories, onAddCategory }: { title: string, categories: string[], onAddCategory: (category: string) => void }) {
   const [newCategory, setNewCategory] = useState('');
@@ -44,30 +46,119 @@ function CategoryManager({ title, categories, onAddCategory }: { title: string, 
 
 export default function SettingsPage() {
   const { addItems, itemCategories, addCategory: addInventoryCategory } = useInventory();
-  const { expenseCategories, addExpenseCategory } = useTransactions();
+  const { addExpense, expenseCategories, addExpenseCategory, addSale } = useTransactions();
+  const { addTransaction: addAirtimeTransaction } = useAirtime();
+  const { addTransaction: addMobileMoneyTransaction } = useMobileMoney();
   const { toast } = useToast();
 
   const handleProductImport = (data: any[]) => {
-    const newItems: InventoryItem[] = data.map((row, index) => ({
-      id: `imported-${Date.now()}-${index}`,
-      productName: row['productName'] || row['Nom du produit'] || 'N/A',
-      sku: row['sku'] || row['SKU'] || 'N/A',
-      category: row['category'] || row['Famille'] || 'N/A',
-      brand: row['brand'] || row['Marque'],
-      reference: row['reference'] || row['Référence'],
-      inStock: parseInt(row['inStock'] || row['En Stock'] || '0', 10),
-      inTransit: parseInt(row['inTransit'] || row['En Transit'] || '0', 10),
-      reorderLevel: parseInt(row['reorderLevel'] || row['Niveau de réapprovisionnement'] || '0', 10),
-      supplier: row['supplier'] || row['Fournisseur'] || 'N/A',
-    }));
+    try {
+      const newItems: InventoryItem[] = data.map((row, index) => {
+        if (!row['productName'] && !row['Nom du produit']) {
+          throw new Error(`Ligne ${index + 2}: Le nom du produit est manquant.`);
+        }
+        if (!row['category'] && !row['Famille']) {
+            throw new Error(`Ligne ${index + 2}: La catégorie est manquante pour le produit ${row['productName'] || row['Nom du produit']}.`);
+        }
+        return {
+            id: `imported-${Date.now()}-${index}`,
+            productName: row['productName'] || row['Nom du produit'],
+            sku: row['sku'] || row['SKU'] || '',
+            category: row['category'] || row['Famille'],
+            brand: row['brand'] || row['Marque'] || '',
+            reference: row['reference'] || row['Référence'] || '',
+            inStock: parseInt(row['inStock'] || row['En Stock'] || '0', 10),
+            inTransit: 0, // Not imported
+            reorderLevel: parseInt(row['reorderLevel'] || row['Niveau de réapprovisionnement'] || '0', 10),
+            supplier: row['supplier'] || row['Fournisseur'] || '',
+            defaultPrice: parseFloat(row['defaultPrice'] || '0'),
+            costPrice: parseFloat(row['costPrice'] || '0'),
+            isQuickSale: false, // Default value
+        }
+      });
 
-    addItems(newItems);
-    
-    toast({
-      title: 'Importation Réussie',
-      description: `${newItems.length} produits ont été ajoutés à l'inventaire.`,
-    });
+      addItems(newItems);
+      
+      toast({
+        title: 'Importation Réussie',
+        description: `${newItems.length} produits ont été ajoutés à l'inventaire.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erreur d\'importation',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
   };
+
+  const handleSalesImport = (data: any[]) => {
+     try {
+        data.forEach((row, index) => {
+            if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
+                throw new Error(`Ligne ${index + 2}: Les colonnes date, productName, quantity et price sont obligatoires.`);
+            }
+            addSale({
+                date: new Date(row['date']).toISOString(),
+                product: row['productName'],
+                quantity: parseFloat(row['quantity']),
+                price: parseFloat(row['price']),
+                amount: parseFloat(row['quantity']) * parseFloat(row['price']),
+                client: row['client'] || 'Client importé',
+            });
+        });
+        toast({ title: 'Importation Réussie', description: `${data.length} ventes ont été ajoutées.` });
+    } catch (error: any) {
+         toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  }
+
+  const handleExpensesImport = (data: any[]) => {
+      try {
+        data.forEach((row, index) => {
+            if (!row['date'] || !row['description'] || !row['amount'] || !row['category']) {
+                throw new Error(`Ligne ${index + 2}: Les colonnes date, description, amount et category sont obligatoires.`);
+            }
+            addExpense({
+                date: new Date(row['date']).toISOString(),
+                description: row['description'],
+                amount: parseFloat(row['amount']),
+                category: row['category'],
+            });
+        });
+        toast({ title: 'Importation Réussie', description: `${data.length} dépenses ont été ajoutées.` });
+    } catch (error: any) {
+         toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  }
+
+  const handleVirtualTransactionsImport = (data: any[]) => {
+     try {
+        data.forEach((row, index) => {
+             if (!row['date'] || !row['provider'] || !row['type'] || !row['amount']) {
+                throw new Error(`Ligne ${index + 2}: Les colonnes date, provider, type et amount sont obligatoires.`);
+            }
+            const provider = row['provider'];
+            const transactionData = {
+                date: new Date(row['date']).toISOString(),
+                provider: provider,
+                type: row['type'],
+                amount: parseFloat(row['amount']),
+                commission: parseFloat(row['commission'] || '0'),
+                phoneNumber: row['phoneNumber'] || '',
+            };
+
+            if (['Moov', 'Yas'].includes(provider)) {
+                addAirtimeTransaction(transactionData as Omit<AirtimeTransaction, 'id'>);
+            } else if (['Mixx', 'Flooz'].includes(provider)) {
+                addMobileMoneyTransaction(transactionData as Omit<MobileMoneyTransaction, 'id'>);
+            }
+        });
+        toast({ title: 'Importation Réussie', description: `${data.length} transactions virtuelles ont été ajoutées.` });
+    } catch (error: any) {
+         toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -101,13 +192,13 @@ export default function SettingsPage() {
        <Card>
         <CardHeader>
             <CardTitle>Importation de Données</CardTitle>
-            <CardDescription>Importez des produits et fournisseurs depuis un fichier Excel (.csv, .xlsx).</CardDescription>
+            <CardDescription>Importez l'historique depuis un fichier Excel (.csv, .xlsx). Assurez-vous que les en-têtes de colonnes correspondent au format attendu.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="grid gap-6 md:grid-cols-2">
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
-          <ExcelImport title="Importer des Fournisseurs" onImport={() => {
-            toast({ title: "Info", description: "L'importation des fournisseurs n'est pas encore implémentée."})
-          }} />
+          <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
+          <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
+          <ExcelImport title="Importer des Opérations Virtuelles (Airtime & Mobile Money)" onImport={handleVirtualTransactionsImport} />
         </CardContent>
        </Card>
     </div>
