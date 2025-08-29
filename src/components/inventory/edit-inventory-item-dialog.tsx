@@ -30,10 +30,10 @@ export function EditInventoryItemDialog({ item }: { item: InventoryItem }) {
     const updatedData = Object.fromEntries(formData.entries());
     
     // Convert string numbers to actual numbers
-    const numericFields = ['inStock', 'inTransit', 'reorderLevel'];
+    const numericFields = ['inStock', 'inTransit', 'reorderLevel', 'defaultPrice'];
     numericFields.forEach(field => {
       if (updatedData[field]) {
-        updatedData[field] = parseInt(updatedData[field] as string, 10);
+        updatedData[field] = parseFloat(updatedData[field] as string);
       }
     });
     
@@ -90,6 +90,10 @@ export function EditInventoryItemDialog({ item }: { item: InventoryItem }) {
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="inStock" className="text-right">Stock</Label>
               <Input id="inStock" name="inStock" type="number" defaultValue={item.inStock} className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="defaultPrice" className="text-right">Prix de vente</Label>
+              <Input id="defaultPrice" name="defaultPrice" type="number" defaultValue={item.defaultPrice} className="col-span-3" placeholder="0" />
             </div>
           </div>
           <DialogFooter>

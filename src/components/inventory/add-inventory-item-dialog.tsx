@@ -36,6 +36,7 @@ export function AddInventoryItemDialog() {
       brand: newItem.brand as string,
       reference: newItem.reference as string,
       inStock: parseInt(newItem.inStock as string, 10),
+      defaultPrice: parseFloat(newItem.defaultPrice as string),
       inTransit: 0,
       reorderLevel: 10, // Default reorder level
       supplier: newItem.supplier as string,
@@ -92,6 +93,10 @@ export function AddInventoryItemDialog() {
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="inStock" className="text-right">Stock</Label>
               <Input id="inStock" name="inStock" type="number" defaultValue="0" className="col-span-3" />
+            </div>
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="defaultPrice" className="text-right">Prix de vente</Label>
+              <Input id="defaultPrice" name="defaultPrice" type="number" placeholder="0" className="col-span-3" />
             </div>
           </div>
           <DialogFooter>
