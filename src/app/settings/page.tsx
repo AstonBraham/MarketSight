@@ -1,3 +1,4 @@
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -158,21 +159,34 @@ function BackupAndRestore() {
 
 export default function SettingsPage() {
   const { addItems, itemCategories, addCategory: addInventoryCategory } = useInventory();
-  const { addExpense, expenseCategories, addExpenseCategory, addSale } = useTransactions();
+  const { addExpense, expenseCategories, addExpenseCategory, addSale, clearWifiSales } = useTransactions();
   const { addTransaction: addAirtimeTransaction } = useAirtime();
   const { addTransaction: addMobileMoneyTransaction } = useMobileMoney();
   const { toast } = useToast();
   
-  const toISODate = (date: any) => {
+  const toISODate = (date: any): string => {
     if (date instanceof Date) {
+        // Excel dates are parsed as Date objects
         return date.toISOString();
     }
-    // Attempt to parse string dates, assuming a common format if necessary
-    const parsedDate = new Date(date);
-    if (!isNaN(parsedDate.getTime())) {
-        return parsedDate.toISOString();
+    if (typeof date === 'string') {
+        // Try parsing common string formats
+        const parsedDate = new Date(date);
+        if (!isNaN(parsedDate.getTime())) {
+            return parsedDate.toISOString();
+        }
     }
-    return new Date().toISOString(); // Fallback or handle as error
+     if (typeof date === 'number') {
+      // Handle Excel's numeric date format (days since 1900)
+      const excelEpoch = new Date(1899, 11, 30);
+      const jsDate = new Date(excelEpoch.getTime() + date * 86400000);
+      if(!isNaN(jsDate.getTime())) {
+        return jsDate.toISOString();
+      }
+    }
+    // Fallback or handle as error - for now, returns current date
+    console.warn(`Could not parse date: ${date}. Using current date as fallback.`);
+    return new Date().toISOString(); 
   };
 
   const handleProductImport = (data: any[]) => {
@@ -240,6 +254,9 @@ export default function SettingsPage() {
 
   const handleWifiSalesImport = (data: any[]) => {
     try {
+      // Clear previous wifi sales before importing new ones
+      clearWifiSales();
+
       data.forEach((row, index) => {
         const line = index + 2;
         if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
@@ -264,7 +281,7 @@ export default function SettingsPage() {
           itemType: 'Ticket Wifi',
         });
       });
-      toast({ title: 'Importation Réussie', description: `${data.length} ventes Wifi ont été ajoutées.` });
+      toast({ title: 'Importation Réussie', description: `Les anciennes données WiFi ont été purgées et ${data.length} nouvelles ventes ont été ajoutées.` });
     } catch (error: any) {
       toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }

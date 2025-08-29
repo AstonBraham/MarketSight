@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
@@ -24,6 +25,7 @@ interface TransactionContextType {
   getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
   addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
+  clearWifiSales: () => void;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -53,6 +55,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Vente',
     };
     setTransactions(prev => [newSale, ...prev]);
+  }, []);
+  
+  const clearWifiSales = useCallback(() => {
+    setTransactions(prev => prev.filter(t => (t as Sale).itemType !== 'Ticket Wifi'));
   }, []);
 
   const addPurchase = useCallback((purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => {
@@ -194,8 +200,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addInvoice,
     getInvoice,
     getAllTransactions,
-    addCashClosing
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing]);
+    addCashClosing,
+    clearWifiSales
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
 
   return (
     <TransactionContext.Provider value={value}>
