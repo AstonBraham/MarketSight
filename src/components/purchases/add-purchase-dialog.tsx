@@ -33,6 +33,7 @@ import { useTransactions } from '@/context/transaction-context';
 import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 
 
 export function AddPurchaseDialog() {
@@ -44,6 +45,7 @@ export function AddPurchaseDialog() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalCost, setTotalCost] = useState(0);
+  const [isPaid, setIsPaid] = useState(true);
 
   const selectedItem = inventory.find(i => i.id === selectedItemId);
 
@@ -56,6 +58,7 @@ export function AddPurchaseDialog() {
     setSelectedItemId(null);
     setQuantity(1);
     setTotalCost(0);
+    setIsPaid(true);
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,7 +78,8 @@ export function AddPurchaseDialog() {
       supplier: selectedItem.supplier,
       product: selectedItem.productName,
       description: `Achat de ${quantity} x ${selectedItem.productName}`,
-      amount: totalCost
+      amount: totalCost,
+      status: isPaid ? 'paid' : 'unpaid'
     });
 
     // --- CUMP Calculation ---
@@ -187,6 +191,12 @@ export function AddPurchaseDialog() {
                             Coût Total Achat
                         </Label>
                         <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" value={totalCost} onChange={(e) => setTotalCost(parseFloat(e.target.value) || 0)} required/>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="isPaid" className="text-right col-span-3">
+                            Payer maintenant (mouvementer la trésorerie)
+                        </Label>
+                        <Switch id="isPaid" checked={isPaid} onCheckedChange={setIsPaid} />
                     </div>
                  </>
             )}

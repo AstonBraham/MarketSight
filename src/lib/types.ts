@@ -26,6 +26,7 @@ export type Purchase = Transaction & {
   type: 'purchase';
   supplier: string;
   product: string;
+  status?: 'paid' | 'unpaid';
 };
 
 export type Expense = Transaction & {

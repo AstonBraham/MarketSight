@@ -11,6 +11,7 @@ import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useMemo } from 'react';
+import { UnpaidPurchases } from '@/components/dashboard/unpaid-purchases';
 
 export default function DashboardPage() {
     const { getAllTransactions } = useTransactions();
@@ -29,15 +30,15 @@ export default function DashboardPage() {
             balance += t.amount;
         } else if (t.type === 'purchase' || t.type === 'expense') {
             balance -= t.amount;
+        } else if (t.type === 'adjustment') {
+          balance += t.amount;
         }
         });
         return balance;
     }, [allTransactions]);
 
     const inventoryValue = useMemo(() => {
-        // This is a placeholder for a real calculation based on purchase price
-        // For now, we'll use a mock average cost per item.
-        return inventory.reduce((acc, item) => acc + (item.inStock * 500), 0);
+        return inventory.reduce((acc, item) => acc + (item.inStock * (item.costPrice || 0)), 0);
     }, [inventory]);
 
     const airtimeStockMoov = getAirtimeStock('Moov');
@@ -98,7 +99,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 grid gap-8">
+          <UnpaidPurchases />
           <CashflowChart />
         </div>
         <div>

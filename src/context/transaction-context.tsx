@@ -12,6 +12,7 @@ interface TransactionContextType {
   invoices: Invoice[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
+  payPurchase: (purchaseId: string) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'date' | 'currency'>) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
@@ -44,9 +45,43 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
       category: 'Achat',
     };
-    setTransactions(prev => [newPurchase, ...prev]);
-  }, []);
+
+    if (newPurchase.status === 'paid') {
+        setTransactions(prev => [newPurchase, ...prev]);
+    } else {
+        // If unpaid, add it to a separate list or handle differently. For now, let's add it with status
+        const allPurchases = transactions.filter(t => t.type === 'purchase');
+        const otherTransactions = transactions.filter(t => t.type !== 'purchase');
+        setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
+    }
+  }, [transactions]);
   
+  const payPurchase = useCallback((purchaseId: string) => {
+    let purchaseToPay: Purchase | undefined;
+
+    setTransactions(prev => prev.map(t => {
+        if (t.id === purchaseId && t.type === 'purchase') {
+            purchaseToPay = { ...t, status: 'paid' } as Purchase;
+            return purchaseToPay;
+        }
+        return t;
+    }));
+
+    if (purchaseToPay) {
+        // Create a new transaction to reflect the payment in the main transaction log
+         const paymentTransaction: Transaction = {
+            id: `PAY${Date.now()}`,
+            type: 'purchase', // It's a payment FOR a purchase
+            amount: purchaseToPay.amount,
+            date: new Date().toISOString(),
+            description: `Paiement achat ${purchaseToPay.id} - ${purchaseToPay.description}`,
+            category: 'Paiement Achat',
+        };
+        setTransactions(prev => [paymentTransaction, ...prev]);
+    }
+  }, []);
+
+
   const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'date' | 'currency'>) => {
     const newExpense: Expense = {
       ...expense,
@@ -85,7 +120,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [invoices]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
-    return [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
+    // This now correctly only includes cash-impacting transactions
+     const cashTransactions = transactions.filter(t => {
+        if (t.type === 'purchase') {
+            // Include only paid purchases
+            return (t as Purchase).status === 'paid';
+        }
+        // Include all other types
+        return t.type !== 'purchase';
+    });
+
+    const paidPurchasePayments = transactions.filter(t => t.category === 'Paiement Achat');
+
+    return [...cashTransactions, ...paidPurchasePayments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
   }, [transactions]);
   
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
@@ -99,12 +146,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     invoices,
     addSale,
     addPurchase,
+    payPurchase,
     addExpense,
     addAdjustment,
     addInvoice,
     getInvoice,
     getAllTransactions
-  }), [sales, purchases, expenses, invoices, addSale, addPurchase, addExpense, addAdjustment, addInvoice, getInvoice, getAllTransactions]);
+  }), [sales, purchases, expenses, invoices, addSale, addPurchase, payPurchase, addExpense, addAdjustment, addInvoice, getInvoice, getAllTransactions]);
 
   return (
     <TransactionContext.Provider value={value}>
