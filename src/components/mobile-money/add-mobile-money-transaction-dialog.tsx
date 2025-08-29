@@ -45,7 +45,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
 
 
   useEffect(() => {
-    if (provider !== 'Mixx' || type === 'transfer' || type === '' || amount <= 0 || type === 'purchase' || type === 'pos_transfer' || type === 'virtual_return') {
+    if (provider !== 'Mixx' || type === 'transfer' || type === '' || amount <= 0 || type === 'purchase' || type === 'pos_transfer' || type === 'virtual_return' || type === 'collect_commission') {
         setCommission(0);
         setIsCommissionManual(false);
         return;
@@ -123,6 +123,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   };
 
   const showCommissionField = type === 'deposit' || type === 'withdrawal';
+  const showPhoneNumber = type !== 'collect_commission';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -147,13 +148,16 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                     <SelectContent>
                         <SelectItem value="deposit">Dépôt</SelectItem>
                         <SelectItem value="withdrawal">Retrait</SelectItem>
-                        <SelectItem value="transfer">Transfert</SelectItem>
                         <SelectItem value="purchase">Achat de virtuel</SelectItem>
+                        <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
                         {provider === 'Mixx' && (
                             <>
+                                <SelectItem value="transfer">Transfert</SelectItem>
                                 <SelectItem value="pos_transfer">Transfert PDV</SelectItem>
-                                <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
                             </>
+                        )}
+                        {provider === 'Flooz' && (
+                           <SelectItem value="collect_commission">Collecte Commission</SelectItem>
                         )}
                     </SelectContent>
                 </Select>
@@ -170,10 +174,12 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
               <Label htmlFor="commission" className="text-right">Commission</Label>
               <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required={showCommissionField}/>
             </div>
-             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-              <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
-            </div>
+             {showPhoneNumber && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
+                <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
+              </div>
+             )}
             {type === 'pos_transfer' && provider === 'Mixx' && (
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="affectsCash" className="text-right col-span-3">Mouvement de trésorerie?</Label>

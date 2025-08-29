@@ -1,3 +1,4 @@
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
@@ -34,13 +35,20 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         supplier: transaction.provider,
         product: 'Virtuel'
       });
-    } else if (transaction.type === 'virtual_return') {
+    } else if (transaction.type === 'virtual_return' && transaction.provider === 'Mixx') {
        addSale({
         description: `Retour virtuel ${transaction.provider}`,
         amount: transaction.amount,
         client: transaction.provider,
         product: 'Virtuel'
       });
+    } else if (transaction.type === 'virtual_return' && transaction.provider === 'Flooz') {
+        addSale({
+          description: `Retour virtuel ${transaction.provider}`,
+          amount: transaction.amount,
+          client: transaction.provider,
+          product: 'Virtuel'
+        });
     } else if (transaction.type === 'pos_transfer' && transaction.affectsCash) {
        addSale({
         description: `Transfert PDV ${transaction.provider}`,
@@ -60,6 +68,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             if (t.type === 'purchase') return acc + t.amount; // Achat de virtuel augmente le solde
             if (t.type === 'virtual_return') return acc - t.amount; // Retour de virtuel diminue le solde
             if (t.type === 'pos_transfer') return acc - t.amount; // Transfert PDV diminue le solde
+            if (t.type === 'collect_commission') return acc + t.amount; // Collecte de commission augmente le solde
             return acc;
         }, 0);
   }, [transactions]);

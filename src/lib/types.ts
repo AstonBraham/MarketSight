@@ -73,7 +73,7 @@ export type AirtimeTransaction = {
   transactionId?: string;
 }
 
-export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return';
+export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission';
 
 export type MobileMoneyTransaction = {
     id: string;
