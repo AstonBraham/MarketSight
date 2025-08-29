@@ -45,6 +45,8 @@ export type InventoryItem = {
   inTransit: number;
   reorderLevel: number;
   supplier: string;
+  defaultPrice?: number;
+  isQuickSale?: boolean;
 };
 
 export type StockMovement = {

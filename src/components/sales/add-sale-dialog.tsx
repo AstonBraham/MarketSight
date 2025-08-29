@@ -41,13 +41,18 @@ export function AddSaleDialog() {
   const { toast } = useToast();
   const { addSale } = useTransactions();
   const { inventory, updateItem } = useInventory();
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
 
+  const selectedItem = inventory.find(i => i.id === selectedItemId);
+
   const handleItemSelect = (itemId: string) => {
     const item = inventory.find(i => i.id === itemId);
-    setSelectedItem(item || null);
+    if (item) {
+        setSelectedItemId(item.id);
+        setPrice(item.defaultPrice || 0);
+    }
     setPopoverOpen(false);
   };
   
@@ -111,7 +116,7 @@ export function AddSaleDialog() {
     });
 
     // Reset form and close
-    setSelectedItem(null);
+    setSelectedItemId(null);
     setQuantity(1);
     setPrice(0);
     setOpen(false);
@@ -160,14 +165,12 @@ export function AddSaleDialog() {
                                     <CommandItem
                                         key={item.id}
                                         value={item.id}
-                                        onSelect={(currentValue) => {
-                                            handleItemSelect(currentValue === selectedItem?.id ? '' : currentValue)
-                                        }}
+                                        onSelect={() => handleItemSelect(item.id)}
                                     >
                                         <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            selectedItem?.id === item.id ? "opacity-100" : "opacity-0"
+                                            selectedItemId === item.id ? "opacity-100" : "opacity-0"
                                         )}
                                         />
                                         {item.productName} ({item.inStock})

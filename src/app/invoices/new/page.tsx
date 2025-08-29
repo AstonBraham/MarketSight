@@ -33,7 +33,7 @@ export default function NewInvoicePage() {
     const { toast } = useToast();
     const router = useRouter();
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-    const [selectedItemId, setSelectedItemId] = useState<string>('');
+    const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
     const [popoverOpen, setPopoverOpen] = useState(false);
     const [applyTax, setApplyTax] = useState(true);
     const [clientName, setClientName] = useState('');
@@ -44,8 +44,8 @@ export default function NewInvoicePage() {
     const handleAddItem = () => {
         const itemToAdd = inventory.find(i => i.id === selectedItemId);
         if (itemToAdd && !invoiceItems.some(i => i.id === itemToAdd.id)) {
-            setInvoiceItems([...invoiceItems, { ...itemToAdd, quantity: 1, price: 0, total: 0 }]);
-            setSelectedItemId(''); // Reset for next selection
+            setInvoiceItems([...invoiceItems, { ...itemToAdd, quantity: 1, price: itemToAdd.defaultPrice || 0, total: itemToAdd.defaultPrice || 0 }]);
+            setSelectedItemId(null); // Reset for next selection
         }
     };
 
@@ -119,6 +119,11 @@ export default function NewInvoicePage() {
         toast({ title: 'Facture Enregistrée', description: `La facture ${finalInvoiceId} a été enregistrée avec succès.`});
         router.push(`/invoices/${finalInvoiceId}`);
     }
+    
+    const handleSelect = (itemId: string) => {
+        setSelectedItemId(itemId);
+        setPopoverOpen(false);
+    }
 
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -172,10 +177,7 @@ export default function NewInvoicePage() {
                                                 <CommandItem
                                                     key={item.id}
                                                     value={item.id}
-                                                    onSelect={(currentValue) => {
-                                                        setSelectedItemId(currentValue === selectedItemId ? '' : currentValue)
-                                                        setPopoverOpen(false)
-                                                    }}
+                                                    onSelect={() => handleSelect(item.id)}
                                                     disabled={invoiceItems.some(i => i.id === item.id)}
                                                 >
                                                     <Check

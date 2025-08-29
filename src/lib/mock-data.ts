@@ -229,7 +229,9 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 100,
     "inTransit": 50,
     "reorderLevel": 20,
-    "supplier": "Fournisseur A"
+    "supplier": "Fournisseur A",
+    "defaultPrice": 250,
+    "isQuickSale": true
   },
   {
     "id": "2",
@@ -241,7 +243,9 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 500,
     "inTransit": 0,
     "reorderLevel": 100,
-    "supplier": "Fournisseur B"
+    "supplier": "Fournisseur B",
+    "defaultPrice": 50,
+    "isQuickSale": true
   },
   {
     "id": "3",
@@ -253,7 +257,9 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 80,
     "inTransit": 20,
     "reorderLevel": 15,
-    "supplier": "Fournisseur A"
+    "supplier": "Fournisseur A",
+    "defaultPrice": 200,
+    "isQuickSale": true
   },
   {
     "id": "4",
@@ -265,7 +271,9 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 1000,
     "inTransit": 200,
     "reorderLevel": 200,
-    "supplier": "Fournisseur B"
+    "supplier": "Fournisseur B",
+    "defaultPrice": 25,
+    "isQuickSale": true
   },
   {
     "id": "5",
@@ -289,7 +297,8 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 120,
     "inTransit": 0,
     "reorderLevel": 25,
-    "supplier": "Fournisseur A"
+    "supplier": "Fournisseur A",
+    "defaultPrice": 400
   },
   {
     "id": "7",
@@ -301,7 +310,8 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 60,
     "inTransit": 30,
     "reorderLevel": 10,
-    "supplier": "Fournisseur D"
+    "supplier": "Fournisseur D",
+    "defaultPrice": 875
   },
   {
     "id": "8",
@@ -313,7 +323,8 @@ export const mockInventory: InventoryItem[] = [
     "inStock": 200,
     "inTransit": 0,
     "reorderLevel": 50,
-    "supplier": "Fournisseur E"
+    "supplier": "Fournisseur E",
+    "defaultPrice": 125
   }
 ];
 
