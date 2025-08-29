@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
@@ -33,7 +32,8 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         description: `Achat virtuel ${transaction.provider}`,
         amount: transaction.amount,
         supplier: transaction.provider,
-        product: 'Virtuel'
+        product: 'Virtuel',
+        status: 'paid' // Virtual purchases are always paid immediately
       });
     } else if (transaction.type === 'virtual_return') {
         addSale({

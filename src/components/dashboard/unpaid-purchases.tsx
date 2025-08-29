@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -33,7 +32,7 @@ export function UnpaidPurchases() {
     payPurchase(purchaseId);
     toast({
         title: "Achat Réglé",
-        description: `L'achat a été marqué comme payé et ${new Intl.NumberFormat('fr-FR').format(amount)} F ont été déduits de la trésorerie.`,
+        description: `L'achat a été marqué comme payé.`,
     });
   }
 
@@ -73,7 +72,7 @@ export function UnpaidPurchases() {
                         <AlertDialogHeader>
                         <AlertDialogTitle>Confirmer le paiement ?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Cette action marquera l'achat comme payé et déduira <strong>{new Intl.NumberFormat('fr-FR').format(purchase.amount)} F</strong> de votre trésorerie.
+                            Cette action marquera l'achat comme payé et créera une transaction de sortie de caisse de <strong>{new Intl.NumberFormat('fr-FR').format(purchase.amount)} F</strong>.
                             L'action est irréversible.
                         </AlertDialogDescription>
                         </AlertDialogHeader>

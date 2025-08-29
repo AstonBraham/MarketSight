@@ -1,4 +1,3 @@
-
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -163,6 +162,18 @@ export default function SettingsPage() {
   const { addTransaction: addAirtimeTransaction } = useAirtime();
   const { addTransaction: addMobileMoneyTransaction } = useMobileMoney();
   const { toast } = useToast();
+  
+  const toISODate = (date: any) => {
+    if (date instanceof Date) {
+        return date.toISOString();
+    }
+    // Attempt to parse string dates, assuming a common format if necessary
+    const parsedDate = new Date(date);
+    if (!isNaN(parsedDate.getTime())) {
+        return parsedDate.toISOString();
+    }
+    return new Date().toISOString(); // Fallback or handle as error
+  };
 
   const handleProductImport = (data: any[]) => {
     try {
@@ -212,7 +223,7 @@ export default function SettingsPage() {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, productName, quantity et price sont obligatoires.`);
             }
             addSale({
-                date: new Date(row['date']).toISOString(),
+                date: toISODate(row['date']),
                 product: row['productName'],
                 quantity: parseFloat(row['quantity']),
                 price: parseFloat(row['price']),
@@ -244,7 +255,7 @@ export default function SettingsPage() {
         }
 
         addSale({
-          date: new Date(row['date']).toISOString(),
+          date: toISODate(row['date']),
           product: row['productName'],
           quantity: quantity,
           price: price,
@@ -266,7 +277,7 @@ export default function SettingsPage() {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, description, amount et category sont obligatoires.`);
             }
             addExpense({
-                date: new Date(row['date']).toISOString(),
+                date: toISODate(row['date']),
                 description: row['description'],
                 amount: parseFloat(row['amount']),
                 category: row['category'],
@@ -285,7 +296,7 @@ export default function SettingsPage() {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
             }
             const transactionData = {
-                date: new Date(row['date']).toISOString(),
+                date: toISODate(row['date']),
                 provider: provider,
                 type: row['type'],
                 amount: parseFloat(row['amount']),
@@ -308,7 +319,7 @@ export default function SettingsPage() {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
             }
             const transactionData = {
-                date: new Date(row['date']).toISOString(),
+                date: toISODate(row['date']),
                 provider: provider,
                 type: row['type'],
                 amount: parseFloat(row['amount']),

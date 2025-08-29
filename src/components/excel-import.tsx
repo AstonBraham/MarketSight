@@ -36,7 +36,8 @@ export function ExcelImport({ title, onImport }: ExcelImportProps) {
     reader.onload = (e) => {
       try {
         const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
+        // The `cellDates: true` option is crucial for correct date parsing from Excel files.
+        const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(worksheet);

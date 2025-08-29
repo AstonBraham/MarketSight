@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
@@ -68,6 +67,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (newPurchase.status === 'paid') {
         setTransactions(prev => [newPurchase, ...prev]);
     } else {
+        // Unpaid purchases are not added to the main transaction flow immediately
+        // They are stored and will be converted to a transaction upon payment
         const allPurchases = transactions.filter(t => t.type === 'purchase');
         const otherTransactions = transactions.filter(t => t.type !== 'purchase');
         setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
@@ -77,26 +78,30 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const payPurchase = useCallback((purchaseId: string) => {
     let purchaseToPay: Purchase | undefined;
 
-    setTransactions(prev => prev.map(t => {
+    const updatedTransactions = transactions.map(t => {
         if (t.id === purchaseId && t.type === 'purchase') {
-            purchaseToPay = { ...t, status: 'paid' } as Purchase;
+            purchaseToPay = { ...(t as Purchase), status: 'paid' };
+            // We don't return it here, instead we add a new transaction for payment
             return purchaseToPay;
         }
         return t;
-    }));
+    });
 
     if (purchaseToPay) {
          const paymentTransaction: Transaction = {
             id: `PAY${Date.now()}`,
-            type: 'purchase',
+            type: 'purchase', // It's a payment for a purchase
             amount: purchaseToPay.amount,
             date: new Date().toISOString(),
             description: `Paiement achat ${purchaseToPay.id} - ${purchaseToPay.description}`,
             category: 'Paiement Achat',
         };
-        setTransactions(prev => [paymentTransaction, ...prev]);
+        // Add the payment transaction to the flow and update the state of the original purchase
+        setTransactions([paymentTransaction, ...updatedTransactions]);
+    } else {
+        setTransactions(updatedTransactions);
     }
-  }, []);
+  }, [transactions]);
 
 
   const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'currency'>) => {
@@ -154,15 +159,15 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
   const getAllTransactions = useCallback((): Transaction[] => {
      const cashTransactions = transactions.filter(t => {
+        // For purchases, only 'paid' ones immediately affect cash flow at the time of purchase.
         if (t.type === 'purchase') {
             return (t as Purchase).status === 'paid';
         }
-        return t.type !== 'purchase';
+        // Other types that affect cash flow
+        return t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment';
     });
 
-    const paidPurchasePayments = transactions.filter(t => t.category === 'Paiement Achat');
-
-    return [...cashTransactions, ...paidPurchasePayments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
+    return cashTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
   }, [transactions]);
   
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
