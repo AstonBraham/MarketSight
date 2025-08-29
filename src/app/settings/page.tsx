@@ -105,6 +105,7 @@ export default function SettingsPage() {
                 price: parseFloat(row['price']),
                 amount: parseFloat(row['quantity']) * parseFloat(row['price']),
                 client: row['client'] || 'Client importé',
+                itemType: row['itemType'] || undefined,
             });
         });
         toast({ title: 'Importation Réussie', description: `${data.length} ventes ont été ajoutées.` });
