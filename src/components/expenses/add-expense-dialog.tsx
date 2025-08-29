@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -17,13 +18,18 @@ import { PlusCircle, Sparkles, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { getExpenseCategory } from '@/app/expenses/actions';
 import { useToast } from '@/hooks/use-toast';
+import { useTransactions } from '@/context/transaction-context';
 
 export function AddExpenseDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const { addExpense } = useTransactions();
+
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+
 
   const handleCategorize = async () => {
     if (!description) {
@@ -57,16 +63,28 @@ export function AddExpenseDialog() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic to save the expense
-    console.log('Expense saved');
+    
+    const numericAmount = parseFloat(amount);
+    if (!description || !category || isNaN(numericAmount) || numericAmount <= 0) {
+      toast({ title: 'Données invalides', description: 'Veuillez remplir tous les champs correctement.', variant: 'destructive'});
+      return;
+    }
+
+    addExpense({
+      description,
+      category,
+      amount: numericAmount,
+    });
+    
     toast({
       title: 'Dépense Ajoutée',
-      description: 'La nouvelle dépense a été enregistrée avec succès.',
+      description: 'La nouvelle dépense a été enregistrée et déduite de la trésorerie.',
     });
     setOpen(false);
     // Reset form
     setDescription('');
     setCategory('');
+    setAmount('');
   }
 
   return (
@@ -95,9 +113,10 @@ export function AddExpenseDialog() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
+                required
               />
             </div>
-             <Button type="button" variant="outline" size="sm" onClick={handleCategorize} disabled={isPending}>
+             <Button type="button" variant="outline" size="sm" onClick={handleCategorize} disabled={isPending || !description}>
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
               Catégoriser avec l'IA
             </Button>
@@ -105,7 +124,7 @@ export function AddExpenseDialog() {
               <Label htmlFor="category" className="text-right">
                 Catégorie
               </Label>
-              <Input id="category" value={category} onChange={e => setCategory(e.target.value)} className="col-span-3" placeholder="Ex: Utilitaires" />
+              <Input id="category" value={category} onChange={e => setCategory(e.target.value)} className="col-span-3" placeholder="Ex: Utilitaires" required />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">
@@ -114,8 +133,11 @@ export function AddExpenseDialog() {
               <Input
                 id="amount"
                 type="number"
-                placeholder="0.00"
+                placeholder="0"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
                 className="col-span-3"
+                required
               />
             </div>
           </div>

@@ -12,7 +12,7 @@ interface TransactionContextType {
   invoices: Invoice[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'date' | 'category'>) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
-  addExpense: (expense: Omit<Expense, 'id' | 'type' | 'date' | 'category'>) => void;
+  addExpense: (expense: Omit<Expense, 'id' | 'type' | 'date' | 'currency'>) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
@@ -47,14 +47,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => [newPurchase, ...prev]);
   }, []);
   
-  const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'date' | 'category'>) => {
+  const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'date' | 'currency'>) => {
     const newExpense: Expense = {
       ...expense,
       id: `EXP${Date.now()}`,
       type: 'expense',
       date: new Date().toISOString(),
+      currency: 'F',
       category: expense.category || 'Dépense',
-      currency: 'F'
     };
     setTransactions(prev => [newExpense, ...prev]);
   }, []);
