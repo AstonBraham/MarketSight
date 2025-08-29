@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,11 @@ export default function WifiPage() {
   const { toast } = useToast();
   const [selectedTicketPrice, setSelectedTicketPrice] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const selectedTicket = WIFI_TICKETS.find(t => t.price === parseInt(selectedTicketPrice, 10));
   const totalAmount = selectedTicket ? selectedTicket.price * quantity : 0;
@@ -105,6 +110,10 @@ export default function WifiPage() {
     setSelectedTicketPrice('');
     setQuantity(1);
   };
+  
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
