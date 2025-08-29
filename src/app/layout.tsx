@@ -1,4 +1,6 @@
-import type { Metadata } from 'next';
+
+'use client';
+
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -10,20 +12,30 @@ import { InventoryProvider } from '@/context/inventory-context';
 import { TransactionProvider } from '@/context/transaction-context';
 import { AirtimeProvider } from '@/context/airtime-context';
 import { MobileMoneyProvider } from '@/context/mobile-money-context';
+import { useEffect, useState } from 'react';
 
-export const metadata: Metadata = {
-  title: 'JokerMarket',
-  description: 'Application web de gestion de supermarché',
-};
+// We can't use Metadata here because we are using 'use client'
+// export const metadata: Metadata = {
+//   title: 'JokerMarket',
+//   description: 'Application web de gestion de supermarché',
+// };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <html lang="fr">
       <head>
+        <title>JokerMarket</title>
+        <meta name="description" content="Application web de gestion de supermarché" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -38,7 +50,7 @@ export default function RootLayout({
               <AirtimeProvider>
                 <MobileMoneyProvider>
                   <SidebarProvider>
-                    <AppSidebar />
+                    {isClient && <AppSidebar />}
                     <SidebarInset>
                       {children}
                       <Toaster />
