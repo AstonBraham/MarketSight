@@ -10,17 +10,19 @@ import { columns as inventoryColumns } from '@/components/inventory/columns-inve
 import { columns as movementsColumns } from '@/components/inventory/columns-movements';
 import { mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileCheck2 } from 'lucide-react';
+import { PlusCircle, FileCheck2, Truck } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
 import { AddPurchaseDialog } from '@/components/purchases/add-purchase-dialog';
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { useTransactions } from '@/context/transaction-context';
 
 export default function InventoryPage() {
   const { user } = useUser();
   const { inventory } = useInventory();
+  const { purchases } = useTransactions();
   const isAdmin = user?.role === 'admin';
   
   const stockValue = useMemo(() => {
@@ -30,6 +32,10 @@ export default function InventoryPage() {
   const outOfStockItems = useMemo(() => {
     return inventory.filter(item => item.inStock <= 0).length;
   }, [inventory]);
+
+  const totalPurchases = useMemo(() => {
+    return purchases.reduce((acc, purchase) => acc + purchase.amount, 0);
+  }, [purchases]);
 
 
   return (
@@ -47,21 +53,24 @@ export default function InventoryPage() {
             </CardContent>
         </Card>
         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total des Achats</CardTitle>
+            <Truck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalPurchases)} F</div>
+            <p className="text-xs text-muted-foreground">
+              Montant total de tous les achats enregistrés.
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Produits en rupture</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{outOfStockItems}</div>
                 <p className="text-xs text-muted-foreground">Articles à commander</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Articles en transit</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">75</div>
-                <p className="text-xs text-muted-foreground">Livraisons en attente</p>
             </CardContent>
         </Card>
          <Card>

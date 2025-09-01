@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -79,6 +80,13 @@ export default function WifiPage() {
   const wifiSales = useMemo(() => {
     return sales.filter(s => s.itemType === 'Ticket Wifi');
   }, [sales]);
+  
+  const today = new Date().toDateString();
+  const dailySales = wifiSales
+    .filter(t => new Date(t.date).toDateString() === today)
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const totalSales = wifiSales.reduce((acc, t) => acc + t.amount, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +102,6 @@ export default function WifiPage() {
 
     addSale({
       product: selectedTicket.name,
-      description: `Vente de ${quantity} ticket(s) Wifi: ${selectedTicket.name}`,
       price: selectedTicket.price,
       quantity: quantity,
       amount: totalAmount,
@@ -119,6 +126,24 @@ export default function WifiPage() {
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
       <PageHeader title="Vente Tickets Wifi" />
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(dailySales)} F</div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total des ventes</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalSales)} F</div>
+            </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-1">

@@ -1,10 +1,12 @@
 
+
 'use client';
 
+import { useMemo } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Zap } from 'lucide-react';
+import { PlusCircle, Zap, Receipt, Banknote } from 'lucide-react';
 import { AddSaleDialog } from '@/components/sales/add-sale-dialog';
 import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
@@ -57,7 +59,7 @@ const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
 }
 
 export default function InvoicesPage() {
-    const { invoices } = useTransactions();
+    const { invoices, sales } = useTransactions();
     const { inventory } = useInventory();
     const router = useRouter();
 
@@ -67,10 +69,45 @@ export default function InvoicesPage() {
     
     const quickSaleItems = inventory.filter(item => item.isQuickSale);
 
+    const totalInvoiced = useMemo(() => {
+        return invoices.reduce((acc, invoice) => acc + invoice.total, 0);
+    }, [invoices]);
+
+    const totalCashSales = useMemo(() => {
+        return sales.filter(s => !s.invoiceId).reduce((acc, sale) => acc + sale.amount, 0);
+    }, [sales]);
+
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
         <PageHeader title="Ventes et Facturation" />
+
+        <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Facturé</CardTitle>
+                <Receipt className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalInvoiced)} F</div>
+                <p className="text-xs text-muted-foreground">
+                Montant total de toutes les factures émises.
+                </p>
+            </CardContent>
+            </Card>
+             <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ventes au Comptant</CardTitle>
+                <Banknote className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalCashSales)} F</div>
+                <p className="text-xs text-muted-foreground">
+                Total des ventes rapides et au comptant.
+                </p>
+            </CardContent>
+            </Card>
+      </div>
         
         <div className="flex gap-4">
             <AddSaleDialog />

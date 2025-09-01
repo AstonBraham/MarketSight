@@ -30,6 +30,10 @@ export default function AirtimeMoovPage() {
   const dailyMargin = moovTransactions
     .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
     .reduce((acc, t) => acc + t.commission, 0);
+    
+  const totalPurchases = moovTransactions
+    .filter(t => t.type === 'purchase')
+    .reduce((acc, t) => acc + t.amount, 0);
 
   const processedTransactions = useMemo(() => {
     let balance = 0;
@@ -70,6 +74,14 @@ export default function AirtimeMoovPage() {
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(moovStock)} F</div>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Achats (Total)</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(totalPurchases)} F</div>
             </CardContent>
         </Card>
         <Card>
