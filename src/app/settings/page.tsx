@@ -158,10 +158,10 @@ function BackupAndRestore() {
 
 
 export default function SettingsPage() {
-  const { addItems, itemCategories, addCategory: addInventoryCategory } = useInventory();
-  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories } = useTransactions();
-  const { addBulkTransactions: addBulkAirtime } = useAirtime();
-  const { addBulkTransactions: addBulkMobileMoney } = useMobileMoney();
+  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory } = useInventory();
+  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings } = useTransactions();
+  const { addBulkTransactions: addBulkAirtime, setTransactions: setAirtimeTransactions } = useAirtime();
+  const { addBulkTransactions: addBulkMobileMoney, setTransactions: setMobileMoneyTransactions } = useMobileMoney();
   const { toast } = useToast();
   
   const toISODate = (date: any): string => {
@@ -318,7 +318,7 @@ export default function SettingsPage() {
                 type: row['type'],
                 amount: parseFloat(row['amount']),
                 commission: parseFloat(row['commission'] || '0'),
-                phoneNumber: row['phoneNumber'] || '',
+                phoneNumber: String(row['phoneNumber'] || row['Numéro Tél.'] || ''),
                 transactionId: row['transactionId'] || '',
             };
         });
@@ -404,3 +404,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
