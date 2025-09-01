@@ -4,7 +4,7 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileDown } from 'lucide-react';
+import { FileDown, Download } from 'lucide-react';
 import { useTransactions } from '@/context/transaction-context';
 import { exportToCsv } from '@/lib/export';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +12,16 @@ import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useMemo } from 'react';
+
+const IMPORT_TEMPLATES = {
+  products: [{ productName: '', sku: '', category: '', brand: '', reference: '', inStock: 0, reorderLevel: 10, supplier: '', defaultPrice: 0, costPrice: 0 }],
+  sales: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
+  expenses: [{ date: '', description: '', amount: 0, category: '' }],
+  wifi: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
+  airtime: [{ date: '', type: '', amount: 0, commission: 0, phoneNumber: '', transactionId: '' }],
+  mobile_money: [{ date: '', type: '', transactionId: '', amount: 0, commission: 0, phoneNumber: '' }],
+};
+
 
 export default function ReportsPage() {
   const { toast } = useToast();
@@ -37,6 +47,14 @@ export default function ReportsPage() {
     toast({
       title: 'Exportation Réussie',
       description: `Le fichier ${name}.csv a été téléchargé.`,
+    });
+  };
+
+  const handleDownloadTemplate = (name: string, data: any[]) => {
+    exportToCsv(`modele_import_${name}.csv`, data);
+    toast({
+      title: 'Modèle Téléchargé',
+      description: `Le fichier modele_import_${name}.csv est prêt.`,
     });
   };
 
@@ -79,6 +97,40 @@ export default function ReportsPage() {
           </Button>
         </CardContent>
        </Card>
+
+      <Card>
+        <CardHeader>
+            <CardTitle>Télécharger les modèles d'importation</CardTitle>
+            <CardDescription>Téléchargez des fichiers CSV avec les bons en-têtes pour préparer vos données avant de les importer depuis la page Paramètres.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Button variant="secondary" onClick={() => handleDownloadTemplate('produits', IMPORT_TEMPLATES.products)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Produits
+          </Button>
+          <Button variant="secondary" onClick={() => handleDownloadTemplate('ventes', IMPORT_TEMPLATES.sales)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Ventes
+          </Button>
+          <Button variant="secondary" onClick={() => handleDownloadTemplate('depenses', IMPORT_TEMPLATES.expenses)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Dépenses
+          </Button>
+           <Button variant="secondary" onClick={() => handleDownloadTemplate('wifi', IMPORT_TEMPLATES.wifi)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Ventes Wifi
+          </Button>
+          <Button variant="secondary" onClick={() => handleDownloadTemplate('airtime', IMPORT_TEMPLATES.airtime)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Airtime
+          </Button>
+           <Button variant="secondary" onClick={() => handleDownloadTemplate('mobile_money', IMPORT_TEMPLATES.mobile_money)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Mobile Money
+          </Button>
+        </CardContent>
+       </Card>
+
     </div>
   );
 }
