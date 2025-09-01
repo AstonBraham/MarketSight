@@ -149,12 +149,8 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                         <SelectItem value="withdrawal">Retrait</SelectItem>
                         <SelectItem value="purchase">Achat de virtuel</SelectItem>
                         <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
-                        {(provider === 'Mixx' || provider === 'Cauris') && (
-                            <>
-                                <SelectItem value="transfer">Transfert</SelectItem>
-                                <SelectItem value="pos_transfer">Transfert PDV</SelectItem>
-                            </>
-                        )}
+                        <SelectItem value="transfer">Transfert</SelectItem>
+                        <SelectItem value="pos_transfer">Transfert PDV</SelectItem>
                         {provider === 'Flooz' && (
                            <SelectItem value="collect_commission">Collecte Commission</SelectItem>
                         )}
