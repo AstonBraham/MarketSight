@@ -30,8 +30,7 @@ export function CashflowChart() {
   const monthlyData = useMemo(() => {
     const data: { [key: string]: { Entrées: number, Sorties: number } } = {};
     const today = new Date();
-    const sixMonthsAgo = startOfMonth(subMonths(today, 5));
-
+    
     // Initialize the last 6 months
     for (let i = 5; i >= 0; i--) {
       const date = subMonths(today, i);
@@ -39,18 +38,19 @@ export function CashflowChart() {
       data[monthName] = { Entrées: 0, Sorties: 0 };
     }
 
+    const sixMonthsAgo = startOfMonth(subMonths(today, 5));
+
     allTransactions.forEach(t => {
       const transactionDate = new Date(t.date);
-      // Check if the transaction is within the last 6 months
       if (transactionDate >= sixMonthsAgo) {
         const monthName = format(transactionDate, 'MMM', { locale: fr });
-
+        
         if (data[monthName]) {
-          if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
-            data[monthName].Entrées += t.amount;
-          } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
-            data[monthName].Sorties += Math.abs(t.amount);
-          }
+            if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
+                data[monthName].Entrées += t.amount;
+            } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
+                data[monthName].Sorties += Math.abs(t.amount);
+            }
         }
       }
     });
