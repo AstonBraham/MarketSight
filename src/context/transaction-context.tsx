@@ -4,7 +4,6 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { mockWifiSales } from '@/lib/mock-data';
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -26,6 +25,7 @@ interface TransactionContextType {
   removeExpense: (id: string) => void;
   addExpenseCategory: (category: string) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
+  addBulkAdjustments: (adjustments: Omit<Transaction, 'id' | 'type' | 'category'>[]) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
@@ -165,6 +165,17 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     };
     setTransactions(prev => [newAdjustment, ...prev]);
   }, [setTransactions]);
+
+  const addBulkAdjustments = useCallback((adjustments: Omit<Transaction, 'id' | 'type' | 'category'>[]) => {
+    const newAdjustments: Transaction[] = adjustments.map((adj, index) => ({
+      ...adj,
+      id: `ADJ-BULK-${Date.now()}-${index}`,
+      type: 'adjustment',
+      date: adj.date || new Date().toISOString(),
+      category: 'Ajustement',
+    }));
+    setTransactions(prev => [...prev, ...newAdjustments]);
+  }, [setTransactions]);
   
   const addInvoice = useCallback((invoiceData: Omit<Invoice, 'id'>): string => {
     const newId = `INV-${Date.now()}`;
@@ -231,12 +242,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     removeExpense,
     addExpenseCategory,
     addAdjustment,
+    addBulkAdjustments,
     addInvoice,
     getInvoice,
     getAllTransactions,
     addCashClosing,
     clearWifiSales
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
 
   return (
     <TransactionContext.Provider value={value}>

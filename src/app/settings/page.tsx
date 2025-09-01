@@ -4,7 +4,7 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExcelImport } from '@/components/excel-import';
-import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction, MobileMoneyProvider, Invoice, CashClosing } from '@/lib/types';
+import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction, MobileMoneyProvider, Invoice, CashClosing, Transaction } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { Button } from '@/components/ui/button';
@@ -159,7 +159,7 @@ function BackupAndRestore() {
 
 export default function SettingsPage() {
   const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory } = useInventory();
-  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings } = useTransactions();
+  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings, addBulkAdjustments } = useTransactions();
   const { addBulkTransactions: addBulkAirtime, setTransactions: setAirtimeTransactions } = useAirtime();
   const { addBulkTransactions: addBulkMobileMoney, setTransactions: setMobileMoneyTransactions } = useMobileMoney();
   const { toast } = useToast();
@@ -246,6 +246,29 @@ export default function SettingsPage() {
         toast({ title: 'Importation Réussie', description: `${data.length} ventes ont été ajoutées.` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  }
+
+  const handleReceiptsImport = (data: any[]) => {
+    try {
+      const newAdjustments: Omit<Transaction, 'id' | 'type' | 'category'>[] = data.map((row, index) => {
+          if (!row['date'] || !row['description'] || !row['amount']) {
+              throw new Error(`Ligne ${index + 2}: Les colonnes date, description, et amount sont obligatoires.`);
+          }
+          const amount = parseFloat(row['amount']);
+          if (isNaN(amount) || amount <= 0) {
+            throw new Error(`Ligne ${index + 2}: Le montant doit être un nombre positif.`);
+          }
+          return {
+              date: toISODate(row['date']),
+              description: row['description'],
+              amount: amount,
+          };
+      });
+      addBulkAdjustments(newAdjustments);
+      toast({ title: 'Importation Réussie', description: `${data.length} encaissements ont été ajoutés.` });
+    } catch (error: any) {
+       toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }
   }
 
@@ -399,6 +422,7 @@ export default function SettingsPage() {
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
           <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
           <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
+          <ExcelImport title="Importer des Encaissements" onImport={handleReceiptsImport} />
           <ExcelImport title="Importer Ventes Wifi" onImport={handleWifiSalesImport} />
           <ExcelImport title="Importer Airtime Moov" onImport={handleAirtimeImport('Moov')} />
           <ExcelImport title="Importer Airtime Yas" onImport={handleAirtimeImport('Yas')} />
@@ -410,5 +434,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

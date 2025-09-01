@@ -17,6 +17,7 @@ const IMPORT_TEMPLATES = {
   products: [{ productName: '', sku: '', category: '', brand: '', reference: '', inStock: 0, reorderLevel: 10, supplier: '', defaultPrice: 0, costPrice: 0 }],
   sales: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
   expenses: [{ date: '', description: '', amount: 0, category: '' }],
+  receipts: [{ date: '', description: '', amount: 0 }],
   wifi: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
   airtime: [{ date: '', type: '', amount: 0, commission: 0, phoneNumber: '', transactionId: '' }],
   mobile_money: [{ date: '', type: '', transactionId: '', amount: 0, commission: 0, phoneNumber: '' }],
@@ -115,6 +116,10 @@ export default function ReportsPage() {
           <Button variant="secondary" onClick={() => handleDownloadTemplate('depenses', IMPORT_TEMPLATES.expenses)}>
             <Download className="mr-2 h-4 w-4" />
             Modèle pour Dépenses
+          </Button>
+          <Button variant="secondary" onClick={() => handleDownloadTemplate('encaissements', IMPORT_TEMPLATES.receipts)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Encaissements
           </Button>
            <Button variant="secondary" onClick={() => handleDownloadTemplate('wifi', IMPORT_TEMPLATES.wifi)}>
             <Download className="mr-2 h-4 w-4" />
