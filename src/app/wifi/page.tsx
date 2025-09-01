@@ -94,6 +94,7 @@ export default function WifiPage() {
 
     addSale({
       product: selectedTicket.name,
+      description: `Vente de ${quantity} ticket(s) Wifi: ${selectedTicket.name}`,
       price: selectedTicket.price,
       quantity: quantity,
       amount: totalAmount,
