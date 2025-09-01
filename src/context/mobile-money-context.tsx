@@ -60,15 +60,15 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
           product: 'Virtuel'
         });
     } else if (transaction.type === 'transfer_to_pos' && transaction.affectsCash) {
-        addExpense({
-            description: `Sortie de caisse pour transfert vers PDV ${transaction.phoneNumber}`,
-            amount: transaction.amount,
-            category: 'Transfert Mobile Money'
-        });
-    } else if (transaction.type === 'transfer_from_pos' && transaction.affectsCash) {
         addAdjustment({
             amount: transaction.amount,
-            description: `Entrée de caisse pour transfert depuis PDV ${transaction.phoneNumber}`
+            description: `Entrée de caisse pour transfert vers PDV ${transaction.phoneNumber}`
+        });
+    } else if (transaction.type === 'transfer_from_pos' && transaction.affectsCash) {
+       addExpense({
+            description: `Sortie de caisse pour transfert depuis PDV ${transaction.phoneNumber}`,
+            amount: transaction.amount,
+            category: 'Transfert Mobile Money'
         });
     }
   }, [addPurchase, addSale, addExpense, setTransactions, addAdjustment]);
