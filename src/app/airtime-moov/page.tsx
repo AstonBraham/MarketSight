@@ -9,11 +9,17 @@ import { columns as airtimeColumns } from '@/components/airtime/columns-airtime'
 import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
 import type { AirtimeTransaction } from '@/lib/types';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog';
 
 export default function AirtimeMoovPage() {
   const { transactions, getStock } = useAirtime();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const moovTransactions = transactions.filter(t => t.provider === 'Moov');
   const moovStock = getStock('Moov');
 
@@ -41,6 +47,9 @@ export default function AirtimeMoovPage() {
     return withBalance.reverse();
   }, [moovTransactions]);
 
+  if (!isClient) {
+    return null; // ou un skeleton/loader
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">

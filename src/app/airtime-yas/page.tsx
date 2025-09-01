@@ -8,12 +8,18 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
 import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog';
 
 
 export default function AirtimeYasPage() {
     const { transactions, getStock } = useAirtime();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+    
     const yasTransactions = transactions.filter(t => t.provider === 'Yas');
     const yasStock = getStock('Yas');
 
@@ -40,6 +46,10 @@ export default function AirtimeYasPage() {
 
         return withBalance.reverse();
     }, [yasTransactions]);
+    
+  if (!isClient) {
+    return null; // ou un skeleton/loader
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">

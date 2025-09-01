@@ -8,10 +8,16 @@ import { columns } from '@/components/mobile-money/columns';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
 import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 export default function MobileMoneyCaurisPage() {
     const { transactions, getBalance } = useMobileMoney();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const caurisTransactions = transactions.filter(t => t.provider === 'Cauris');
     const caurisBalance = getBalance('Cauris');
 
@@ -43,6 +49,9 @@ export default function MobileMoneyCaurisPage() {
         return withBalance.reverse();
     }, [caurisTransactions]);
 
+  if (!isClient) {
+    return null; // ou un skeleton/loader
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">

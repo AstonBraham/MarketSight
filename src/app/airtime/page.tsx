@@ -9,8 +9,18 @@ import { PlusCircle } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
 import { mockAirtimeTransactions } from '@/lib/mock-data';
+import { useState, useEffect } from 'react';
 
 export default function AirtimePage() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null; // ou un skeleton/loader
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
