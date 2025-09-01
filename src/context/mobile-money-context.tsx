@@ -10,7 +10,7 @@ interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
   setTransactions: (transactions: MobileMoneyTransaction[]) => void;
   addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => void;
-  addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[]) => void;
+  addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => void;
   removeTransaction: (id: string) => void;
   getBalance: (provider: MobileMoneyProvider) => number;
 }
@@ -31,7 +31,20 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => [newTransaction, ...prev]);
 
     // Handle cash flow impact for specific transactions
-    if (transaction.type === 'purchase') {
+    if (transaction.type === 'deposit') {
+        addSale({
+            description: `Dépôt Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
+            amount: transaction.amount,
+            client: 'Client Mobile Money',
+            product: 'Dépôt Virtuel'
+        });
+    } else if (transaction.type === 'withdrawal') {
+        addExpense({
+            description: `Retrait Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
+            amount: transaction.amount,
+            category: 'Retrait Mobile Money'
+        });
+    } else if (transaction.type === 'purchase') {
       addPurchase({
         description: `Achat virtuel ${transaction.provider}`,
         amount: transaction.amount,
@@ -46,29 +59,24 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
           client: transaction.provider,
           product: 'Virtuel'
         });
-    } else if (transaction.type === 'deposit') {
-        addSale({
-            description: `Dépôt Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
-            amount: transaction.amount,
-            client: 'Client Mobile Money',
-            product: 'Dépôt Virtuel'
-        });
-    } else if (transaction.type === 'withdrawal') {
-        addExpense({
-            description: `Retrait Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
-            amount: transaction.amount,
-            category: 'Retrait Mobile Money'
-        });
     }
   }, [addPurchase, addSale, addExpense, setTransactions]);
 
-  const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[]) => {
+  const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => {
     const fullTransactions = newTransactions.map((t, i) => ({
       ...t,
       id: `MMBULK-${Date.now()}-${i}`,
       date: t.date || new Date().toISOString()
     }));
-    setTransactions(prev => [...prev, ...fullTransactions]);
+    
+    setTransactions(prev => {
+        const otherProviderTransactions = providerToClear 
+            ? prev.filter(t => t.provider !== providerToClear)
+            : prev;
+        
+        return [...otherProviderTransactions, ...fullTransactions];
+    });
+
   }, [setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {
@@ -79,12 +87,16 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return transactions
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {
-            // Increases virtual balance
-            if (t.type === 'withdrawal' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'transfer_from_pos') {
+            if (t.type === 'deposit' || t.type === 'transfer_to_pos') {
+                return acc - t.amount;
+            }
+             if(t.type === 'withdrawal') {
                 return acc + t.amount + (t.commission || 0);
             }
-             // Decreases virtual balance
-            if (t.type === 'deposit' || t.type === 'virtual_return' || t.type === 'transfer_to_pos') {
+             if (t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'transfer_from_pos') {
+                return acc + t.amount;
+            }
+            if (t.type === 'virtual_return') {
                 return acc - t.amount;
             }
              if(t.type === 'adjustment') {

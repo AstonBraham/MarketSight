@@ -369,8 +369,8 @@ export default function SettingsPage() {
                 transactionId: row['transactionId'] || '',
             };
         });
-        addBulkMobileMoney(newTransactions as Omit<MobileMoneyTransaction, 'id' | 'date'>[]);
-        toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées.` });
+        addBulkMobileMoney(newTransactions as Omit<MobileMoneyTransaction, 'id' | 'date'>[], provider);
+        toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées (anciennes données purgées).` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }
