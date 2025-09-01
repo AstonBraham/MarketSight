@@ -88,12 +88,12 @@ export function CashflowChart() {
                 <Legend />
                 <Bar
                   dataKey="Entrées"
-                  fill="hsl(var(--primary))"
+                  fill="hsl(var(--chart-1))"
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="Sorties"
-                  fill="hsl(var(--accent))"
+                  fill="hsl(var(--chart-2))"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
