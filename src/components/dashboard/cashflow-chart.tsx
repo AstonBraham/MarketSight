@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/card';
 import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
-import { format, subMonths } from 'date-fns';
+import { format, subMonths, startOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function CashflowChart() {
@@ -30,6 +30,7 @@ export function CashflowChart() {
   const monthlyData = useMemo(() => {
     const data: { [key: string]: { Entrées: number, Sorties: number } } = {};
     const today = new Date();
+    const sixMonthsAgo = startOfMonth(subMonths(today, 5));
 
     // Initialize the last 6 months
     for (let i = 5; i >= 0; i--) {
@@ -41,13 +42,15 @@ export function CashflowChart() {
     allTransactions.forEach(t => {
       const transactionDate = new Date(t.date);
       // Check if the transaction is within the last 6 months
-      if (transactionDate > subMonths(today, 6)) {
+      if (transactionDate >= sixMonthsAgo) {
         const monthName = format(transactionDate, 'MMM', { locale: fr });
 
-        if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
-          data[monthName].Entrées += t.amount;
-        } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
-          data[monthName].Sorties += Math.abs(t.amount);
+        if (data[monthName]) {
+          if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
+            data[monthName].Entrées += t.amount;
+          } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
+            data[monthName].Sorties += Math.abs(t.amount);
+          }
         }
       }
     });
