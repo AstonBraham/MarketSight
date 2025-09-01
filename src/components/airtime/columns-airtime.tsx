@@ -86,6 +86,10 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     }
   },
   {
+    accessorKey: 'phoneNumber',
+    header: 'Numéro',
+  },
+  {
     accessorKey: 'amount',
     header: () => <div className="text-right">Montant</div>,
     cell: ({ row }) => {
