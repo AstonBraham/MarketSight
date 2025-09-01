@@ -30,7 +30,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     };
     setTransactions(prev => [newTransaction, ...prev]);
 
-    // Handle cash flow impact for specific transactions
     if (transaction.type === 'deposit') {
         addSale({
             description: `Dépôt Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
@@ -60,9 +59,11 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
           product: 'Virtuel'
         });
     } else if (transaction.type === 'transfer_to_pos' && transaction.affectsCash) {
-        addAdjustment({
+        addSale({
+            description: `Entrée de caisse pour transfert vers PDV ${transaction.phoneNumber}`,
             amount: transaction.amount,
-            description: `Entrée de caisse pour transfert vers PDV ${transaction.phoneNumber}`
+            client: `PDV ${transaction.phoneNumber}`,
+            product: 'Transfert Virtuel',
         });
     } else if (transaction.type === 'transfer_from_pos' && transaction.affectsCash) {
        addExpense({
@@ -83,7 +84,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => {
         const otherProviderTransactions = providerToClear 
             ? prev.filter(t => t.provider !== providerToClear)
-            : [];
+            : []; // If no provider is specified, this will clear all transactions, which might not be desired. Be careful.
         
         return [...otherProviderTransactions, ...fullTransactions];
     });

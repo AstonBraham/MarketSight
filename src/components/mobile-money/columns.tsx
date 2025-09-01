@@ -63,8 +63,12 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
     header: 'ID Transaction',
   },
     {
-    accessorKey: 'description',
-    header: 'Description',
+    accessorKey: 'phoneNumber',
+    header: 'N° Tél / Description',
+     cell: ({ row }) => {
+        const transaction = row.original;
+        return <span>{transaction.phoneNumber || transaction.description}</span>
+    }
   },
   {
     accessorKey: 'type',
