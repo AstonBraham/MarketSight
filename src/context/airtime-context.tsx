@@ -10,7 +10,7 @@ interface AirtimeContextType {
   transactions: AirtimeTransaction[];
   setTransactions: (transactions: AirtimeTransaction[]) => void;
   addTransaction: (transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => void;
-  addBulkTransactions: (transactions: Omit<AirtimeTransaction, 'id' | 'date'>[]) => void;
+  addBulkTransactions: (transactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => void;
   removeTransaction: (id: string) => void;
   getStock: (provider: 'Moov' | 'Yas') => number;
 }
@@ -32,7 +32,7 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
 
     if (transaction.type === 'sale') {
       addSale({
-        description: `Vente Airtime ${transaction.provider} - ${transaction.phoneNumber}`,
+        description: `Vente Airtime ${transaction.provider} - ${transaction.phoneNumber || ''}`,
         product: `Airtime ${transaction.provider}`,
         itemType: 'Airtime',
         client: 'Client Airtime',
@@ -44,14 +44,22 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
 
   }, [setTransactions, addSale]);
 
-  const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[]) => {
+  const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => {
     const fullTransactions = newTransactions.map((t, i) => ({
       ...t,
       id: `AIRBULK-${Date.now()}-${i}`,
       date: t.date || new Date().toISOString()
     }));
-    // Replace current transactions with the new bulk import
-    setTransactions(fullTransactions);
+    
+    setTransactions(prev => {
+        // Filter out transactions for the provider being cleared
+        const otherProviderTransactions = providerToClear 
+            ? prev.filter(t => t.provider !== providerToClear)
+            : prev;
+        
+        // Add the new transactions
+        return [...otherProviderTransactions, ...fullTransactions];
+    });
   }, [setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {
