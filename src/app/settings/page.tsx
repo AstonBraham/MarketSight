@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { Save, Upload } from 'lucide-react';
+import { useInventory } from '@/context/inventory-context';
 
 function CategoryManager({ title, categories, onAddCategory }: { title: string, categories: string[], onAddCategory: (category: string) => void }) {
   const [newCategory, setNewCategory] = useState('');
