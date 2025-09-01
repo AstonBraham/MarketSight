@@ -1,9 +1,10 @@
 
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { mockWifiSales } from '@/lib/mock-data';
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -36,6 +37,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
+
+  useEffect(() => {
+    if (transactions.length === 0) {
+      const initialSales = mockWifiSales.map(sale => ({
+        ...sale,
+        id: `SALE${Date.now()}${Math.random()}`,
+        type: 'sale' as const,
+        category: 'Vente',
+        description: `Vente de ${sale.product}`
+      }));
+      setTransactions(initialSales);
+    }
+  }, []);
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
