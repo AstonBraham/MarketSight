@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -20,20 +19,24 @@ export default function AirtimeMoovPage() {
     setIsClient(true);
   }, []);
 
-  const moovTransactions = transactions.filter(t => t.provider === 'Moov');
-  const moovStock = getStock('Moov');
-
-  const dailySales = moovTransactions
-    .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
-    .reduce((acc, t) => acc + t.amount, 0);
+  const moovTransactions = useMemo(() => transactions.filter(t => t.provider === 'Moov'), [transactions]);
+  const moovStock = useMemo(() => getStock('Moov'), [getStock, transactions]);
   
-  const dailyMargin = moovTransactions
-    .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
-    .reduce((acc, t) => acc + t.commission, 0);
-    
-  const totalPurchases = moovTransactions
-    .filter(t => t.type === 'purchase')
-    .reduce((acc, t) => acc + t.amount, 0);
+  const totalPurchases = useMemo(() => {
+    return moovTransactions
+      .filter(t => t.type === 'purchase')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }, [moovTransactions]);
+  
+  const totalSales = useMemo(() => {
+    return moovTransactions
+      .filter(t => t.type === 'sale')
+      .reduce((acc, t) => acc + t.amount, 0);
+  }, [moovTransactions]);
+  
+  const totalCommission = useMemo(() => {
+    return totalPurchases * 0.05;
+  }, [totalPurchases]);
 
   const processedTransactions = useMemo(() => {
     let balance = 0;
@@ -86,18 +89,19 @@ export default function AirtimeMoovPage() {
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
+                <CardTitle className="text-sm font-medium">Ventes (Total)</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(dailySales)} F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(totalSales)} F</div>
             </CardContent>
         </Card>
          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
+                <CardTitle className="text-sm font-medium">Marge/Commission (Total)</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(dailyMargin)} F</div>
+                <div className="text-2xl font-bold text-blue-600">{new Intl.NumberFormat('fr-FR').format(totalCommission)} F</div>
+                 <p className="text-xs text-muted-foreground">Basé sur 5% des achats</p>
             </CardContent>
         </Card>
       </div>

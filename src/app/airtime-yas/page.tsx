@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -20,20 +19,24 @@ export default function AirtimeYasPage() {
         setIsClient(true);
     }, []);
     
-    const yasTransactions = transactions.filter(t => t.provider === 'Yas');
-    const yasStock = getStock('Yas');
+    const yasTransactions = useMemo(() => transactions.filter(t => t.provider === 'Yas'), [transactions]);
+    const yasStock = useMemo(() => getStock('Yas'), [getStock, transactions]);
 
-    const dailySales = yasTransactions
-      .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
-      .reduce((acc, t) => acc + t.amount, 0);
+    const totalPurchases = useMemo(() => {
+      return yasTransactions
+        .filter(t => t.type === 'purchase')
+        .reduce((acc, t) => acc + t.amount, 0);
+    }, [yasTransactions]);
 
-    const dailyMargin = yasTransactions
-      .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === new Date().toDateString())
-      .reduce((acc, t) => acc + t.commission, 0);
-    
-    const totalPurchases = yasTransactions
-      .filter(t => t.type === 'purchase')
-      .reduce((acc, t) => acc + t.amount, 0);
+    const totalSales = useMemo(() => {
+      return yasTransactions
+        .filter(t => t.type === 'sale')
+        .reduce((acc, t) => acc + t.amount, 0);
+    }, [yasTransactions]);
+
+    const totalCommission = useMemo(() => {
+      return totalPurchases * 0.05;
+    }, [totalPurchases]);
 
     const processedTransactions = useMemo(() => {
         let balance = 0;
@@ -86,18 +89,19 @@ export default function AirtimeYasPage() {
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ventes du jour</CardTitle>
+                <CardTitle className="text-sm font-medium">Ventes (Total)</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(dailySales)} F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(totalSales)} F</div>
             </CardContent>
         </Card>
          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Marge du jour</CardTitle>
+                <CardTitle className="text-sm font-medium">Marge/Commission (Total)</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(dailyMargin)} F</div>
+                <div className="text-2xl font-bold text-yellow-600">{new Intl.NumberFormat('fr-FR').format(totalCommission)} F</div>
+                <p className="text-xs text-muted-foreground">Basé sur 5% des achats</p>
             </CardContent>
         </Card>
       </div>
