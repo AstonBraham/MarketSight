@@ -18,9 +18,11 @@ interface TransactionContextType {
   setCashClosings: (cashClosings: CashClosing[]) => void;
   expenseCategories: string[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => void;
+  addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   payPurchase: (purchaseId: string) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
+  addBulkExpenses: (expenses: Omit<Expense, 'id' | 'type' | 'currency'>[]) => void;
   removeExpense: (id: string) => void;
   addExpenseCategory: (category: string) => void;
   addAdjustment: (adjustment: { amount: number; description: string }) => void;
@@ -40,9 +42,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (transactions.length === 0) {
-      const initialSales = mockWifiSales.map(sale => ({
+      const initialSales = mockWifiSales.map((sale, index) => ({
         ...sale,
-        id: `SALE${Date.now()}${Math.random()}`,
+        id: `SALE${Date.now()}${index}`,
         type: 'sale' as const,
         category: 'Vente',
         description: `Vente de ${sale.product}`
@@ -71,6 +73,17 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Vente',
     };
     setTransactions(prev => [newSale, ...prev]);
+  }, [setTransactions]);
+
+  const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
+    const newSales: Sale[] = sales.map((sale, index) => ({
+        ...sale,
+        id: `SALE-BULK-${Date.now()}-${index}`,
+        type: 'sale',
+        date: sale.date || new Date().toISOString(),
+        category: 'Vente',
+    }));
+    setTransactions(prev => [...prev, ...newSales]);
   }, [setTransactions]);
   
   const clearWifiSales = useCallback(() => {
@@ -132,6 +145,18 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: expense.category || 'Dépense',
     };
     setTransactions(prev => [newExpense, ...prev]);
+  }, [setTransactions]);
+
+  const addBulkExpenses = useCallback((expenses: Omit<Expense, 'id'|'type'|'currency'>[]) => {
+    const newExpenses: Expense[] = expenses.map((expense, index) => ({
+        ...expense,
+        id: `EXP-BULK-${Date.now()}-${index}`,
+        type: 'expense',
+        date: expense.date || new Date().toISOString(),
+        currency: 'F',
+        category: expense.category || 'Dépense',
+    }));
+    setTransactions(prev => [...prev, ...newExpenses]);
   }, [setTransactions]);
 
   const removeExpense = useCallback((id: string) => {
@@ -206,9 +231,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setCashClosings,
     expenseCategories,
     addSale,
+    addBulkSales,
     addPurchase,
     payPurchase,
     addExpense,
+    addBulkExpenses,
     removeExpense,
     addExpenseCategory,
     addAdjustment,
@@ -217,7 +244,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     getAllTransactions,
     addCashClosing,
     clearWifiSales
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addPurchase, payPurchase, addExpense, removeExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
 
   return (
     <TransactionContext.Provider value={value}>

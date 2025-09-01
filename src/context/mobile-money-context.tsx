@@ -10,6 +10,7 @@ interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
   setTransactions: (transactions: MobileMoneyTransaction[]) => void;
   addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => void;
+  addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[]) => void;
   removeTransaction: (id: string) => void;
   getBalance: (provider: MobileMoneyProvider) => number;
 }
@@ -55,6 +56,15 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     }
   }, [addPurchase, addSale, setTransactions]);
 
+  const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[]) => {
+    const fullTransactions = newTransactions.map((t, i) => ({
+      ...t,
+      id: `MMBULK-${Date.now()}-${i}`,
+      date: t.date || new Date().toISOString()
+    }));
+    setTransactions(prev => [...prev, ...fullTransactions]);
+  }, [setTransactions]);
+
   const removeTransaction = useCallback((id: string) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
   }, [setTransactions]);
@@ -77,9 +87,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     transactions,
     setTransactions,
     addTransaction,
+    addBulkTransactions,
     removeTransaction,
     getBalance,
-  }), [transactions, setTransactions, addTransaction, removeTransaction, getBalance]);
+  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getBalance]);
 
   return (
     <MobileMoneyContext.Provider value={value}>

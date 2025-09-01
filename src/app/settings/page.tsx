@@ -159,32 +159,28 @@ function BackupAndRestore() {
 
 export default function SettingsPage() {
   const { addItems, itemCategories, addCategory: addInventoryCategory } = useInventory();
-  const { addExpense, expenseCategories, addExpenseCategory, addSale, clearWifiSales } = useTransactions();
-  const { addTransaction: addAirtimeTransaction } = useAirtime();
-  const { addTransaction: addMobileMoneyTransaction } = useMobileMoney();
+  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories } = useTransactions();
+  const { addBulkTransactions: addBulkAirtime } = useAirtime();
+  const { addBulkTransactions: addBulkMobileMoney } = useMobileMoney();
   const { toast } = useToast();
   
   const toISODate = (date: any): string => {
     if (date instanceof Date) {
-        // Excel dates are parsed as Date objects
         return date.toISOString();
     }
     if (typeof date === 'string') {
-        // Try parsing common string formats
         const parsedDate = new Date(date);
         if (!isNaN(parsedDate.getTime())) {
             return parsedDate.toISOString();
         }
     }
      if (typeof date === 'number') {
-      // Handle Excel's numeric date format (days since 1900)
       const excelEpoch = new Date(1899, 11, 30);
       const jsDate = new Date(excelEpoch.getTime() + date * 86400000);
       if(!isNaN(jsDate.getTime())) {
         return jsDate.toISOString();
       }
     }
-    // Fallback or handle as error - for now, returns current date
     console.warn(`Could not parse date: ${date}. Using current date as fallback.`);
     return new Date().toISOString(); 
   };
@@ -232,11 +228,11 @@ export default function SettingsPage() {
 
   const handleSalesImport = (data: any[]) => {
      try {
-        data.forEach((row, index) => {
+        const newSales = data.map((row, index) => {
             if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, productName, quantity et price sont obligatoires.`);
             }
-            addSale({
+            return {
                 date: toISODate(row['date']),
                 product: row['productName'],
                 quantity: parseFloat(row['quantity']),
@@ -244,8 +240,9 @@ export default function SettingsPage() {
                 amount: parseFloat(row['quantity']) * parseFloat(row['price']),
                 client: row['client'] || 'Client importé',
                 itemType: row['itemType'] || undefined,
-            });
+            };
         });
+        addBulkSales(newSales);
         toast({ title: 'Importation Réussie', description: `${data.length} ventes ont été ajoutées.` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
@@ -254,7 +251,6 @@ export default function SettingsPage() {
 
   const handleWifiSalesImport = (data: any[]) => {
     try {
-      // Clear previous wifi sales before importing new ones
       clearWifiSales();
 
       const newSales = data.map((row, index) => {
@@ -282,7 +278,7 @@ export default function SettingsPage() {
         };
       });
 
-      newSales.forEach(sale => addSale(sale));
+      addBulkSales(newSales);
       
       toast({ title: 'Importation Réussie', description: `Les anciennes données WiFi ont été purgées et ${data.length} nouvelles ventes ont été ajoutées.` });
     } catch (error: any) {
@@ -292,17 +288,18 @@ export default function SettingsPage() {
 
   const handleExpensesImport = (data: any[]) => {
       try {
-        data.forEach((row, index) => {
+        const newExpenses = data.map((row, index) => {
             if (!row['date'] || !row['description'] || !row['amount'] || !row['category']) {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, description, amount et category sont obligatoires.`);
             }
-            addExpense({
+            return {
                 date: toISODate(row['date']),
                 description: row['description'],
                 amount: parseFloat(row['amount']),
                 category: row['category'],
-            });
+            };
         });
+        addBulkExpenses(newExpenses);
         toast({ title: 'Importation Réussie', description: `${data.length} dépenses ont été ajoutées.` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
@@ -311,11 +308,11 @@ export default function SettingsPage() {
   
   const handleAirtimeImport = (provider: 'Moov' | 'Yas') => (data: any[]) => {
       try {
-        data.forEach((row, index) => {
+        const newTransactions = data.map((row, index) => {
              if (!row['date'] || !row['type'] || !row['amount']) {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
             }
-            const transactionData = {
+            return {
                 date: toISODate(row['date']),
                 provider: provider,
                 type: row['type'],
@@ -324,8 +321,8 @@ export default function SettingsPage() {
                 phoneNumber: row['phoneNumber'] || '',
                 transactionId: row['transactionId'] || '',
             };
-            addAirtimeTransaction(transactionData as Omit<AirtimeTransaction, 'id'>);
         });
+        addBulkAirtime(newTransactions as Omit<AirtimeTransaction, 'id' | 'date'>[]);
         toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées.` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
@@ -334,11 +331,11 @@ export default function SettingsPage() {
   
   const handleMobileMoneyImport = (provider: MobileMoneyProvider) => (data: any[]) => {
        try {
-        data.forEach((row, index) => {
+        const newTransactions = data.map((row, index) => {
              if (!row['date'] || !row['type'] || !row['amount']) {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
             }
-            const transactionData = {
+            return {
                 date: toISODate(row['date']),
                 provider: provider,
                 type: row['type'],
@@ -347,8 +344,8 @@ export default function SettingsPage() {
                 phoneNumber: row['phoneNumber'] || '',
                 transactionId: row['transactionId'] || '',
             };
-            addMobileMoneyTransaction(transactionData as Omit<MobileMoneyTransaction, 'id'>);
         });
+        addBulkMobileMoney(newTransactions as Omit<MobileMoneyTransaction, 'id' | 'date'>[]);
         toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées.` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });

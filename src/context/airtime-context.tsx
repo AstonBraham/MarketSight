@@ -9,6 +9,7 @@ interface AirtimeContextType {
   transactions: AirtimeTransaction[];
   setTransactions: (transactions: AirtimeTransaction[]) => void;
   addTransaction: (transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => void;
+  addBulkTransactions: (transactions: Omit<AirtimeTransaction, 'id' | 'date'>[]) => void;
   removeTransaction: (id: string) => void;
   getStock: (provider: 'Moov' | 'Yas') => number;
 }
@@ -25,6 +26,15 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev]);
+  }, [setTransactions]);
+
+  const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[]) => {
+    const fullTransactions = newTransactions.map((t, i) => ({
+      ...t,
+      id: `AIRBULK-${Date.now()}-${i}`,
+      date: t.date || new Date().toISOString()
+    }));
+    setTransactions(prev => [...prev, ...fullTransactions]);
   }, [setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {
@@ -46,9 +56,10 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     transactions,
     setTransactions,
     addTransaction,
+    addBulkTransactions,
     removeTransaction,
     getStock,
-  }), [transactions, setTransactions, addTransaction, removeTransaction, getStock]);
+  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getStock]);
 
   return (
     <AirtimeContext.Provider value={value}>
