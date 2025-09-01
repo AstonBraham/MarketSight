@@ -73,8 +73,12 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     }
   },
   {
-    accessorKey: 'description',
-    header: 'Description',
+    accessorKey: 'phoneNumber',
+    header: 'Numéro / Description',
+    cell: ({row}) => {
+        const transaction = row.original;
+        return <span>{transaction.phoneNumber || transaction.description}</span>
+    }
   },
   {
     accessorKey: 'provider',
@@ -84,10 +88,6 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
         const isMoov = provider === 'Moov';
         return <Badge variant="outline" className={cn(isMoov ? "border-blue-500 text-blue-600" : "border-yellow-500 text-yellow-600")}>{provider}</Badge>
     }
-  },
-  {
-    accessorKey: 'phoneNumber',
-    header: 'Numéro',
   },
   {
     accessorKey: 'amount',
