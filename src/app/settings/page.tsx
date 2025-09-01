@@ -4,7 +4,6 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExcelImport } from '@/components/excel-import';
-import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction, MobileMoneyProvider, Invoice, CashClosing } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
@@ -257,7 +256,7 @@ export default function SettingsPage() {
       // Clear previous wifi sales before importing new ones
       clearWifiSales();
 
-      data.forEach((row, index) => {
+      const newSales = data.map((row, index) => {
         const line = index + 2;
         if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
           throw new Error(`Ligne ${line}: Les colonnes date, productName, quantity et price sont obligatoires.`);
@@ -271,7 +270,7 @@ export default function SettingsPage() {
             throw new Error(`Ligne ${line}: quantity, price, ou amount contiennent des valeurs non valides.`);
         }
 
-        addSale({
+        return {
           date: toISODate(row['date']),
           product: row['productName'],
           quantity: quantity,
@@ -279,8 +278,11 @@ export default function SettingsPage() {
           amount: amount,
           client: row['client'] || 'Client Wifi',
           itemType: 'Ticket Wifi',
-        });
+        };
       });
+
+      newSales.forEach(sale => addSale(sale));
+      
       toast({ title: 'Importation Réussie', description: `Les anciennes données WiFi ont été purgées et ${data.length} nouvelles ventes ont été ajoutées.` });
     } catch (error: any) {
       toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
