@@ -17,7 +17,14 @@ interface AirtimeContextType {
 const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 
 export function AirtimeProvider({ children }: { children: ReactNode }) {
+  // TEMP: Force reset by starting with an empty array, ignoring localStorage for now.
   const [transactions, setTransactions] = useLocalStorage<AirtimeTransaction[]>('airtimeTransactions', []);
+
+  useEffect(() => {
+    // This will clear the transactions on first load after the change.
+    setTransactions([]);
+  }, [setTransactions]);
+
 
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
     const newTransaction: AirtimeTransaction = {
@@ -34,7 +41,8 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
       id: `AIRBULK-${Date.now()}-${i}`,
       date: t.date || new Date().toISOString()
     }));
-    setTransactions(prev => [...prev, ...fullTransactions]);
+    // Replace current transactions with the new bulk import
+    setTransactions(fullTransactions);
   }, [setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {

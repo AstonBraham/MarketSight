@@ -322,6 +322,12 @@ export default function SettingsPage() {
                 transactionId: row['transactionId'] || '',
             };
         });
+        // Clear previous data for this provider before importing
+        if (provider === 'Moov') {
+            setAirtimeTransactions(prev => prev.filter(t => t.provider !== 'Moov'));
+        } else if (provider === 'Yas') {
+            setAirtimeTransactions(prev => prev.filter(t => t.provider !== 'Yas'));
+        }
         addBulkAirtime(newTransactions as Omit<AirtimeTransaction, 'id' | 'date'>[]);
         toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées.` });
     } catch (error: any) {
