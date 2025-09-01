@@ -19,7 +19,7 @@ const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(und
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
-  const { addPurchase, addSale, addExpense } = useTransactions();
+  const { addPurchase, addSale, addExpense, addAdjustment } = useTransactions();
 
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
@@ -59,8 +59,19 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
           client: transaction.provider,
           product: 'Virtuel'
         });
+    } else if (transaction.type === 'transfer_to_pos' && transaction.affectsCash) {
+        addExpense({
+            description: `Sortie de caisse pour transfert vers PDV ${transaction.phoneNumber}`,
+            amount: transaction.amount,
+            category: 'Transfert Mobile Money'
+        });
+    } else if (transaction.type === 'transfer_from_pos' && transaction.affectsCash) {
+        addAdjustment({
+            amount: transaction.amount,
+            description: `Entrée de caisse pour transfert depuis PDV ${transaction.phoneNumber}`
+        });
     }
-  }, [addPurchase, addSale, addExpense, setTransactions]);
+  }, [addPurchase, addSale, addExpense, setTransactions, addAdjustment]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => {
     const fullTransactions = newTransactions.map((t, i) => ({
@@ -72,7 +83,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => {
         const otherProviderTransactions = providerToClear 
             ? prev.filter(t => t.provider !== providerToClear)
-            : prev;
+            : [];
         
         return [...otherProviderTransactions, ...fullTransactions];
     });
@@ -87,22 +98,23 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return transactions
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {
-            if (t.type === 'deposit' || t.type === 'transfer_to_pos') {
-                return acc - t.amount;
+            switch (t.type) {
+                case 'deposit':
+                    return acc - t.amount + (t.commission || 0);
+                case 'withdrawal':
+                    return acc + t.amount + (t.commission || 0);
+                case 'purchase':
+                case 'collect_commission':
+                case 'transfer_from_pos':
+                    return acc + t.amount;
+                case 'virtual_return':
+                case 'transfer_to_pos':
+                    return acc - t.amount;
+                case 'adjustment':
+                    return acc + t.amount;
+                default:
+                    return acc;
             }
-             if(t.type === 'withdrawal') {
-                return acc + t.amount + (t.commission || 0);
-            }
-             if (t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'transfer_from_pos') {
-                return acc + t.amount;
-            }
-            if (t.type === 'virtual_return') {
-                return acc - t.amount;
-            }
-             if(t.type === 'adjustment') {
-                return acc + t.amount;
-            }
-            return acc;
         }, 0);
   }, [transactions]);
 

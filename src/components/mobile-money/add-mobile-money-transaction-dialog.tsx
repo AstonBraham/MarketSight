@@ -45,7 +45,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
 
 
   useEffect(() => {
-    if (provider !== 'Mixx' || type === '' || amount <= 0 || !['deposit', 'withdrawal'].includes(type)) {
+    if (amount <= 0 || !['deposit', 'withdrawal'].includes(type)) {
         setCommission(0);
         setIsCommissionManual(false);
         return;
@@ -54,21 +54,9 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     let calculatedCommission = 0;
     let manual = false;
 
-    if (type === 'deposit') {
-        if (amount <= 499) calculatedCommission = 0;
-        else if (amount <= 5000) calculatedCommission = 14;
-        else if (amount <= 15000) calculatedCommission = 36;
-        else if (amount <= 20000) calculatedCommission = 73;
-        else if (amount <= 50000) calculatedCommission = 73;
-        else if (amount <= 100000) calculatedCommission = 146;
-        else if (amount <= 200000) calculatedCommission = 219;
-    } else if (type === 'withdrawal') {
-        if (amount > 0 && amount <= 499) calculatedCommission = 21;
-        else if (amount <= 5000) calculatedCommission = 21;
-        else if (amount <= 15000) calculatedCommission = 65;
-        else if (amount <= 20000) calculatedCommission = 65;
-        else if (amount <= 50000) calculatedCommission = 146;
-        else if (amount <= 100000) calculatedCommission = 329;
+    // Commission logic for withdrawal
+    if (type === 'withdrawal') {
+        if (amount <= 20000) calculatedCommission = 0; // Example, adjust as needed
         else { 
             manual = true;
             toast({
@@ -122,7 +110,8 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   };
 
   const showCommissionField = type === 'deposit' || type === 'withdrawal';
-  const showPhoneNumber = type !== 'collect_commission';
+  const showPhoneNumber = type !== 'collect_commission' && type !== 'purchase' && type !== 'virtual_return' && type !== 'adjustment' ;
+  const showAffectsCashSwitch = type === 'transfer_to_pos' || type === 'transfer_from_pos';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -151,9 +140,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                         <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
                         <SelectItem value="transfer_from_pos">Transfert depuis PDV</SelectItem>
                         <SelectItem value="transfer_to_pos">Transfert vers PDV</SelectItem>
-                        {provider === 'Flooz' && (
-                           <SelectItem value="collect_commission">Collecte Commission</SelectItem>
-                        )}
+                        <SelectItem value="collect_commission">Collecte Commission</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -175,9 +162,9 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                 <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
               </div>
              )}
-            {(type === 'transfer_to_pos' || type === 'pos_transfer') && (provider === 'Mixx' || provider === 'Cauris') && (
+            {showAffectsCashSwitch && (
                 <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="affectsCash" className="text-right col-span-3">Mouvement de trésorerie?</Label>
+                    <Label htmlFor="affectsCash" className="text-right col-span-3">Mouvement de trésorerie ?</Label>
                     <Switch id="affectsCash" checked={affectsCash} onCheckedChange={setAffectsCash} />
                 </div>
             )}
