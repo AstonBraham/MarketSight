@@ -19,7 +19,7 @@ const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 
 export function AirtimeProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<AirtimeTransaction[]>('airtimeTransactions', []);
-  const { addSale } = useTransactions();
+  const { addSale, addPurchase } = useTransactions();
 
 
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
@@ -40,9 +40,17 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
         quantity: 1,
         price: transaction.amount,
       });
+    } else if (transaction.type === 'purchase') {
+      addPurchase({
+        description: `Achat Airtime ${transaction.provider}`,
+        amount: transaction.amount,
+        supplier: transaction.provider,
+        product: 'Airtime',
+        status: 'paid' // Airtime purchases are paid immediately from cash
+      });
     }
 
-  }, [setTransactions, addSale]);
+  }, [setTransactions, addSale, addPurchase]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => {
     const fullTransactions = newTransactions.map((t, i) => ({

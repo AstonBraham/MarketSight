@@ -91,9 +91,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Achat',
     };
 
+    // If purchase is paid, it affects cash immediately. If unpaid, it's just tracked.
     if (newPurchase.status === 'paid') {
         setTransactions(prev => [newPurchase, ...prev]);
     } else {
+        // Add to transactions without affecting cash balance immediately
+        // We can sort it to appear at the end or manage separately if needed.
         const allPurchases = transactions.filter(t => t.type === 'purchase');
         const otherTransactions = transactions.filter(t => t.type !== 'purchase');
         setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
@@ -112,17 +115,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     });
 
     if (purchaseToPay) {
+         // This transaction now represents the cash outflow.
+         // We change its date to now to reflect payment time.
          const paymentTransaction: Transaction = {
-            id: `PAY${Date.now()}`,
-            type: 'purchase', // It's a payment for a purchase
+            id: purchaseToPay.id, // Keep the same ID
+            type: 'purchase',
             amount: purchaseToPay.amount,
             date: new Date().toISOString(),
-            description: `Paiement achat ${purchaseToPay.id} - ${purchaseToPay.description}`,
+            description: `Paiement achat: ${purchaseToPay.description}`,
             category: 'Paiement Achat',
         };
-        setTransactions([paymentTransaction, ...updatedTransactions]);
-    } else {
-        setTransactions(updatedTransactions);
+        // Remove the old unpaid purchase and add the new paid one.
+        const filteredTransactions = transactions.filter(t => t.id !== purchaseId);
+        setTransactions([paymentTransaction, ...filteredTransactions]);
     }
   }, [transactions, setTransactions]);
 
@@ -210,7 +215,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const getAllTransactions = useCallback((): Transaction[] => {
      const cashTransactions = transactions.filter(t => {
         if (t.type === 'purchase') {
-            return (t as Purchase).status === 'paid';
+            return (t as Purchase).status !== 'unpaid';
         }
         return t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment';
     });
