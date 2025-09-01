@@ -41,16 +41,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
 
   useEffect(() => {
-    if (transactions.length === 0) {
-      const initialSales = mockWifiSales.map((sale, index) => ({
-        ...sale,
-        id: `SALE${Date.now()}${index}`,
-        type: 'sale' as const,
-        category: 'Vente',
-        description: `Vente de ${sale.product}`
-      }));
-      setTransactions(initialSales);
-    }
+    // This effect now does nothing, initial data loading is handled by useLocalStorage.
+    // If you want to seed data on first load, you can add logic here checking if transactions is empty.
   }, []);
 
   const expenseCategories = useMemo(() => {
