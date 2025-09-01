@@ -20,7 +20,16 @@ const IMPORT_TEMPLATES = {
   receipts: [{ date: '', description: '', amount: 0 }],
   wifi: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
   airtime: [{ date: '', type: '', amount: 0, commission: 0, phoneNumber: '', transactionId: '' }],
-  mobile_money: [{ date: '', type: '', transactionId: '', amount: 0, commission: 0, phoneNumber: '' }],
+  mobile_money: [
+    { date: '2024-08-28', type: 'deposit', transactionId: 'DEP123', amount: 5000, commission: 15, phoneNumber: '91234567' },
+    { date: '2024-08-28', type: 'withdrawal', transactionId: 'WITH456', amount: 10000, commission: 30, phoneNumber: '98765432' },
+    { date: '2024-08-28', type: 'purchase', transactionId: 'PUR789', amount: 100000, commission: 0, phoneNumber: '' },
+    { date: '2024-08-28', type: 'transfer_to_pos', transactionId: 'TTP101', amount: 50000, commission: 0, phoneNumber: 'PDV_02' },
+    { date: '2024-08-28', type: 'transfer_from_pos', transactionId: 'TFP102', amount: 25000, commission: 0, phoneNumber: 'PDV_03' },
+    { date: '2024-08-28', type: 'virtual_return', transactionId: 'VR103', amount: 15000, commission: 0, phoneNumber: '' },
+    { date: '2024-08-28', type: 'collect_commission', transactionId: 'CC104', amount: 5500, commission: 0, phoneNumber: '' },
+    { date: '2024-08-28', type: 'adjustment', transactionId: 'ADJ105', amount: -50, commission: 0, phoneNumber: 'Erreur de saisie' },
+  ],
 };
 
 
