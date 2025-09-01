@@ -76,12 +76,12 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
                 return <Badge variant="default" className="bg-green-600 hover:bg-green-700"><ArrowDown className="mr-1 h-3 w-3" /> Dépôt</Badge>
             case 'withdrawal':
                 return <Badge variant="destructive"><ArrowUp className="mr-1 h-3 w-3" /> Retrait</Badge>
-            case 'transfer':
-                 return <Badge variant="secondary"><Repeat className="mr-1 h-3 w-3" /> Transfert</Badge>
+            case 'transfer_from_pos':
+                 return <Badge variant="secondary"><Repeat className="mr-1 h-3 w-3" /> Transfert depuis PDV</Badge>
             case 'purchase':
                 return <Badge variant="default" className="bg-blue-600 hover:bg-blue-700"><ShoppingCart className="mr-1 h-3 w-3" /> Achat virtuel</Badge>
-            case 'pos_transfer':
-                return <Badge variant="secondary" className="bg-orange-500 hover:bg-orange-600"><Send className="mr-1 h-3 w-3" /> Transfert PDV</Badge>
+            case 'transfer_to_pos':
+                return <Badge variant="secondary" className="bg-orange-500 hover:bg-orange-600"><Send className="mr-1 h-3 w-3" /> Transfert vers PDV</Badge>
             case 'virtual_return':
                  return <Badge variant="secondary" className="bg-purple-500 hover:bg-purple-600"><Undo2 className="mr-1 h-3 w-3" /> Retour virtuel</Badge>
             case 'collect_commission':

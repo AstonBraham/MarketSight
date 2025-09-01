@@ -19,7 +19,7 @@ const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(und
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
-  const { addPurchase, addSale } = useTransactions();
+  const { addPurchase, addSale, addExpense } = useTransactions();
 
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
@@ -46,15 +46,21 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
           client: transaction.provider,
           product: 'Virtuel'
         });
-    } else if (transaction.type === 'pos_transfer' && transaction.affectsCash) {
-       addSale({
-        description: `Transfert PDV ${transaction.provider}`,
-        amount: transaction.amount,
-        client: 'PDV',
-        product: 'Virtuel'
-      });
+    } else if (transaction.type === 'deposit') {
+        addSale({
+            description: `Dépôt Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
+            amount: transaction.amount,
+            client: 'Client Mobile Money',
+            product: 'Dépôt Virtuel'
+        });
+    } else if (transaction.type === 'withdrawal') {
+        addExpense({
+            description: `Retrait Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
+            amount: transaction.amount,
+            category: 'Retrait Mobile Money'
+        });
     }
-  }, [addPurchase, addSale, setTransactions]);
+  }, [addPurchase, addSale, addExpense, setTransactions]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[]) => {
     const fullTransactions = newTransactions.map((t, i) => ({
@@ -73,11 +79,16 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return transactions
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {
-            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'adjustment') {
-                return acc + t.amount;
+            // Increases virtual balance
+            if (t.type === 'withdrawal' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'transfer_from_pos') {
+                return acc + t.amount + (t.commission || 0);
             }
-            if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer' || t.type === 'transfer') {
+             // Decreases virtual balance
+            if (t.type === 'deposit' || t.type === 'virtual_return' || t.type === 'transfer_to_pos') {
                 return acc - t.amount;
+            }
+             if(t.type === 'adjustment') {
+                return acc + t.amount;
             }
             return acc;
         }, 0);

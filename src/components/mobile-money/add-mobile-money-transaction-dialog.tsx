@@ -149,8 +149,8 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                         <SelectItem value="withdrawal">Retrait</SelectItem>
                         <SelectItem value="purchase">Achat de virtuel</SelectItem>
                         <SelectItem value="virtual_return">Retour de virtuel</SelectItem>
-                        <SelectItem value="transfer">Transfert</SelectItem>
-                        <SelectItem value="pos_transfer">Transfert PDV</SelectItem>
+                        <SelectItem value="transfer_from_pos">Transfert depuis PDV</SelectItem>
+                        <SelectItem value="transfer_to_pos">Transfert vers PDV</SelectItem>
                         {provider === 'Flooz' && (
                            <SelectItem value="collect_commission">Collecte Commission</SelectItem>
                         )}
@@ -175,7 +175,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                 <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
               </div>
              )}
-            {type === 'pos_transfer' && (provider === 'Mixx' || provider === 'Cauris') && (
+            {(type === 'transfer_to_pos' || type === 'pos_transfer') && (provider === 'Mixx' || provider === 'Cauris') && (
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="affectsCash" className="text-right col-span-3">Mouvement de trésorerie?</Label>
                     <Switch id="affectsCash" checked={affectsCash} onCheckedChange={setAffectsCash} />

@@ -83,7 +83,7 @@ export type AirtimeTransaction = {
 
 export type MobileMoneyProvider = 'Mixx' | 'Flooz' | 'Cauris';
 
-export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission' | 'adjustment';
+export type MobileMoneyTransactionType = 'deposit' | 'withdrawal' | 'transfer_to_pos' | 'transfer_from_pos' | 'purchase' | 'pos_transfer' | 'virtual_return' | 'collect_commission' | 'adjustment';
 
 export type MobileMoneyTransaction = {
     id: string;
