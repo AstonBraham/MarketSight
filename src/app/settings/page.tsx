@@ -158,7 +158,7 @@ function BackupAndRestore() {
 
 
 export default function SettingsPage() {
-  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels } = useInventory();
+  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels, inventory } = useInventory();
   const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings, addBulkAdjustments, sales } = useTransactions();
   const { addBulkTransactions: addBulkAirtime, setTransactions: setAirtimeTransactions } = useAirtime();
   const { addBulkTransactions: addBulkMobileMoney, setTransactions: setMobileMoneyTransactions } = useMobileMoney();
@@ -229,17 +229,28 @@ export default function SettingsPage() {
   const handleSalesImport = (data: any[]) => {
      try {
         const newSales = data.map((row, index) => {
-            if (!row['date'] || !row['productName'] || !row['quantity'] || !row['price']) {
-                throw new Error(`Ligne ${index + 2}: Les colonnes date, productName, quantity et price sont obligatoires.`);
+            const line = index + 2;
+            const identifier = row['sku_ou_reference'];
+
+            if (!row['date'] || !identifier || !row['quantity'] || !row['price']) {
+                throw new Error(`Ligne ${line}: Les colonnes date, sku_ou_reference, quantity et price sont obligatoires.`);
             }
+
+            const item = inventory.find(i => i.sku === identifier || i.reference === identifier);
+
+            if (!item) {
+                throw new Error(`Ligne ${line}: Article avec SKU/Référence "${identifier}" non trouvé dans l'inventaire.`);
+            }
+            
             return {
                 date: toISODate(row['date']),
-                product: row['productName'],
+                product: item.productName,
+                reference: item.reference,
+                itemType: item.category,
                 quantity: parseFloat(row['quantity']),
                 price: parseFloat(row['price']),
                 amount: parseFloat(row['quantity']) * parseFloat(row['price']),
                 client: row['client'] || 'Client importé',
-                itemType: row['itemType'] || undefined,
             };
         });
         addBulkSales(newSales);

@@ -15,7 +15,7 @@ import { useMemo } from 'react';
 
 const IMPORT_TEMPLATES = {
   products: [{ productName: '', sku: '', category: '', brand: '', reference: '', inStock: 0, reorderLevel: 10, supplier: '', defaultPrice: 0, costPrice: 0 }],
-  sales: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
+  sales: [{ date: '', sku_ou_reference: '', quantity: 0, price: 0, client: '' }],
   expenses: [{ date: '', description: '', amount: 0, category: '' }],
   receipts: [{ date: '', description: '', amount: 0 }],
   wifi: [{ date: '', productName: '', quantity: 0, price: 0, amount: 0, client: '' }],
