@@ -12,7 +12,7 @@ import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog'
 
 
 export default function AirtimeYasPage() {
-    const { transactions, getStock } = useAirtime();
+    const { transactions, getStock, getProcessedTransactions } = useAirtime();
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -39,20 +39,8 @@ export default function AirtimeYasPage() {
     }, [totalPurchases]);
 
     const processedTransactions = useMemo(() => {
-        let balance = 0;
-        const sorted = [...yasTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        
-        const withBalance = sorted.map(t => {
-            if (t.type === 'purchase' || t.type === 'adjustment') {
-                balance += t.amount;
-            } else if (t.type === 'sale') {
-                balance -= t.amount;
-            }
-            return { ...t, balance };
-        });
-
-        return withBalance.reverse();
-    }, [yasTransactions]);
+        return getProcessedTransactions('Yas');
+    }, [getProcessedTransactions, yasTransactions]);
     
   if (!isClient) {
     return null; // ou un skeleton/loader

@@ -6,6 +6,8 @@ import { createContext, useContext, useState, ReactNode, useMemo, useCallback, u
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { startOfDay, endOfDay, isEqual } from 'date-fns';
+import { useAirtime } from './airtime-context';
+import { useMobileMoney } from './mobile-money-context';
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -43,6 +45,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
   
+  const { transactions: airtimeTransactions } = useAirtime();
+  const { transactions: mobileMoneyTransactions } = useMobileMoney();
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -206,15 +210,70 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [addAdjustment, setCashClosings]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
-     const cashTransactions = transactions.filter(t => {
+     let allTransactions: Transaction[] = [...transactions];
+
+     airtimeTransactions.forEach(at => {
+        if(at.type === 'sale') {
+            allTransactions.push({ id: at.id, type: 'sale', amount: at.amount, date: at.date, description: `Vente Airtime ${at.provider}`});
+        } else if (at.type === 'purchase') {
+            allTransactions.push({ id: at.id, type: 'purchase', amount: at.amount, date: at.date, description: `Achat Airtime ${at.provider}`});
+        }
+     });
+
+     mobileMoneyTransactions.forEach(mt => {
+        let cashFlowImpact = 0;
+        let description = '';
+
+        switch(mt.type) {
+            case 'deposit':
+                cashFlowImpact = mt.amount;
+                description = `Dépôt MM ${mt.provider} (${mt.transactionId})`;
+                break;
+            case 'withdrawal':
+                cashFlowImpact = -mt.amount;
+                description = `Retrait MM ${mt.provider} (${mt.transactionId})`;
+                break;
+            case 'purchase':
+                cashFlowImpact = -mt.amount;
+                description = `Achat virtuel ${mt.provider} (${mt.transactionId})`;
+                break;
+            case 'virtual_return':
+                cashFlowImpact = mt.amount;
+                description = `Retour virtuel ${mt.provider} (${mt.transactionId})`;
+                break;
+            case 'transfer_to_pos':
+                if (mt.affectsCash) {
+                    cashFlowImpact = mt.amount;
+                    description = `Transfert vers PDV ${mt.phoneNumber} (${mt.transactionId})`;
+                }
+                break;
+            case 'transfer_from_pos':
+                if (mt.affectsCash) {
+                    cashFlowImpact = -mt.amount;
+                    description = `Transfert depuis PDV ${mt.phoneNumber} (${mt.transactionId})`;
+                }
+                break;
+            case 'collect_commission':
+                 cashFlowImpact = mt.amount;
+                 description = `Collecte commission ${mt.provider} (${mt.transactionId})`;
+                 break;
+        }
+
+        if(cashFlowImpact !== 0) {
+            allTransactions.push({ id: mt.id, type: cashFlowImpact > 0 ? 'sale' : 'expense', amount: Math.abs(cashFlowImpact), date: mt.date, description: description });
+        }
+     });
+
+    const cashTransactions = allTransactions.filter(t => {
         if (t.type === 'purchase') {
-            return (t as Purchase).status !== 'unpaid';
+            const p = t as Purchase;
+            return p.status !== 'unpaid';
         }
         return t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment';
     });
 
     return cashTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
-  }, [transactions]);
+  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
   
   const getDailyHistory = useCallback((date: Date): (Transaction & { source?: string, link?: string })[] => {
     const start = startOfDay(date);
@@ -225,37 +284,67 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         return transactionDate >= start && transactionDate <= end;
     };
     
-    let allDailyTransactions: (Transaction & { source?: string, link?: string })[] = [];
+    let allDailyTransactions: (Transaction & { source?: string, link?: string, amount: number })[] = [];
 
-    const cashTransactions = transactions
-      .filter(filterByDate)
-      .filter(t => t.type !== 'purchase' || (t as Purchase).status !== 'unpaid')
-      .map(t => {
-          let type = t.type;
-          let link: string | undefined = undefined;
-          let amount = 0;
-          if (t.type === 'sale') {
-              const sale = t as Sale;
-              amount = sale.amount;
-              if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
-              if (sale.invoiceId) {
-                type = 'Facture';
-                link = `/invoices/${sale.invoiceId}`;
-              }
-          } else if (t.type === 'purchase' || t.type === 'expense' || t.type === 'adjustment') {
-              amount = -t.amount;
-          }
+    // Base transactions (sales, expenses, purchases, adjustments)
+    transactions
+        .filter(filterByDate)
+        .filter(t => t.type !== 'purchase' || (t as Purchase).status !== 'unpaid')
+        .forEach(t => {
+            let type = t.type;
+            let link: string | undefined = undefined;
+            let amount = 0;
+            if (t.type === 'sale') {
+                const sale = t as Sale;
+                amount = sale.amount;
+                if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
+                if (sale.invoiceId) {
+                    type = 'Facture';
+                    link = `/invoices/${sale.invoiceId}`;
+                }
+            } else if (t.type === 'purchase' || t.type === 'expense') {
+                amount = -t.amount;
+            } else if (t.type === 'adjustment') {
+                amount = t.amount;
+            }
+            allDailyTransactions.push({ ...t, amount, type, link });
+        });
 
-          if(t.type === 'adjustment' && t.amount > 0) amount = t.amount;
+    // Airtime Transactions
+    airtimeTransactions
+        .filter(filterByDate)
+        .forEach(at => {
+            if (at.type === 'sale') {
+                allDailyTransactions.push({ ...at, type: 'Vente Airtime', source: at.provider, amount: at.amount });
+            } else if (at.type === 'purchase') {
+                allDailyTransactions.push({ ...at, type: 'Achat Airtime', source: at.provider, amount: -at.amount });
+            }
+        });
+    
+    // Mobile Money Transactions
+    mobileMoneyTransactions
+        .filter(filterByDate)
+        .forEach(mt => {
+            let cashFlowImpact = 0;
+            let type = mt.type;
+            switch (mt.type) {
+                case 'deposit': cashFlowImpact = mt.amount; break;
+                case 'withdrawal': cashFlowImpact = -mt.amount; break;
+                case 'purchase': cashFlowImpact = -mt.amount; type = 'MM Purchase'; break;
+                case 'virtual_return': cashFlowImpact = mt.amount; type = 'MM Virtual Return'; break;
+                case 'transfer_to_pos': if (mt.affectsCash) { cashFlowImpact = mt.amount; type = 'MM Transfer'; } break;
+                case 'transfer_from_pos': if (mt.affectsCash) { cashFlowImpact = -mt.amount; type = 'MM Transfer'; } break;
+                case 'collect_commission': cashFlowImpact = mt.amount; type = 'MM Commission'; break;
+            }
+            if (cashFlowImpact !== 0) {
+                allDailyTransactions.push({ ...mt, amount: cashFlowImpact, type, description: mt.description || `${type} ${mt.provider}` });
+            }
+        });
 
-
-          return { ...t, amount, type, link };
-      });
-    allDailyTransactions.push(...cashTransactions);
 
     return allDailyTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  }, [transactions]);
+  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
 
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
   const purchases = useMemo(() => transactions.filter(t => t.type === 'purchase') as Purchase[], [transactions]);
@@ -288,7 +377,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     getDailyHistory,
     addCashClosing,
     clearWifiSales
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, addCashClosing, clearWifiSales]);
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, addCashClosing, clearWifiSales, airtimeTransactions, mobileMoneyTransactions]);
 
   return (
     <TransactionContext.Provider value={value}>

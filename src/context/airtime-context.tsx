@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { AirtimeTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useTransactions } from './transaction-context';
 
 interface AirtimeContextType {
   transactions: AirtimeTransaction[];
@@ -12,6 +13,7 @@ interface AirtimeContextType {
   addBulkTransactions: (transactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => void;
   removeTransaction: (id: string) => void;
   getStock: (provider: 'Moov' | 'Yas') => number;
+  getProcessedTransactions: (provider: 'Moov' | 'Yas') => AirtimeTransaction[];
 }
 
 const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
@@ -36,12 +38,10 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     }));
     
     setTransactions(prev => {
-        // Filter out transactions for the provider being cleared
         const otherProviderTransactions = providerToClear 
             ? prev.filter(t => t.provider !== providerToClear)
             : prev;
         
-        // Add the new transactions
         return [...otherProviderTransactions, ...fullTransactions];
     });
   }, [setTransactions]);
@@ -59,6 +59,23 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
         return acc;
       }, 0);
   }, [transactions]);
+
+  const getProcessedTransactions = useCallback((provider: 'Moov' | 'Yas'): AirtimeTransaction[] => {
+    const providerTransactions = transactions.filter(t => t.provider === provider);
+    let balance = 0;
+    const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const withBalance = sorted.map(t => {
+        if (t.type === 'purchase' || t.type === 'adjustment') {
+            balance += t.amount;
+        } else if (t.type === 'sale') {
+            balance -= t.amount;
+        }
+        return { ...t, balance };
+    });
+
+    return withBalance.reverse();
+  }, [transactions]);
   
 
   const value = useMemo(() => ({
@@ -68,7 +85,8 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     addBulkTransactions,
     removeTransaction,
     getStock,
-  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getStock]);
+    getProcessedTransactions,
+  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getStock, getProcessedTransactions]);
 
   return (
     <AirtimeContext.Provider value={value}>

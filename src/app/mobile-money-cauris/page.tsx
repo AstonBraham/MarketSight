@@ -11,7 +11,7 @@ import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust
 import { useMemo, useState, useEffect } from 'react';
 
 export default function MobileMoneyCaurisPage() {
-    const { transactions, getBalance } = useMobileMoney();
+    const { transactions, getBalance, getProcessedTransactions } = useMobileMoney();
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -34,20 +34,8 @@ export default function MobileMoneyCaurisPage() {
         .reduce((acc, t) => acc + t.commission, 0);
     
     const processedTransactions = useMemo(() => {
-        let balance = 0;
-        const sorted = [...caurisTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        
-        const withBalance = sorted.map(t => {
-            if (t.type === 'deposit' || t.type === 'purchase' || t.type === 'collect_commission' || t.type === 'adjustment') {
-                balance += t.amount;
-            } else if (t.type === 'withdrawal' || t.type === 'virtual_return' || t.type === 'pos_transfer' || t.type === 'transfer') {
-                balance -= t.amount;
-            }
-            return { ...t, balance };
-        });
-
-        return withBalance.reverse();
-    }, [caurisTransactions]);
+        return getProcessedTransactions('Cauris');
+    }, [getProcessedTransactions, caurisTransactions]);
 
   if (!isClient) {
     return null; // ou un skeleton/loader
