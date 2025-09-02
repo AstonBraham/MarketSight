@@ -11,37 +11,14 @@ import { AddSaleDialog } from '@/components/sales/add-sale-dialog';
 import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
 import { DataTable } from '@/components/data-table/data-table';
-import type { Invoice, InventoryItem } from '@/lib/types';
+import type { Invoice, InventoryItem, Sale } from '@/lib/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useRouter } from 'next/navigation';
 import { useInventory } from '@/context/inventory-context';
 import { QuickSaleDialog } from '@/components/sales/quick-sale-dialog';
+import { columns as invoiceColumns } from '@/components/invoices/columns-invoices';
+import { columns as salesColumns } from '@/components/sales/columns-sales';
 
-
-export const columns: ColumnDef<Invoice>[] = [
-    {
-        accessorKey: 'id',
-        header: 'N° Facture',
-    },
-    {
-        accessorKey: 'date',
-        header: 'Date',
-        cell: ({ row }) => new Date(row.original.date).toLocaleDateString('fr-FR'),
-    },
-    {
-        accessorKey: 'clientName',
-        header: 'Client',
-    },
-    {
-        accessorKey: 'total',
-        header: () => <div className="text-right">Montant Total</div>,
-        cell: ({ row }) => (
-            <div className="text-right font-medium">
-                {new Intl.NumberFormat('fr-FR').format(row.original.total)} F
-            </div>
-        ),
-    },
-];
 
 const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
     return (
@@ -61,11 +38,6 @@ const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
 export default function InvoicesPage() {
     const { invoices, sales } = useTransactions();
     const { inventory } = useInventory();
-    const router = useRouter();
-
-    const handleRowClick = (row: any) => {
-        router.push(`/invoices/${row.original.id}`);
-    }
     
     const quickSaleItems = inventory.filter(item => item.isQuickSale);
 
@@ -73,9 +45,15 @@ export default function InvoicesPage() {
         return invoices.reduce((acc, invoice) => acc + invoice.total, 0);
     }, [invoices]);
 
-    const totalCashSales = useMemo(() => {
-        return sales.filter(s => !s.invoiceId).reduce((acc, sale) => acc + sale.amount, 0);
+    const cashSales = useMemo(() => {
+        return sales.filter(s => !s.invoiceId);
     }, [sales]);
+
+    const totalCashSales = useMemo(() => {
+        return cashSales.reduce((acc, sale) => acc + sale.amount, 0);
+    }, [cashSales]);
+
+    const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value);
 
 
   return (
@@ -89,7 +67,7 @@ export default function InvoicesPage() {
                 <Receipt className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalInvoiced)} F</div>
+                <div className="text-2xl font-bold">{formatCurrency(totalInvoiced)} F</div>
                 <p className="text-xs text-muted-foreground">
                 Montant total de toutes les factures émises.
                 </p>
@@ -101,7 +79,7 @@ export default function InvoicesPage() {
                 <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalCashSales)} F</div>
+                <div className="text-2xl font-bold">{formatCurrency(totalCashSales)} F</div>
                 <p className="text-xs text-muted-foreground">
                 Total des ventes rapides et au comptant.
                 </p>
@@ -133,20 +111,36 @@ export default function InvoicesPage() {
             </Card>
         )}
 
-        <Card>
-            <CardHeader>
-                <CardTitle>Factures Récentes</CardTitle>
-                <CardDescription>Liste des dernières factures et ventes au comptant.</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <DataTable
-                    columns={columns}
-                    data={invoices}
-                    filterColumn="clientName"
-                    filterPlaceholder="Filtrer par client..."
-                />
-            </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Factures Récentes</CardTitle>
+                    <CardDescription>Liste des dernières factures émises.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <DataTable
+                        columns={invoiceColumns}
+                        data={invoices}
+                        filterColumn="clientName"
+                        filterPlaceholder="Filtrer par client..."
+                    />
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Ventes au comptant récentes</CardTitle>
+                    <CardDescription>Liste des dernières ventes au comptant.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <DataTable
+                        columns={salesColumns}
+                        data={cashSales}
+                        filterColumn="product"
+                        filterPlaceholder="Filtrer par produit..."
+                    />
+                </CardContent>
+            </Card>
+        </div>
     </div>
   );
 }

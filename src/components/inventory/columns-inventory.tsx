@@ -18,6 +18,7 @@ import {
 import { useUser } from '@/context/user-context';
 import { EditInventoryItemDialog } from './edit-inventory-item-dialog';
 import { DeleteInventoryItemDialog } from './delete-inventory-item-dialog';
+import { cn } from '@/lib/utils';
 
 
 function ActionsCell({ row }: { row: any }) {
@@ -53,26 +54,30 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: 'Produit',
   },
   {
-    accessorKey: 'sku',
-    header: 'SKU',
-  },
-  {
     accessorKey: 'category',
     header: 'Famille',
   },
   {
     accessorKey: 'inStock',
-    header: 'En Stock',
+    header: () => <div className="text-center">En Stock</div>,
     cell: ({ row }) => {
         const inStock = row.original.inStock;
         const reorderLevel = row.original.reorderLevel;
         const isLow = inStock <= reorderLevel;
         return (
-            <div className="flex items-center gap-2">
-                <span className={isLow ? 'text-destructive font-bold' : ''}>{inStock}</span>
-                {isLow && <Badge variant="destructive">Bas</Badge>}
+            <div className={cn("flex items-center justify-center gap-2", isLow ? 'text-destructive font-bold' : '')}>
+                <span>{inStock}</span>
+                {isLow && <Badge variant="destructive" className="hidden lg:inline-flex">Bas</Badge>}
             </div>
         )
+    }
+  },
+  {
+    accessorKey: 'reorderLevel',
+    header: () => <div className="text-center">Niveau Alerte</div>,
+    cell: ({ row }) => {
+        const reorderLevel = row.original.reorderLevel;
+        return <div className="text-center">{reorderLevel}</div>
     }
   },
   {

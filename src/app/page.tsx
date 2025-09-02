@@ -12,6 +12,7 @@ import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useMemo } from 'react';
 import { UnpaidPurchases } from '@/components/dashboard/unpaid-purchases';
+import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-chart';
 
 export default function DashboardPage() {
     const { getAllTransactions } = useTransactions();
@@ -103,8 +104,9 @@ export default function DashboardPage() {
           <UnpaidPurchases />
           <CashflowChart />
         </div>
-        <div>
+        <div className="grid gap-8">
           <RecentTransactions />
+          <SalesBreakdownChart />
         </div>
       </div>
     </div>

@@ -1,13 +1,21 @@
 
 'use client';
 
-import type { Transaction } from '@/lib/types';
+import type { Transaction, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUp, ArrowDown, ShoppingCart, Truck, Banknote, SlidersHorizontal, Smartphone, Send, Repeat, HandCoins, Wifi, Receipt, FileCheck2, SquareArrowOutUpRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '../ui/button';
+
+type HistoryTransaction = Transaction & { 
+    source?: string, 
+    link?: string, 
+    phoneNumber?: string, 
+    transactionId?: string 
+};
+
 
 const getIconAndStyle = (type: string) => {
     switch (type) {
@@ -35,7 +43,7 @@ const getIconAndStyle = (type: string) => {
 }
 
 
-export const columns: ColumnDef<Transaction & { source?: string, link?: string }>[] = [
+export const columns: ColumnDef<HistoryTransaction>[] = [
   {
     accessorKey: 'date',
     header: 'Heure',
@@ -57,22 +65,33 @@ export const columns: ColumnDef<Transaction & { source?: string, link?: string }
     accessorKey: 'description',
     header: 'Description',
      cell: ({ row }) => {
-        const description = row.getValue('description') as string;
-        const link = row.original.link;
+        const transaction = row.original;
+        const description = transaction.description;
+        const link = transaction.link;
+        const phoneNumber = transaction.phoneNumber;
+        const transactionId = transaction.transactionId;
         
-        if (link) {
-            return (
+        return (
+            <div>
                 <div className="flex items-center">
-                   <span>{description}</span>
-                    <Button asChild variant="link" size="icon" className="h-5 w-5 ml-1">
-                        <Link href={link} target="_blank">
-                             <SquareArrowOutUpRight className="h-3 w-3" />
-                        </Link>
-                    </Button>
+                   <span className="font-medium">{description}</span>
+                    {link && (
+                        <Button asChild variant="link" size="icon" className="h-5 w-5 ml-1">
+                            <Link href={link} target="_blank">
+                                <SquareArrowOutUpRight className="h-3 w-3" />
+                            </Link>
+                        </Button>
+                    )}
                 </div>
-            )
-        }
-        return <span>{description}</span>
+                 {(phoneNumber || transactionId) && (
+                    <div className="text-xs text-muted-foreground">
+                        {phoneNumber && <span>Tél: {phoneNumber}</span>}
+                        {phoneNumber && transactionId && <span> &bull; </span>}
+                        {transactionId && <span>ID: {transactionId}</span>}
+                    </div>
+                )}
+            </div>
+        )
      }
   },
   {

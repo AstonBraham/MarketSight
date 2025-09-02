@@ -9,6 +9,13 @@ import { startOfDay, endOfDay, isEqual } from 'date-fns';
 import { useAirtime } from './airtime-context';
 import { useMobileMoney } from './mobile-money-context';
 
+type HistoryTransaction = Transaction & { 
+    source?: string, 
+    link?: string, 
+    phoneNumber?: string, 
+    transactionId?: string 
+};
+
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
   setTransactions: (transactions: (Sale | Purchase | Expense | Transaction)[]) => void;
@@ -33,7 +40,7 @@ interface TransactionContextType {
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
-  getDailyHistory: (date: Date) => (Transaction & { source?: string, link?: string })[];
+  getDailyHistory: (date: Date) => HistoryTransaction[];
   addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
   clearWifiSales: () => void;
   clearCashTransactions: () => void;
@@ -282,7 +289,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     return cashTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
   }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
   
-  const getDailyHistory = useCallback((date: Date): (Transaction & { source?: string, link?: string })[] => {
+  const getDailyHistory = useCallback((date: Date): HistoryTransaction[] => {
     const start = startOfDay(date);
     const end = endOfDay(date);
 
@@ -291,7 +298,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         return transactionDate >= start && transactionDate <= end;
     };
     
-    let allDailyTransactions: (Transaction & { source?: string, link?: string, amount: number })[] = [];
+    let allDailyTransactions: HistoryTransaction[] = [];
 
     // Base transactions (sales, expenses, purchases, adjustments)
     transactions
@@ -322,9 +329,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .filter(filterByDate)
         .forEach(at => {
             if (at.type === 'sale') {
-                allDailyTransactions.push({ ...at, type: 'Vente Airtime', source: at.provider, amount: at.amount });
+                allDailyTransactions.push({ ...at, type: 'Vente Airtime', source: at.provider, amount: at.amount, description: `Vente Airtime ${at.provider}` });
             } else if (at.type === 'purchase') {
-                allDailyTransactions.push({ ...at, type: 'Achat Airtime', source: at.provider, amount: -at.amount });
+                allDailyTransactions.push({ ...at, type: 'Achat Airtime', source: at.provider, amount: -at.amount, description: `Achat Airtime ${at.provider}` });
             }
         });
     
@@ -334,17 +341,20 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         .forEach(mt => {
             let cashFlowImpact = 0;
             let type = mt.type;
-            switch (mt.type) {
-                case 'deposit': cashFlowImpact = mt.amount; break;
-                case 'withdrawal': cashFlowImpact = -mt.amount; break;
-                case 'purchase': cashFlowImpact = -mt.amount; type = 'MM Purchase'; break;
-                case 'virtual_return': cashFlowImpact = mt.amount; type = 'MM Virtual Return'; break;
-                case 'transfer_to_pos': if (mt.affectsCash) { cashFlowImpact = mt.amount; type = 'MM Transfer'; } break;
-                case 'transfer_from_pos': if (mt.affectsCash) { cashFlowImpact = -mt.amount; type = 'MM Transfer'; } break;
-                case 'collect_commission': cashFlowImpact = mt.amount; type = 'MM Commission'; break;
+            let description = mt.description || `${type} ${mt.provider}`;
+
+             switch (mt.type) {
+                case 'deposit': cashFlowImpact = mt.amount; description = `Dépôt MM ${mt.provider}`; break;
+                case 'withdrawal': cashFlowImpact = -mt.amount; description = `Retrait MM ${mt.provider}`; break;
+                case 'purchase': cashFlowImpact = -mt.amount; type = 'MM Purchase'; description = `Achat virtuel ${mt.provider}`; break;
+                case 'virtual_return': cashFlowImpact = mt.amount; type = 'MM Virtual Return'; description = `Retour virtuel ${mt.provider}`; break;
+                case 'transfer_to_pos': if (mt.affectsCash) { cashFlowImpact = mt.amount; type = 'MM Transfer'; description = `Transfert vers PDV ${mt.phoneNumber}`; } break;
+                case 'transfer_from_pos': if (mt.affectsCash) { cashFlowImpact = -mt.amount; type = 'MM Transfer'; description = `Transfert depuis PDV ${mt.phoneNumber}`; } break;
+                case 'collect_commission': cashFlowImpact = mt.amount; type = 'MM Commission'; description = `Collecte commission ${mt.provider}`; break;
             }
+
             if (cashFlowImpact !== 0) {
-                allDailyTransactions.push({ ...mt, amount: cashFlowImpact, type, description: mt.description || `${type} ${mt.provider}` });
+                allDailyTransactions.push({ ...mt, amount: cashFlowImpact, type, description });
             }
         });
 
@@ -409,5 +419,3 @@ export function useTransactions() {
   }
   return context;
 }
-
-    
