@@ -2,7 +2,7 @@
 'use client';
 
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { ExcelImport } from '@/components/excel-import';
 import type { InventoryItem, Sale, Expense, AirtimeTransaction, MobileMoneyTransaction, MobileMoneyProvider, Invoice, CashClosing, Transaction } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -13,8 +13,20 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
-import { Save, Upload, BrainCircuit } from 'lucide-react';
+import { Save, Upload, BrainCircuit, Trash2 } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
 
 function CategoryManager({ title, categories, onAddCategory }: { title: string, categories: string[], onAddCategory: (category: string) => void }) {
   const [newCategory, setNewCategory] = useState('');
@@ -156,6 +168,71 @@ function BackupAndRestore() {
   )
 }
 
+function MaintenanceActions() {
+    const { toast } = useToast();
+    const { clearInventory } = useInventory();
+    const { setTransactions, setInvoices, setCashClosings } = useTransactions();
+    const { setTransactions: setAirtimeTransactions } = useAirtime();
+    const { setTransactions: setMobileMoneyTransactions } = useMobileMoney();
+    
+    const handleClearData = () => {
+        try {
+            clearInventory();
+            setTransactions([]);
+            setInvoices([]);
+            setCashClosings([]);
+            setAirtimeTransactions([]);
+            setMobileMoneyTransactions([]);
+
+            toast({
+                title: 'Données Effacées',
+                description: "L'inventaire et toutes les transactions ont été réinitialisés.",
+                variant: 'default',
+            });
+        } catch (error) {
+             toast({
+                title: 'Erreur',
+                description: "Une erreur est survenue lors de la suppression des données.",
+                variant: 'destructive',
+            });
+        }
+    }
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Actions de maintenance</CardTitle>
+                <CardDescription>Actions irréversibles pour la gestion des données de l'application.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                         <Button variant="destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Vider l'inventaire et les transactions
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Cette action est irréversible. Toutes vos données (produits, ventes, achats, dépenses, etc.) seront définitivement effacées.
+                            Il est fortement recommandé de faire une sauvegarde avant de continuer.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleClearData} className="bg-destructive hover:bg-destructive/90">
+                            Oui, tout supprimer
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </CardContent>
+        </Card>
+    )
+}
+
 
 export default function SettingsPage() {
   const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels, inventory } = useInventory();
@@ -236,7 +313,11 @@ export default function SettingsPage() {
                 throw new Error(`Ligne ${line}: Les colonnes date, sku_ou_reference, quantity et price sont obligatoires.`);
             }
 
-            const item = inventory.find(i => i.sku === identifier || i.reference === identifier);
+            const item = inventory.find(i => 
+                (i.sku && i.sku.trim() === identifier) || 
+                (i.reference && i.reference.trim() === identifier)
+            );
+
 
             if (!item) {
                 throw new Error(`Ligne ${line}: Article avec SKU/Référence "${identifier}" non trouvé dans l'inventaire.`);
@@ -401,6 +482,7 @@ export default function SettingsPage() {
       <PageHeader title="Paramètres" />
       
       <BackupAndRestore />
+      <MaintenanceActions />
 
       <Card>
         <CardHeader>
