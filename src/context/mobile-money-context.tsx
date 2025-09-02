@@ -60,17 +60,20 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         .filter(t => t.provider === provider)
         .reduce((acc, t) => {
             switch (t.type) {
-                case 'deposit':
                 case 'purchase':
-                case 'collect_commission':
-                case 'transfer_from_pos':
                     return acc + t.amount;
                 case 'withdrawal':
                     return acc - t.amount + t.commission;
+                case 'deposit':
+                    return acc - t.amount;
+                case 'collect_commission':
+                    return acc + t.amount;
                 case 'virtual_return':
                 case 'transfer_to_pos':
                 case 'pos_transfer':
                     return acc - t.amount;
+                case 'transfer_from_pos':
+                    return acc + t.amount;
                 case 'adjustment':
                     return acc + t.amount;
                 default:
@@ -86,19 +89,25 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
      
      const withBalance = sorted.map(t => {
          switch (t.type) {
-            case 'deposit':
             case 'purchase':
-            case 'collect_commission':
-            case 'transfer_from_pos':
                 balance += t.amount;
                 break;
             case 'withdrawal':
                 balance = balance - t.amount + t.commission;
                 break;
+            case 'deposit':
+                balance -= t.amount;
+                break;
+            case 'collect_commission':
+                 balance += t.amount;
+                 break;
             case 'virtual_return':
             case 'transfer_to_pos':
             case 'pos_transfer':
                 balance -= t.amount;
+                break;
+             case 'transfer_from_pos':
+                balance += t.amount;
                 break;
              case 'adjustment':
                 balance += t.amount;

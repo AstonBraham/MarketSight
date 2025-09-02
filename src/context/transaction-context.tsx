@@ -224,70 +224,18 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [addAdjustment, setCashClosings]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
-     let allTransactions: Transaction[] = [...transactions];
+    const allCashTransactions: Transaction[] = [...transactions];
 
-     airtimeTransactions.forEach(at => {
-        if(at.type === 'sale') {
-            allTransactions.push({ id: at.id, type: 'sale', amount: at.amount, date: at.date, description: `Vente Airtime ${at.provider}`});
-        } else if (at.type === 'purchase') {
-            allTransactions.push({ id: at.id, type: 'purchase', amount: at.amount, date: at.date, description: `Achat Airtime ${at.provider}`});
-        }
-     });
-
-     mobileMoneyTransactions.forEach(mt => {
-        let cashFlowImpact = 0;
-        let description = '';
-
-        switch(mt.type) {
-            case 'deposit':
-                cashFlowImpact = mt.amount;
-                description = `Dépôt MM ${mt.provider} (${mt.transactionId})`;
-                break;
-            case 'withdrawal':
-                cashFlowImpact = -mt.amount;
-                description = `Retrait MM ${mt.provider} (${mt.transactionId})`;
-                break;
-            case 'purchase':
-                cashFlowImpact = -mt.amount;
-                description = `Achat virtuel ${mt.provider} (${mt.transactionId})`;
-                break;
-            case 'virtual_return':
-                cashFlowImpact = mt.amount;
-                description = `Retour virtuel ${mt.provider} (${mt.transactionId})`;
-                break;
-            case 'transfer_to_pos':
-                if (mt.affectsCash) {
-                    cashFlowImpact = mt.amount;
-                    description = `Transfert vers PDV ${mt.phoneNumber} (${mt.transactionId})`;
-                }
-                break;
-            case 'transfer_from_pos':
-                if (mt.affectsCash) {
-                    cashFlowImpact = -mt.amount;
-                    description = `Transfert depuis PDV ${mt.phoneNumber} (${mt.transactionId})`;
-                }
-                break;
-            case 'collect_commission':
-                 cashFlowImpact = mt.amount;
-                 description = `Collecte commission ${mt.provider} (${mt.transactionId})`;
-                 break;
-        }
-
-        if(cashFlowImpact !== 0) {
-            allTransactions.push({ id: mt.id, type: cashFlowImpact > 0 ? 'sale' : 'expense', amount: Math.abs(cashFlowImpact), date: mt.date, description: description });
-        }
-     });
-
-    const cashTransactions = allTransactions.filter(t => {
+    return allCashTransactions
+      .filter(t => {
         if (t.type === 'purchase') {
             const p = t as Purchase;
             return p.status !== 'unpaid';
         }
         return t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment';
-    });
-
-    return cashTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
-  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
+      })
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
+  }, [transactions]);
   
   const getDailyHistory = useCallback((date: Date): HistoryTransaction[] => {
     const start = startOfDay(date);

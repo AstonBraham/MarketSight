@@ -15,7 +15,7 @@ import { UnpaidPurchases } from '@/components/dashboard/unpaid-purchases';
 import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-chart';
 
 export default function DashboardPage() {
-    const { getAllTransactions } = useTransactions();
+    const { getAllTransactions, sales } = useTransactions();
     const { inventory } = useInventory();
     const { getStock: getAirtimeStock } = useAirtime();
     const { getBalance: getMobileMoneyBalance } = useMobileMoney();
@@ -46,21 +46,22 @@ export default function DashboardPage() {
     const airtimeStockYas = getAirtimeStock('Yas');
     const mobileMoneyBalanceFlooz = getMobileMoneyBalance('Flooz');
     const mobileMoneyBalanceMixx = getMobileMoneyBalance('Mixx');
+    const mobileMoneyBalanceCauris = getMobileMoneyBalance('Cauris');
 
-    const totalVirtualBalance = airtimeStockMoov + airtimeStockYas + mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx;
+    const totalVirtualBalance = airtimeStockMoov + airtimeStockYas + mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCauris;
 
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
     
-    const todaySales = allTransactions
-        .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === today.toDateString())
+    const todaySales = sales
+        .filter(t => new Date(t.date).toDateString() === today.toDateString())
         .reduce((acc, t) => acc + t.amount, 0);
 
-    const monthSales = allTransactions
+    const monthSales = sales
         .filter(t => {
             const transactionDate = new Date(t.date);
-            return t.type === 'sale' && transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
         })
         .reduce((acc, t) => acc + t.amount, 0);
 

@@ -19,7 +19,7 @@ import {
 import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19A3', '#19B2FF'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF19A3', '#19B2FF', '#F44336', '#4CAF50', '#9C27B0'];
 
 export function SalesBreakdownChart() {
   const { sales } = useTransactions();
@@ -35,9 +35,17 @@ export function SalesBreakdownChart() {
       data[category] += sale.amount;
     });
 
-    return Object.keys(data)
+    let processedData = Object.keys(data)
       .map(name => ({ name, value: data[name] }))
       .sort((a, b) => b.value - a.value);
+
+    if (processedData.length > 9) {
+      const top9 = processedData.slice(0, 9);
+      const othersValue = processedData.slice(9).reduce((acc, item) => acc + item.value, 0);
+      processedData = [...top9, { name: 'Autres', value: othersValue }];
+    }
+
+    return processedData;
 
   }, [sales]);
 
