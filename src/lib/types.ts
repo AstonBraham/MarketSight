@@ -19,7 +19,7 @@ export type Sale = Transaction & {
   quantity?: number;
   itemType?: string;
   discount?: number;
-  invoiceId?: string; // Ajout de la référence à la facture
+  invoiceId?: string;
 };
 
 export type Purchase = Transaction & {
@@ -48,7 +48,7 @@ export type InventoryItem = {
   supplier: string;
   defaultPrice?: number;
   isQuickSale?: boolean;
-  costPrice?: number; // Coût unitaire moyen pondéré (CUMP)
+  costPrice?: number;
 };
 
 export type StockMovement = {
@@ -94,7 +94,7 @@ export type MobileMoneyTransaction = {
     commission: number;
     date: string;
     phoneNumber?: string;
-    affectsCash?: boolean; // For POS transfers
+    affectsCash?: boolean;
     balance?: number;
     description?: string;
 }
@@ -126,3 +126,5 @@ export interface CashClosing {
     notes?: string;
     closedBy: string;
 }
+
+    

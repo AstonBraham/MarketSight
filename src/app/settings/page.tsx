@@ -196,15 +196,15 @@ export default function SettingsPage() {
         }
         return {
             id: `imported-${Date.now()}-${index}`,
-            productName: row['productName'] || row['Nom du produit'],
-            sku: row['sku'] || row['SKU'] || '',
-            category: row['category'] || row['Famille'],
-            brand: row['brand'] || row['Marque'] || '',
-            reference: row['reference'] || row['Référence'] || '',
+            productName: String(row['productName'] || row['Nom du produit'] || '').trim(),
+            sku: String(row['sku'] || row['SKU'] || '').trim(),
+            category: String(row['category'] || row['Famille'] || '').trim(),
+            brand: String(row['brand'] || row['Marque'] || '').trim(),
+            reference: String(row['reference'] || row['Référence'] || '').trim(),
             inStock: parseInt(row['inStock'] || row['En Stock'] || '0', 10),
             inTransit: 0, // Not imported
             reorderLevel: parseInt(row['reorderLevel'] || '0', 10), // Default to 0, will be calculated later
-            supplier: row['supplier'] || row['Fournisseur'] || '',
+            supplier: String(row['supplier'] || row['Fournisseur'] || '').trim(),
             defaultPrice: parseFloat(row['defaultPrice'] || '0'),
             costPrice: parseFloat(row['costPrice'] || '0'),
             isQuickSale: false, // Default value
@@ -230,7 +230,7 @@ export default function SettingsPage() {
      try {
         const newSales = data.map((row, index) => {
             const line = index + 2;
-            const identifier = row['sku_ou_reference'];
+            const identifier = String(row['sku_ou_reference'] || '').trim();
 
             if (!row['date'] || !identifier || !row['quantity'] || !row['price']) {
                 throw new Error(`Ligne ${line}: Les colonnes date, sku_ou_reference, quantity et price sont obligatoires.`);
@@ -456,5 +456,7 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
 
     
