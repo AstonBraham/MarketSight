@@ -59,7 +59,7 @@ export default function AirtimeYasPage() {
         return getProcessedTransactions('Yas');
     }, [getProcessedTransactions, yasTransactions]);
 
-    const isStockLow = remainingDays <= 7;
+    const isStockLow = remainingDays <= 3;
     
   if (!isClient) {
     return null; // ou un skeleton/loader

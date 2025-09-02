@@ -59,7 +59,7 @@ export default function AirtimeMoovPage() {
     return getProcessedTransactions('Moov');
   }, [getProcessedTransactions, moovTransactions]);
 
-  const isStockLow = remainingDays <= 7;
+  const isStockLow = remainingDays <= 3;
 
 
   if (!isClient) {
