@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useTransactions } from './transaction-context';
 
 interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
@@ -12,13 +13,14 @@ interface MobileMoneyContextType {
   addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => void;
   removeTransaction: (id: string) => void;
   getBalance: (provider: MobileMoneyProvider) => number;
-  getCashFlowTransactions: () => { id: string; date: string; type: 'sale' | 'expense' | 'purchase'; amount: number; description: string; category: string }[];
 }
 
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
+  const { addAdjustment } = useTransactions();
+
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
     const newTransaction: MobileMoneyTransaction = {
@@ -27,7 +29,42 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev]);
-  }, [setTransactions]);
+
+    // Handle cash flow impact
+    let cashFlowImpact: { amount: number, description: string } | null = null;
+    
+    switch(newTransaction.type) {
+      case 'deposit':
+        // Client gives us cash, it's an income
+        cashFlowImpact = { amount: newTransaction.amount, description: `Dépôt MM ${newTransaction.provider} (${newTransaction.transactionId})` };
+        break;
+      case 'withdrawal':
+        // We give cash to client, it's an expense
+        cashFlowImpact = { amount: -newTransaction.amount, description: `Retrait MM ${newTransaction.provider} (${newTransaction.transactionId})` };
+        break;
+      case 'purchase':
+        cashFlowImpact = { amount: -newTransaction.amount, description: `Achat virtuel ${newTransaction.provider} (${newTransaction.transactionId})` };
+        break;
+      case 'virtual_return':
+        cashFlowImpact = { amount: newTransaction.amount, description: `Retour virtuel ${newTransaction.provider} (${newTransaction.transactionId})` };
+        break;
+      case 'transfer_to_pos':
+        if (newTransaction.affectsCash) {
+          cashFlowImpact = { amount: newTransaction.amount, description: `Transfert vers PDV ${newTransaction.phoneNumber} (${newTransaction.transactionId})` };
+        }
+        break;
+      case 'transfer_from_pos':
+        if (newTransaction.affectsCash) {
+          cashFlowImpact = { amount: -newTransaction.amount, description: `Transfert depuis PDV ${newTransaction.phoneNumber} (${newTransaction.transactionId})` };
+        }
+        break;
+    }
+
+    if (cashFlowImpact) {
+      addAdjustment({ ...cashFlowImpact, date: newTransaction.date });
+    }
+
+  }, [setTransactions, addAdjustment]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => {
     const fullTransactions = newTransactions.map((t, i) => ({
@@ -59,13 +96,13 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
                 case 'purchase':
                 case 'collect_commission':
                 case 'transfer_from_pos':
-                    // Our virtual balance increases
                     return acc + t.amount;
                 case 'withdrawal':
+                     // Virtual balance decreases by the amount, but increases by the commission
+                    return acc - t.amount + t.commission;
                 case 'virtual_return':
                 case 'transfer_to_pos':
                 case 'pos_transfer':
-                    // Our virtual balance decreases
                     return acc - t.amount;
                 case 'adjustment':
                     return acc + t.amount;
@@ -75,49 +112,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         }, 0);
   }, [transactions]);
   
-  const getCashFlowTransactions = useCallback(() => {
-    const cashFlow: { id: string; date: string; type: 'sale' | 'expense' | 'purchase'; amount: number; description: string; category: string }[] = [];
-
-    transactions.forEach(t => {
-      const cashFlowId = `VIRTUAL-${t.id}`;
-      
-      switch(t.type) {
-          case 'deposit':
-              // Client gives us cash, it's an income
-              cashFlow.push({ id: cashFlowId, date: t.date, type: 'sale', amount: t.amount, description: `Dépôt MM ${t.provider}`, category: 'Mobile Money' });
-              break;
-          case 'withdrawal':
-              // We give cash to client, it's an expense
-              cashFlow.push({ id: cashFlowId, date: t.date, type: 'expense', amount: t.amount, description: `Retrait MM ${t.provider}`, category: 'Mobile Money' });
-              // But we earn commission, so it's an income
-              if (t.commission > 0) {
-                 cashFlow.push({ id: `${cashFlowId}-COMM`, date: t.date, type: 'sale', amount: t.commission, description: `Commission Retrait MM ${t.provider}`, category: 'Mobile Money' });
-              }
-              break;
-          case 'purchase':
-              cashFlow.push({ id: cashFlowId, date: t.date, type: 'purchase', amount: t.amount, description: `Achat virtuel ${t.provider}`, category: 'Mobile Money' });
-              break;
-          case 'virtual_return':
-              // We get cash back, it's an income
-              cashFlow.push({ id: cashFlowId, date: t.date, type: 'sale', amount: t.amount, description: `Retour virtuel ${t.provider}`, category: 'Mobile Money' });
-              break;
-          case 'transfer_to_pos':
-              // We send virtual, if it affects cash, we receive cash (income)
-              if (t.affectsCash) {
-                  cashFlow.push({ id: cashFlowId, date: t.date, type: 'sale', amount: t.amount, description: `Transfert vers PDV ${t.phoneNumber}`, category: 'Mobile Money' });
-              }
-              break;
-          case 'transfer_from_pos':
-               // We receive virtual, if it affects cash, we give cash (expense)
-               if (t.affectsCash) {
-                  cashFlow.push({ id: cashFlowId, date: t.date, type: 'expense', amount: t.amount, description: `Transfert depuis PDV ${t.phoneNumber}`, category: 'Mobile Money' });
-              }
-              break;
-      }
-    });
-
-    return cashFlow;
-  }, [transactions]);
 
   const value = useMemo(() => ({
     transactions,
@@ -126,8 +120,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     addBulkTransactions,
     removeTransaction,
     getBalance,
-    getCashFlowTransactions,
-  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getBalance, getCashFlowTransactions]);
+  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getBalance]);
 
   return (
     <MobileMoneyContext.Provider value={value}>

@@ -1,20 +1,11 @@
 
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { startOfDay, endOfDay, isEqual } from 'date-fns';
-
-// Create contexts for Airtime and MobileMoney to be used here
-// This avoids circular dependencies
-const AirtimeContext = createContext<{ transactions: AirtimeTransaction[] }>({ transactions: [] });
-const MobileMoneyContext = createContext<{ transactions: MobileMoneyTransaction[] }>({ transactions: [] });
-
-// Custom hooks to use these placeholder contexts
-export const useAirtimeTransactions = () => useContext(AirtimeContext);
-export const useMobileMoneyTransactions = () => useContext(MobileMoneyContext);
-
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -35,7 +26,7 @@ interface TransactionContextType {
   addBulkExpenses: (expenses: Omit<Expense, 'id' | 'type' | 'currency'>[]) => void;
   removeExpense: (id: string) => void;
   addExpenseCategory: (category: string) => void;
-  addAdjustment: (adjustment: { amount: number; description: string }) => void;
+  addAdjustment: (adjustment: { amount: number; description: string, date?: string }) => void;
   addBulkAdjustments: (adjustments: Omit<Transaction, 'id' | 'type' | 'category'>[]) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
@@ -47,78 +38,11 @@ interface TransactionContextType {
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
-// This is the main provider that now wraps the others
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
   
-  // These hooks will get data from the providers nested inside this one
-  const { transactions: airtimeTransactions } = useAirtimeTransactions();
-  const { transactions: mobileMoneyTransactions } = useMobileMoneyTransactions();
-
-  // Effect to sync cash flow from Airtime/MobileMoney operations
-  useEffect(() => {
-    // This logic is complex because we need to avoid adding duplicates on re-renders
-    // We'll create a Set of transaction IDs that have already been processed into cash flow
-    const processedVirtualIds = new Set(transactions.filter(t => t.id.startsWith('VIRTUAL-')).map(t => t.id));
-
-    const virtualCashTransactions: Transaction[] = [];
-
-    airtimeTransactions.forEach(t => {
-      const cashFlowId = `VIRTUAL-${t.id}`;
-      if (processedVirtualIds.has(cashFlowId)) return;
-
-      if (t.type === 'sale') {
-        virtualCashTransactions.push({ id: cashFlowId, type: 'sale', amount: t.amount, date: t.date, description: `Vente Airtime ${t.provider}`, category: 'Airtime' });
-      } else if (t.type === 'purchase') {
-        virtualCashTransactions.push({ id: cashFlowId, type: 'purchase', amount: t.amount, date: t.date, description: `Achat Airtime ${t.provider}`, category: 'Airtime' });
-      }
-    });
-
-    mobileMoneyTransactions.forEach(t => {
-       const cashFlowId = `VIRTUAL-${t.id}`;
-       if (processedVirtualIds.has(cashFlowId)) return;
-
-       let cashTransaction: Omit<Transaction, 'id' | 'date'> | null = null;
-       
-        switch(t.type) {
-            case 'deposit':
-                cashTransaction = { type: 'sale', amount: t.amount, description: `Dépôt MM ${t.provider}`, category: 'Mobile Money' };
-                break;
-            case 'withdrawal':
-                cashTransaction = { type: 'expense', amount: t.amount, description: `Retrait MM ${t.provider}`, category: 'Mobile Money' };
-                break;
-            case 'purchase':
-                cashTransaction = { type: 'purchase', amount: t.amount, description: `Achat virtuel ${t.provider}`, category: 'Mobile Money' };
-                break;
-            case 'virtual_return':
-                cashTransaction = { type: 'sale', amount: t.amount, description: `Retour virtuel ${t.provider}`, category: 'Mobile Money' };
-                break;
-            case 'transfer_to_pos':
-                if (t.affectsCash) {
-                    cashTransaction = { type: 'sale', amount: t.amount, description: `Transfert vers PDV ${t.phoneNumber}`, category: 'Mobile Money' };
-                }
-                break;
-            case 'transfer_from_pos':
-                 if (t.affectsCash) {
-                    cashTransaction = { type: 'expense', amount: t.amount, description: `Transfert depuis PDV ${t.phoneNumber}`, category: 'Mobile Money' };
-                }
-                break;
-        }
-
-        if (cashTransaction) {
-            virtualCashTransactions.push({ ...cashTransaction, id: cashFlowId, date: t.date });
-        }
-    });
-
-    if (virtualCashTransactions.length > 0) {
-      setTransactions(prev => [...prev, ...virtualCashTransactions]);
-    }
-  // We only want to run this when the virtual transactions change.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [airtimeTransactions, mobileMoneyTransactions]);
-
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -229,12 +153,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.filter(t => t.id !== id && t.type === 'expense'));
   }, [setTransactions]);
 
-  const addAdjustment = useCallback((adjustment: { amount: number; description: string }) => {
+  const addAdjustment = useCallback((adjustment: { amount: number; description: string, date?: string }) => {
     const newAdjustment: Transaction = {
       ...adjustment,
       id: `ADJ${Date.now()}`,
       type: 'adjustment',
-      date: new Date().toISOString(),
+      date: adjustment.date || new Date().toISOString(),
       category: 'Ajustement'
     };
     setTransactions(prev => [newAdjustment, ...prev]);
