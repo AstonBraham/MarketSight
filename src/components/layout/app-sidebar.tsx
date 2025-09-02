@@ -32,7 +32,8 @@ import {
   Receipt,
   Landmark,
   Wifi,
-  Archive
+  Archive,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -64,6 +65,7 @@ const allMenuItems = [
   { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin', 'user'] },
   { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin', 'user'] },
   { href: '/mobile-money-cauris', label: 'Mobile Money Cauris', icon: Send, roles: ['admin', 'user'] },
+  { href: '/history', label: 'Historique', icon: History, roles: ['admin', 'user'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];

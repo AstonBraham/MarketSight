@@ -4,6 +4,9 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useAirtime } from './airtime-context';
+import { useMobileMoney } from './mobile-money-context';
+import { startOfDay, endOfDay, isEqual } from 'date-fns';
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -29,6 +32,7 @@ interface TransactionContextType {
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
+  getDailyHistory: (date: Date) => (Transaction & { source?: string, link?: string })[];
   addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
   clearWifiSales: () => void;
 }
@@ -39,6 +43,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
+  const { transactions: airtimeTransactions } = useAirtime();
+  const { transactions: mobileMoneyTransactions } = useMobileMoney();
 
   useEffect(() => {
     // This effect now does nothing, initial data loading is handled by useLocalStorage.
@@ -223,6 +229,108 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     return cashTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
   }, [transactions]);
   
+  const getDailyHistory = useCallback((date: Date): (Transaction & { source?: string, link?: string })[] => {
+    const start = startOfDay(date);
+    const end = endOfDay(date);
+
+    const filterByDate = (t: { date: string }) => {
+        const transactionDate = new Date(t.date);
+        return transactionDate >= start && transactionDate <= end;
+    };
+    
+    let allDailyTransactions: (Transaction & { source?: string, link?: string })[] = [];
+
+    // Cash Transactions (Sales, Purchases, Expenses, Adjustments)
+    const cashTransactions = transactions
+      .filter(filterByDate)
+      .filter(t => t.type !== 'purchase' || (t as Purchase).status !== 'unpaid')
+      .map(t => {
+          let type = t.type;
+          let link: string | undefined = undefined;
+          if (t.type === 'sale') {
+              const sale = t as Sale;
+              if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
+              if (sale.invoiceId) {
+                type = 'Facture';
+                link = `/invoices/${sale.invoiceId}`;
+              }
+          }
+          return { ...t, amount: t.type === 'sale' ? t.amount : -t.amount, type, link };
+      });
+    allDailyTransactions.push(...cashTransactions);
+
+
+    // Airtime Transactions
+    const dailyAirtime = airtimeTransactions
+        .filter(filterByDate)
+        .map(t => ({
+            id: t.id,
+            date: t.date,
+            description: `${t.type === 'sale' ? 'Vente' : 'Achat'} Airtime ${t.provider} ${t.phoneNumber || ''}`,
+            amount: t.type === 'sale' ? t.amount : -t.amount,
+            type: t.type === 'sale' ? 'Vente Airtime' : 'Achat Airtime',
+            category: 'Airtime',
+        }));
+    allDailyTransactions.push(...dailyAirtime);
+
+    // Mobile Money Transactions
+    const dailyMobileMoney = mobileMoneyTransactions
+        .filter(filterByDate)
+        .map(t => {
+            let amount = 0;
+            let type = '';
+            let description = `MM ${t.provider} - ${t.transactionId}`;
+
+            switch (t.type) {
+                case 'deposit': 
+                    amount = t.amount;
+                    type = 'deposit';
+                    description = `Dépôt MM ${t.provider} - ${t.phoneNumber}`;
+                    break;
+                case 'withdrawal':
+                    amount = -t.amount;
+                    type = 'withdrawal';
+                    description = `Retrait MM ${t.provider} - ${t.phoneNumber}`;
+                    break;
+                case 'purchase':
+                    amount = -t.amount;
+                    type = 'MM Purchase';
+                    description = `Achat virtuel ${t.provider}`;
+                    break;
+                case 'virtual_return':
+                    amount = t.amount;
+                    type = 'MM Transfer';
+                    description = `Retour virtuel ${t.provider}`;
+                    break;
+                case 'transfer_to_pos':
+                    if (t.affectsCash) amount = t.amount;
+                    type = 'MM Transfer';
+                    description = `Transfert vers PDV ${t.phoneNumber}`;
+                    break;
+                case 'transfer_from_pos':
+                    if (t.affectsCash) amount = -t.amount;
+                    type = 'MM Transfer';
+                    description = `Transfert depuis PDV ${t.phoneNumber}`;
+                    break;
+                // Commission and internal adjustments don't affect cash
+            }
+            
+            return {
+                id: t.id,
+                date: t.date,
+                description,
+                amount,
+                type,
+                category: 'Mobile Money'
+            };
+        }).filter(t => t.amount !== 0);
+
+    allDailyTransactions.push(...dailyMobileMoney);
+
+    return allDailyTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
+
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
   const purchases = useMemo(() => transactions.filter(t => t.type === 'purchase') as Purchase[], [transactions]);
   const expenses = useMemo(() => transactions.filter(t => t.type === 'expense') as Expense[], [transactions]);
@@ -251,9 +359,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addInvoice,
     getInvoice,
     getAllTransactions,
+    getDailyHistory,
     addCashClosing,
     clearWifiSales
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, addCashClosing, clearWifiSales]);
+  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, addCashClosing, clearWifiSales]);
 
   return (
     <TransactionContext.Provider value={value}>

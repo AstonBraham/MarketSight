@@ -1,0 +1,92 @@
+
+'use client';
+
+import type { Transaction } from '@/lib/types';
+import { Badge } from '@/components/ui/badge';
+import type { ColumnDef } from '@tanstack/react-table';
+import { ArrowUp, ArrowDown, ShoppingCart, Truck, Banknote, SlidersHorizontal, Smartphone, Send, Repeat, HandCoins, Wifi, Receipt, FileCheck2, SquareArrowOutUpRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { Button } from '../ui/button';
+
+const getIconAndStyle = (type: string) => {
+    switch (type) {
+        case 'sale': return { icon: <ShoppingCart className="mr-1 h-3 w-3" />, style: 'bg-green-100 text-green-700 hover:bg-green-200' };
+        case 'Vente Wifi': return { icon: <Wifi className="mr-1 h-3 w-3" />, style: 'bg-sky-100 text-sky-700 hover:bg-sky-200' };
+        case 'Vente Airtime': return { icon: <Smartphone className="mr-1 h-3 w-3" />, style: 'bg-blue-100 text-blue-700 hover:bg-blue-200' };
+        case 'Facture': return { icon: <Receipt className="mr-1 h-3 w-3" />, style: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' };
+        
+        case 'purchase': return { icon: <Truck className="mr-1 h-3 w-3" />, style: 'bg-red-100 text-red-700 hover:bg-red-200' };
+        case 'Achat Airtime': return { icon: <Smartphone className="mr-1 h-3 w-3" />, style: 'bg-red-100 text-red-700 hover:bg-red-200' };
+        
+        case 'expense': return { icon: <Banknote className="mr-1 h-3 w-3" />, style: 'bg-orange-100 text-orange-700 hover:bg-orange-200' };
+        
+        case 'deposit': return { icon: <ArrowDown className="mr-1 h-3 w-3" />, style: 'bg-teal-100 text-teal-700 hover:bg-teal-200' };
+        case 'withdrawal': return { icon: <ArrowUp className="mr-1 h-3 w-3" />, style: 'bg-pink-100 text-pink-700 hover:bg-pink-200' };
+        case 'MM Purchase': return { icon: <ShoppingCart className="mr-1 h-3 w-3" />, style: 'bg-blue-100 text-blue-700 hover:bg-blue-200' };
+        case 'MM Commission': return { icon: <HandCoins className="mr-1 h-3 w-3" />, style: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' };
+        case 'MM Transfer': return { icon: <Repeat className="mr-1 h-3 w-3" />, style: 'bg-purple-100 text-purple-700 hover:bg-purple-200' };
+        
+        case 'adjustment': return { icon: <SlidersHorizontal className="mr-1 h-3 w-3" />, style: 'border-orange-500 text-orange-600' };
+        case 'closing': return { icon: <FileCheck2 className="mr-1 h-3 w-3" />, style: 'border-gray-500 text-gray-600' };
+
+        default: return { icon: null, style: 'bg-gray-100 text-gray-700' };
+    }
+}
+
+
+export const columns: ColumnDef<Transaction & { source?: string, link?: string }>[] = [
+  {
+    accessorKey: 'date',
+    header: 'Heure',
+    cell: ({ row }) => {
+        const date = new Date(row.getValue('date'));
+        return <span>{date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+    }
+  },
+  {
+    accessorKey: 'type',
+    header: 'Type',
+    cell: ({ row }) => {
+        const type = row.getValue('type') as string;
+        const { icon, style } = getIconAndStyle(type);
+        return <Badge variant='default' className={cn('whitespace-nowrap', style)}>{icon}{type}</Badge>;
+    }
+  },
+  {
+    accessorKey: 'description',
+    header: 'Description',
+     cell: ({ row }) => {
+        const description = row.getValue('description') as string;
+        const link = row.original.link;
+        
+        if (link) {
+            return (
+                <div className="flex items-center">
+                   <span>{description}</span>
+                    <Button asChild variant="link" size="icon" className="h-5 w-5 ml-1">
+                        <Link href={link} target="_blank">
+                             <SquareArrowOutUpRight className="h-3 w-3" />
+                        </Link>
+                    </Button>
+                </div>
+            )
+        }
+        return <span>{description}</span>
+     }
+  },
+  {
+    accessorKey: 'amount',
+    header: () => <div className="text-right">Montant</div>,
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue('amount'));
+      const formatted = new Intl.NumberFormat('fr-FR').format(Math.abs(amount));
+
+      const isCredit = amount > 0;
+      const colorClass = isCredit ? 'text-green-600' : 'text-red-600';
+      const sign = isCredit ? '+' : '-';
+
+      return <div className={cn("text-right font-mono font-semibold", colorClass)}>{sign}{formatted} F</div>;
+    },
+  },
+];
