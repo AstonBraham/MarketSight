@@ -46,9 +46,9 @@ export default function RootLayout({
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <UserProvider>
           <InventoryProvider>
-            <AirtimeProvider>
-              <MobileMoneyProvider>
-                <TransactionProvider>
+            <TransactionProvider>
+              <AirtimeProvider>
+                <MobileMoneyProvider>
                   <SidebarProvider>
                     {isClient && <AppSidebar />}
                     <SidebarInset>
@@ -56,9 +56,9 @@ export default function RootLayout({
                       <Toaster />
                     </SidebarInset>
                   </SidebarProvider>
-                </TransactionProvider>
-              </MobileMoneyProvider>
-            </AirtimeProvider>
+                </MobileMoneyProvider>
+              </AirtimeProvider>
+            </TransactionProvider>
           </InventoryProvider>
         </UserProvider>
       </body>

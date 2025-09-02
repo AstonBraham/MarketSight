@@ -3,7 +3,6 @@
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
-import { useTransactions } from './transaction-context';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface MobileMoneyContextType {
@@ -19,8 +18,6 @@ const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(und
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
-  const { addPurchase, addSale, addExpense, addAdjustment } = useTransactions();
-
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
     const newTransaction: MobileMoneyTransaction = {
@@ -29,70 +26,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev]);
-
-    // This is the core logic to make Mobile Money operations affect cash flow
-    switch (transaction.type) {
-        case 'deposit':
-            // Client gives us cash, we give them virtual. Cash goes UP.
-            addSale({
-                description: `Dépôt Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
-                amount: transaction.amount,
-                client: 'Client Mobile Money',
-                product: 'Dépôt Virtuel'
-            });
-            break;
-        case 'withdrawal':
-            // We give client cash, they give us virtual. Cash goes DOWN.
-            addExpense({
-                description: `Retrait Mobile Money ${transaction.provider} - ${transaction.phoneNumber}`,
-                amount: transaction.amount,
-                category: 'Retrait Mobile Money'
-            });
-            break;
-        case 'purchase':
-            // We buy virtual from operator. Cash goes DOWN.
-            addPurchase({
-                description: `Achat virtuel ${transaction.provider}`,
-                amount: transaction.amount,
-                supplier: transaction.provider,
-                product: 'Virtuel',
-                status: 'paid' // Virtual purchases are always paid immediately
-            });
-            break;
-        case 'virtual_return':
-            // We return virtual to operator, they give us cash. Cash goes UP.
-            addSale({
-                description: `Retour virtuel ${transaction.provider}`,
-                amount: transaction.amount,
-                client: transaction.provider,
-                product: 'Virtuel'
-            });
-            break;
-        case 'transfer_to_pos':
-            // We send virtual to another agent. If they give us cash, cash goes UP.
-            if (transaction.affectsCash) {
-                addSale({
-                    description: `Entrée de caisse pour transfert vers PDV ${transaction.phoneNumber}`,
-                    amount: transaction.amount,
-                    client: `PDV ${transaction.phoneNumber}`,
-                    product: 'Transfert Virtuel',
-                });
-            }
-            break;
-        case 'transfer_from_pos':
-            // We receive virtual from another agent. If we give them cash, cash goes DOWN.
-            if (transaction.affectsCash) {
-                addExpense({
-                    description: `Sortie de caisse pour transfert depuis PDV ${transaction.phoneNumber}`,
-                    amount: transaction.amount,
-                    category: 'Transfert Mobile Money'
-                });
-            }
-            break;
-        // collect_commission and adjustment do not affect cash by default.
-        // They are internal virtual balance operations.
-    }
-  }, [addPurchase, addSale, addExpense, setTransactions, addAdjustment]);
+  }, [setTransactions]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => {
     const fullTransactions = newTransactions.map((t, i) => ({

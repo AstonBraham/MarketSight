@@ -1,10 +1,9 @@
 
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { AirtimeTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useTransactions } from './transaction-context';
 
 interface AirtimeContextType {
   transactions: AirtimeTransaction[];
@@ -19,8 +18,6 @@ const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 
 export function AirtimeProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<AirtimeTransaction[]>('airtimeTransactions', []);
-  const { addSale, addPurchase } = useTransactions();
-
 
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
     const newTransaction: AirtimeTransaction = {
@@ -29,28 +26,7 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev]);
-
-    if (transaction.type === 'sale') {
-      addSale({
-        description: `Vente Airtime ${transaction.provider} - ${transaction.phoneNumber || ''}`,
-        product: `Airtime ${transaction.provider}`,
-        itemType: 'Airtime',
-        client: 'Client Airtime',
-        amount: transaction.amount,
-        quantity: 1,
-        price: transaction.amount,
-      });
-    } else if (transaction.type === 'purchase') {
-      addPurchase({
-        description: `Achat Airtime ${transaction.provider}`,
-        amount: transaction.amount,
-        supplier: transaction.provider,
-        product: 'Airtime',
-        status: 'paid' // Airtime purchases are paid immediately from cash
-      });
-    }
-
-  }, [setTransactions, addSale, addPurchase]);
+  }, [setTransactions]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => {
     const fullTransactions = newTransactions.map((t, i) => ({

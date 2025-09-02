@@ -82,7 +82,7 @@ export const columns: ColumnDef<Transaction & { source?: string, link?: string }
       const amount = parseFloat(row.getValue('amount'));
       const formatted = new Intl.NumberFormat('fr-FR').format(Math.abs(amount));
 
-      const isCredit = amount > 0;
+      const isCredit = amount >= 0;
       const colorClass = isCredit ? 'text-green-600' : 'text-red-600';
       const sign = isCredit ? '+' : '-';
 

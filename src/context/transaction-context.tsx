@@ -2,11 +2,19 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
-import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing } from '@/lib/types';
+import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useAirtime } from './airtime-context';
-import { useMobileMoney } from './mobile-money-context';
 import { startOfDay, endOfDay, isEqual } from 'date-fns';
+
+// Create contexts for Airtime and MobileMoney to be used here
+// This avoids circular dependencies
+const AirtimeContext = createContext<{ transactions: AirtimeTransaction[] }>({ transactions: [] });
+const MobileMoneyContext = createContext<{ transactions: MobileMoneyTransaction[] }>({ transactions: [] });
+
+// Custom hooks to use these placeholder contexts
+export const useAirtimeTransactions = () => useContext(AirtimeContext);
+export const useMobileMoneyTransactions = () => useContext(MobileMoneyContext);
+
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -39,17 +47,78 @@ interface TransactionContextType {
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
+// This is the main provider that now wraps the others
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
-  const { transactions: airtimeTransactions } = useAirtime();
-  const { transactions: mobileMoneyTransactions } = useMobileMoney();
+  
+  // These hooks will get data from the providers nested inside this one
+  const { transactions: airtimeTransactions } = useAirtimeTransactions();
+  const { transactions: mobileMoneyTransactions } = useMobileMoneyTransactions();
 
+  // Effect to sync cash flow from Airtime/MobileMoney operations
   useEffect(() => {
-    // This effect now does nothing, initial data loading is handled by useLocalStorage.
-    // If you want to seed data on first load, you can add logic here checking if transactions is empty.
-  }, []);
+    // This logic is complex because we need to avoid adding duplicates on re-renders
+    // We'll create a Set of transaction IDs that have already been processed into cash flow
+    const processedVirtualIds = new Set(transactions.filter(t => t.id.startsWith('VIRTUAL-')).map(t => t.id));
+
+    const virtualCashTransactions: Transaction[] = [];
+
+    airtimeTransactions.forEach(t => {
+      const cashFlowId = `VIRTUAL-${t.id}`;
+      if (processedVirtualIds.has(cashFlowId)) return;
+
+      if (t.type === 'sale') {
+        virtualCashTransactions.push({ id: cashFlowId, type: 'sale', amount: t.amount, date: t.date, description: `Vente Airtime ${t.provider}`, category: 'Airtime' });
+      } else if (t.type === 'purchase') {
+        virtualCashTransactions.push({ id: cashFlowId, type: 'purchase', amount: t.amount, date: t.date, description: `Achat Airtime ${t.provider}`, category: 'Airtime' });
+      }
+    });
+
+    mobileMoneyTransactions.forEach(t => {
+       const cashFlowId = `VIRTUAL-${t.id}`;
+       if (processedVirtualIds.has(cashFlowId)) return;
+
+       let cashTransaction: Omit<Transaction, 'id' | 'date'> | null = null;
+       
+        switch(t.type) {
+            case 'deposit':
+                cashTransaction = { type: 'sale', amount: t.amount, description: `Dépôt MM ${t.provider}`, category: 'Mobile Money' };
+                break;
+            case 'withdrawal':
+                cashTransaction = { type: 'expense', amount: t.amount, description: `Retrait MM ${t.provider}`, category: 'Mobile Money' };
+                break;
+            case 'purchase':
+                cashTransaction = { type: 'purchase', amount: t.amount, description: `Achat virtuel ${t.provider}`, category: 'Mobile Money' };
+                break;
+            case 'virtual_return':
+                cashTransaction = { type: 'sale', amount: t.amount, description: `Retour virtuel ${t.provider}`, category: 'Mobile Money' };
+                break;
+            case 'transfer_to_pos':
+                if (t.affectsCash) {
+                    cashTransaction = { type: 'sale', amount: t.amount, description: `Transfert vers PDV ${t.phoneNumber}`, category: 'Mobile Money' };
+                }
+                break;
+            case 'transfer_from_pos':
+                 if (t.affectsCash) {
+                    cashTransaction = { type: 'expense', amount: t.amount, description: `Transfert depuis PDV ${t.phoneNumber}`, category: 'Mobile Money' };
+                }
+                break;
+        }
+
+        if (cashTransaction) {
+            virtualCashTransactions.push({ ...cashTransaction, id: cashFlowId, date: t.date });
+        }
+    });
+
+    if (virtualCashTransactions.length > 0) {
+      setTransactions(prev => [...prev, ...virtualCashTransactions]);
+    }
+  // We only want to run this when the virtual transactions change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [airtimeTransactions, mobileMoneyTransactions]);
+
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -97,12 +166,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Achat',
     };
 
-    // If purchase is paid, it affects cash immediately. If unpaid, it's just tracked.
     if (newPurchase.status === 'paid') {
         setTransactions(prev => [newPurchase, ...prev]);
     } else {
-        // Add to transactions without affecting cash balance immediately
-        // We can sort it to appear at the end or manage separately if needed.
         const allPurchases = transactions.filter(t => t.type === 'purchase');
         const otherTransactions = transactions.filter(t => t.type !== 'purchase');
         setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
@@ -121,17 +187,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     });
 
     if (purchaseToPay) {
-         // This transaction now represents the cash outflow.
-         // We change its date to now to reflect payment time.
          const paymentTransaction: Transaction = {
-            id: purchaseToPay.id, // Keep the same ID
+            id: purchaseToPay.id,
             type: 'purchase',
             amount: purchaseToPay.amount,
             date: new Date().toISOString(),
             description: `Paiement achat: ${purchaseToPay.description}`,
             category: 'Paiement Achat',
         };
-        // Remove the old unpaid purchase and add the new paid one.
         const filteredTransactions = transactions.filter(t => t.id !== purchaseId);
         setTransactions([paymentTransaction, ...filteredTransactions]);
     }
@@ -240,96 +303,35 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     
     let allDailyTransactions: (Transaction & { source?: string, link?: string })[] = [];
 
-    // Cash Transactions (Sales, Purchases, Expenses, Adjustments)
     const cashTransactions = transactions
       .filter(filterByDate)
       .filter(t => t.type !== 'purchase' || (t as Purchase).status !== 'unpaid')
       .map(t => {
           let type = t.type;
           let link: string | undefined = undefined;
+          let amount = 0;
           if (t.type === 'sale') {
               const sale = t as Sale;
+              amount = sale.amount;
               if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
               if (sale.invoiceId) {
                 type = 'Facture';
                 link = `/invoices/${sale.invoiceId}`;
               }
+          } else if (t.type === 'purchase' || t.type === 'expense' || t.type === 'adjustment') {
+              amount = -t.amount;
           }
-          return { ...t, amount: t.type === 'sale' ? t.amount : -t.amount, type, link };
+
+          if(t.type === 'adjustment' && t.amount > 0) amount = t.amount;
+
+
+          return { ...t, amount, type, link };
       });
     allDailyTransactions.push(...cashTransactions);
 
-
-    // Airtime Transactions
-    const dailyAirtime = airtimeTransactions
-        .filter(filterByDate)
-        .map(t => ({
-            id: t.id,
-            date: t.date,
-            description: `${t.type === 'sale' ? 'Vente' : 'Achat'} Airtime ${t.provider} ${t.phoneNumber || ''}`,
-            amount: t.type === 'sale' ? t.amount : -t.amount,
-            type: t.type === 'sale' ? 'Vente Airtime' : 'Achat Airtime',
-            category: 'Airtime',
-        }));
-    allDailyTransactions.push(...dailyAirtime);
-
-    // Mobile Money Transactions
-    const dailyMobileMoney = mobileMoneyTransactions
-        .filter(filterByDate)
-        .map(t => {
-            let amount = 0;
-            let type = '';
-            let description = `MM ${t.provider} - ${t.transactionId}`;
-
-            switch (t.type) {
-                case 'deposit': 
-                    amount = t.amount;
-                    type = 'deposit';
-                    description = `Dépôt MM ${t.provider} - ${t.phoneNumber}`;
-                    break;
-                case 'withdrawal':
-                    amount = -t.amount;
-                    type = 'withdrawal';
-                    description = `Retrait MM ${t.provider} - ${t.phoneNumber}`;
-                    break;
-                case 'purchase':
-                    amount = -t.amount;
-                    type = 'MM Purchase';
-                    description = `Achat virtuel ${t.provider}`;
-                    break;
-                case 'virtual_return':
-                    amount = t.amount;
-                    type = 'MM Transfer';
-                    description = `Retour virtuel ${t.provider}`;
-                    break;
-                case 'transfer_to_pos':
-                    if (t.affectsCash) amount = t.amount;
-                    type = 'MM Transfer';
-                    description = `Transfert vers PDV ${t.phoneNumber}`;
-                    break;
-                case 'transfer_from_pos':
-                    if (t.affectsCash) amount = -t.amount;
-                    type = 'MM Transfer';
-                    description = `Transfert depuis PDV ${t.phoneNumber}`;
-                    break;
-                // Commission and internal adjustments don't affect cash
-            }
-            
-            return {
-                id: t.id,
-                date: t.date,
-                description,
-                amount,
-                type,
-                category: 'Mobile Money'
-            };
-        }).filter(t => t.amount !== 0);
-
-    allDailyTransactions.push(...dailyMobileMoney);
-
     return allDailyTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
+  }, [transactions]);
 
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
   const purchases = useMemo(() => transactions.filter(t => t.type === 'purchase') as Purchase[], [transactions]);
