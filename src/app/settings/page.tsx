@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
-import { Save, Upload } from 'lucide-react';
+import { Save, Upload, BrainCircuit } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 
 function CategoryManager({ title, categories, onAddCategory }: { title: string, categories: string[], onAddCategory: (category: string) => void }) {
@@ -158,8 +158,8 @@ function BackupAndRestore() {
 
 
 export default function SettingsPage() {
-  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory } = useInventory();
-  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings, addBulkAdjustments } = useTransactions();
+  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels } = useInventory();
+  const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings, addBulkAdjustments, sales } = useTransactions();
   const { addBulkTransactions: addBulkAirtime, setTransactions: setAirtimeTransactions } = useAirtime();
   const { addBulkTransactions: addBulkMobileMoney, setTransactions: setMobileMoneyTransactions } = useMobileMoney();
   const { toast } = useToast();
@@ -203,7 +203,7 @@ export default function SettingsPage() {
             reference: row['reference'] || row['Référence'] || '',
             inStock: parseInt(row['inStock'] || row['En Stock'] || '0', 10),
             inTransit: 0, // Not imported
-            reorderLevel: parseInt(row['reorderLevel'] || row['Niveau de réapprovisionnement'] || '0', 10),
+            reorderLevel: parseInt(row['reorderLevel'] || '0', 10), // Default to 0, will be calculated later
             supplier: row['supplier'] || row['Fournisseur'] || '',
             defaultPrice: parseFloat(row['defaultPrice'] || '0'),
             costPrice: parseFloat(row['costPrice'] || '0'),
@@ -375,6 +375,14 @@ export default function SettingsPage() {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }
   }
+  
+  const handleReorderLevelCalculation = () => {
+    calculateAndSetReorderLevels(sales, 3); // Calculate for a 3-day buffer
+    toast({
+        title: 'Calcul Terminé',
+        description: 'Les niveaux de réapprovisionnement ont été mis à jour pour tous les articles en fonction de l\'historique des ventes.'
+    })
+  }
 
 
   return (
@@ -410,13 +418,21 @@ export default function SettingsPage() {
 
        <Card>
         <CardHeader>
-            <CardTitle>Importation de Données</CardTitle>
-            <CardDescription>Importez l'historique depuis un fichier Excel (.csv, .xlsx). Assurez-vous que les en-têtes de colonnes correspondent au format attendu.</CardDescription>
+            <CardTitle>Importation et Actions intelligentes</CardTitle>
+            <CardDescription>Importez l'historique depuis un fichier Excel (.csv, .xlsx) et utilisez les outils pour automatiser la configuration.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
           <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
           <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
+          <div className="p-4 border rounded-lg space-y-4 bg-background/50 flex flex-col justify-center items-start">
+             <h3 className="font-medium">Niveaux de Réapprovisionnement</h3>
+             <p className="text-sm text-muted-foreground">Après avoir importé vos produits et vos ventes, cliquez ici pour calculer automatiquement les stocks d'alerte.</p>
+            <Button onClick={handleReorderLevelCalculation} variant="secondary">
+                <BrainCircuit className="mr-2 h-4 w-4" />
+                Calculer les niveaux
+            </Button>
+          </div>
           <ExcelImport title="Importer des Encaissements" onImport={handleReceiptsImport} />
           <ExcelImport title="Importer Ventes Wifi" onImport={handleWifiSalesImport} />
           <ExcelImport title="Importer Airtime Moov" onImport={handleAirtimeImport('Moov')} />
@@ -429,3 +445,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    

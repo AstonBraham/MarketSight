@@ -2,7 +2,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
-import type { InventoryItem } from '@/lib/types';
+import type { InventoryItem, Sale } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface InventoryContextType {
@@ -15,6 +15,7 @@ interface InventoryContextType {
   clearInventory: () => void;
   itemCategories: string[];
   addCategory: (category: string) => void;
+  calculateAndSetReorderLevels: (sales: Sale[], bufferDays: number) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -51,6 +52,33 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     setInventory([]);
   }, [setInventory]);
 
+  const calculateAndSetReorderLevels = useCallback((sales: Sale[], bufferDays: number) => {
+    const salesByProduct: { [productName: string]: { totalQuantity: number, dates: Set<string> } } = {};
+
+    sales.forEach(sale => {
+      if (!salesByProduct[sale.product]) {
+        salesByProduct[sale.product] = { totalQuantity: 0, dates: new Set() };
+      }
+      if (sale.quantity) {
+        salesByProduct[sale.product].totalQuantity += sale.quantity;
+        salesByProduct[sale.product].dates.add(new Date(sale.date).toDateString());
+      }
+    });
+
+    const updatedInventory = inventory.map(item => {
+      const productSales = salesByProduct[item.productName];
+      if (productSales) {
+        const numberOfDaysWithSales = productSales.dates.size;
+        const averageDailySales = numberOfDaysWithSales > 0 ? productSales.totalQuantity / numberOfDaysWithSales : 0;
+        const reorderLevel = Math.ceil(averageDailySales * bufferDays);
+        return { ...item, reorderLevel: reorderLevel > 0 ? reorderLevel : 1 };
+      }
+      return item; // Keep original reorder level if no sales history
+    });
+
+    setInventory(updatedInventory);
+  }, [inventory, setInventory]);
+
   const value = useMemo(() => ({
     inventory,
     setInventory,
@@ -61,7 +89,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     clearInventory,
     itemCategories,
     addCategory,
-  }), [inventory, setInventory, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory]);
+    calculateAndSetReorderLevels,
+  }), [inventory, setInventory, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory, calculateAndSetReorderLevels]);
 
   return (
     <InventoryContext.Provider value={value}>
@@ -77,3 +106,5 @@ export function useInventory() {
   }
   return context;
 }
+
+    
