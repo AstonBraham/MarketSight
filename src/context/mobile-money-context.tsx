@@ -11,6 +11,7 @@ interface MobileMoneyContextType {
   addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => void;
   addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => void;
   removeTransaction: (id: string) => void;
+  clearMobileMoneyTransactions: () => void;
   getBalance: (provider: MobileMoneyProvider) => number;
   getProcessedTransactions: (provider: MobileMoneyProvider) => MobileMoneyTransaction[];
 }
@@ -50,6 +51,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.filter(t => t.id !== id));
   }, [setTransactions]);
 
+  const clearMobileMoneyTransactions = useCallback(() => {
+    setTransactions([]);
+  }, [setTransactions]);
+
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     return transactions
         .filter(t => t.provider === provider)
@@ -85,7 +90,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             case 'purchase':
             case 'collect_commission':
             case 'transfer_from_pos':
-            case 'adjustment':
                 balance += t.amount;
                 break;
             case 'withdrawal':
@@ -95,6 +99,9 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             case 'transfer_to_pos':
             case 'pos_transfer':
                 balance -= t.amount;
+                break;
+             case 'adjustment':
+                balance += t.amount;
                 break;
         }
          return { ...t, balance };
@@ -109,9 +116,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     addTransaction,
     addBulkTransactions,
     removeTransaction,
+    clearMobileMoneyTransactions,
     getBalance,
     getProcessedTransactions,
-  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, getBalance, getProcessedTransactions]);
+  }), [transactions, setTransactions, addTransaction, addBulkTransactions, removeTransaction, clearMobileMoneyTransactions, getBalance, getProcessedTransactions]);
 
   return (
     <MobileMoneyContext.Provider value={value}>

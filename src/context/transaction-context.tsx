@@ -36,6 +36,9 @@ interface TransactionContextType {
   getDailyHistory: (date: Date) => (Transaction & { source?: string, link?: string })[];
   addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
   clearWifiSales: () => void;
+  clearCashTransactions: () => void;
+  clearInvoices: () => void;
+  clearCashClosings: () => void;
 }
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
@@ -84,6 +87,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const clearWifiSales = useCallback(() => {
     setTransactions(prev => prev.filter(t => (t as Sale).itemType !== 'Ticket Wifi'));
   }, [setTransactions]);
+  
+  const clearCashTransactions = useCallback(() => setTransactions([]), [setTransactions]);
+  const clearInvoices = useCallback(() => setInvoices([]), [setInvoices]);
+  const clearCashClosings = useCallback(() => setCashClosings([]), [setCashClosings]);
 
   const addPurchase = useCallback((purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => {
     const newPurchase: Purchase = {
@@ -376,8 +383,17 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     getAllTransactions,
     getDailyHistory,
     addCashClosing,
-    clearWifiSales
-  }), [transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, addCashClosing, clearWifiSales, airtimeTransactions, mobileMoneyTransactions]);
+    clearWifiSales,
+    clearCashTransactions,
+    clearInvoices,
+    clearCashClosings,
+  }), [
+      transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, 
+      expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, 
+      addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, 
+      addCashClosing, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
+      airtimeTransactions, mobileMoneyTransactions
+    ]);
 
   return (
     <TransactionContext.Provider value={value}>

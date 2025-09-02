@@ -171,22 +171,22 @@ function BackupAndRestore() {
 function MaintenanceActions() {
     const { toast } = useToast();
     const { clearInventory } = useInventory();
-    const { setTransactions, setInvoices, setCashClosings } = useTransactions();
-    const { setTransactions: setAirtimeTransactions } = useAirtime();
-    const { setTransactions: setMobileMoneyTransactions } = useMobileMoney();
+    const { clearCashTransactions, clearInvoices, clearCashClosings } = useTransactions();
+    const { clearAirtimeTransactions } = useAirtime();
+    const { clearMobileMoneyTransactions } = useMobileMoney();
     
-    const handleClearData = () => {
+    const handleClearAllData = () => {
         try {
             clearInventory();
-            setTransactions([]);
-            setInvoices([]);
-            setCashClosings([]);
-            setAirtimeTransactions([]);
-            setMobileMoneyTransactions([]);
+            clearCashTransactions();
+            clearInvoices();
+            clearCashClosings();
+            clearAirtimeTransactions();
+            clearMobileMoneyTransactions();
 
             toast({
                 title: 'Données Effacées',
-                description: "L'inventaire et toutes les transactions ont été réinitialisés.",
+                description: "Toutes les données de l'application ont été réinitialisées.",
                 variant: 'default',
             });
         } catch (error) {
@@ -197,32 +197,73 @@ function MaintenanceActions() {
             });
         }
     }
+    
+    const createClearAction = (
+        clearFunction: () => void, 
+        title: string, 
+        description: string
+    ) => () => {
+        try {
+            clearFunction();
+            toast({ title: "Opération réussie", description: `${title} ont été effacées.` });
+        } catch (error) {
+            toast({ title: "Erreur", description: `Impossible de vider les ${title.toLowerCase()}.`, variant: 'destructive' });
+        }
+    }
 
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Actions de maintenance</CardTitle>
-                <CardDescription>Actions irréversibles pour la gestion des données de l'application.</CardDescription>
+                <CardDescription>Actions irréversibles pour la gestion des données de l'application. Il est fortement recommandé de faire une sauvegarde avant toute suppression.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild><Button variant="outline">Vider l'inventaire</Button></AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Vider l'inventaire ?</AlertDialogTitle><AlertDialogDescription>Tous les produits seront supprimés. Les transactions ne seront pas affectées.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearInventory, "L'inventaire", "Produits supprimés.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild><Button variant="outline">Vider les transactions de caisse</Button></AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Vider les transactions de caisse ?</AlertDialogTitle><AlertDialogDescription>Toutes les ventes, achats et dépenses seront supprimés.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearCashTransactions, "Transactions de caisse", "Ventes, achats et dépenses supprimés.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild><Button variant="outline">Vider les données Airtime</Button></AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Vider les données Airtime ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Airtime (Moov et Yas) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearAirtimeTransactions, "Données Airtime", "Transactions Airtime supprimées.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild><Button variant="outline">Vider les données Mobile Money</Button></AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>Vider les données Mobile Money ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Mobile Money (Flooz, Mixx, Cauris) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearMobileMoneyTransactions, "Données Mobile Money", "Transactions Mobile Money supprimées.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
                          <Button variant="destructive">
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Vider l'inventaire et les transactions
+                            Tout Réinitialiser
                         </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
                         <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Cette action est irréversible. Toutes vos données (produits, ventes, achats, dépenses, etc.) seront définitivement effacées.
-                            Il est fortement recommandé de faire une sauvegarde avant de continuer.
+                            Cette action est irréversible. Toutes vos données (produits, ventes, achats, dépenses, airtime, mobile money, etc.) seront définitivement effacées.
                         </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleClearData} className="bg-destructive hover:bg-destructive/90">
+                        <AlertDialogAction onClick={handleClearAllData} className="bg-destructive hover:bg-destructive/90">
                             Oui, tout supprimer
                         </AlertDialogAction>
                         </AlertDialogFooter>
@@ -542,3 +583,4 @@ export default function SettingsPage() {
     
 
     
+
