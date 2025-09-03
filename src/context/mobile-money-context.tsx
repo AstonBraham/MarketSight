@@ -24,7 +24,7 @@ const initialMixxBalance: MobileMoneyTransaction = {
     provider: 'Mixx',
     amount: 2164,
     commission: 0,
-    date: '2020-01-01T00:00:00.000Z', // Very old date
+    date: '2024-07-25T00:00:00.000Z',
     description: 'Solde initial reporté',
 };
 
