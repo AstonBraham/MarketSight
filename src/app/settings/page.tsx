@@ -200,8 +200,7 @@ function MaintenanceActions() {
     
     const createClearAction = (
         clearFunction: () => void, 
-        title: string, 
-        description: string
+        title: string
     ) => () => {
         try {
             clearFunction();
@@ -222,28 +221,28 @@ function MaintenanceActions() {
                     <AlertDialogTrigger asChild><Button variant="outline">Vider l'inventaire</Button></AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>Vider l'inventaire ?</AlertDialogTitle><AlertDialogDescription>Tous les produits seront supprimés. Les transactions ne seront pas affectées.</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearInventory, "L'inventaire", "Produits supprimés.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearInventory, "L'inventaire")}>Confirmer</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
                  <AlertDialog>
                     <AlertDialogTrigger asChild><Button variant="outline">Vider les transactions de caisse</Button></AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>Vider les transactions de caisse ?</AlertDialogTitle><AlertDialogDescription>Toutes les ventes, achats et dépenses seront supprimés.</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearCashTransactions, "Transactions de caisse", "Ventes, achats et dépenses supprimés.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearCashTransactions, "Transactions de caisse")}>Confirmer</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
                  <AlertDialog>
                     <AlertDialogTrigger asChild><Button variant="outline">Vider les données Airtime</Button></AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>Vider les données Airtime ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Airtime (Moov et Yas) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearAirtimeTransactions, "Données Airtime", "Transactions Airtime supprimées.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearAirtimeTransactions, "Données Airtime")}>Confirmer</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
                  <AlertDialog>
                     <AlertDialogTrigger asChild><Button variant="outline">Vider les données Mobile Money</Button></AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>Vider les données Mobile Money ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Mobile Money (Flooz, Mixx, Cauris) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
-                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearMobileMoneyTransactions, "Données Mobile Money", "Transactions Mobile Money supprimées.")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                        <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearMobileMoneyTransactions, "Données Mobile Money")}>Confirmer</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
 
@@ -464,6 +463,7 @@ export default function SettingsPage() {
   
   const handleAirtimeImport = (provider: 'Moov' | 'Yas') => (data: any[]) => {
       try {
+        addBulkAirtime([], provider); // Clear existing data for this provider
         const newTransactions = data.map((row, index) => {
              if (!row['date'] || !row['type'] || !row['amount']) {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
@@ -479,7 +479,7 @@ export default function SettingsPage() {
             };
         });
         
-        addBulkAirtime(newTransactions as Omit<AirtimeTransaction, 'id' | 'date'>[], provider);
+        addBulkAirtime(newTransactions as Omit<AirtimeTransaction, 'id' | 'date'>[]);
         toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées (anciennes données purgées).` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
@@ -488,6 +488,7 @@ export default function SettingsPage() {
   
   const handleMobileMoneyImport = (provider: MobileMoneyProvider) => (data: any[]) => {
        try {
+        addBulkMobileMoney([], provider); // Clear existing data for this provider
         const newTransactions = data.map((row, index) => {
              if (!row['date'] || !row['type'] || !row['amount']) {
                 throw new Error(`Ligne ${index + 2}: Les colonnes date, type et amount sont obligatoires.`);
@@ -502,7 +503,7 @@ export default function SettingsPage() {
                 transactionId: row['transactionId'] || '',
             };
         });
-        addBulkMobileMoney(newTransactions as Omit<MobileMoneyTransaction, 'id' | 'date'>[], provider);
+        addBulkMobileMoney(newTransactions as Omit<MobileMoneyTransaction, 'id' | 'date'>[]);
         toast({ title: 'Importation Réussie', description: `${data.length} transactions pour ${provider} ont été ajoutées (anciennes données purgées).` });
     } catch (error: any) {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
@@ -583,4 +584,3 @@ export default function SettingsPage() {
     
 
     
-
