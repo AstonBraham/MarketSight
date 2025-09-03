@@ -49,13 +49,13 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     }));
     
     setTransactions(prev => {
-        let existingTransactions = prev.filter(t => t.id !== initialMixxBalance.id);
+        let existingTransactions = prev;
         
         if (providerToClear) {
             existingTransactions = existingTransactions.filter(t => t.provider !== providerToClear);
         }
         
-        return [initialMixxBalance, ...existingTransactions, ...fullTransactions];
+        return [...existingTransactions, ...fullTransactions];
     });
 
   }, [setTransactions]);
@@ -70,9 +70,19 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   }, [setTransactions]);
 
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
-    return transactions
-        .filter(t => t.provider === provider)
-        .reduce((acc, t) => {
+    const providerTransactions = transactions.filter(t => t.provider === provider);
+
+    if (provider === 'Mixx') {
+        return providerTransactions.reduce((acc, t) => {
+             if (t.type === 'deposit') return acc + t.amount;
+             if (t.type === 'withdrawal') return acc - t.amount;
+             if (t.type === 'adjustment') return acc + t.amount; // For initial balance
+             return acc;
+        }, 0);
+    }
+    
+    // Original logic for other providers
+    return providerTransactions.reduce((acc, t) => {
             switch (t.type) {
                 case 'purchase':
                     return acc + t.amount;
@@ -102,31 +112,37 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
      const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
      
      const withBalance = sorted.map(t => {
-         switch (t.type) {
-            case 'purchase':
-                balance += t.amount;
-                break;
-            case 'withdrawal':
-                balance = balance - t.amount + t.commission;
-                break;
-            case 'deposit':
-                balance -= t.amount;
-                break;
-            case 'collect_commission':
-                 balance += t.amount;
-                 break;
-            case 'virtual_return':
-            case 'transfer_to_pos':
-            case 'pos_transfer':
-                balance -= t.amount;
-                break;
-             case 'transfer_from_pos':
-                balance += t.amount;
-                break;
-             case 'adjustment':
-                balance += t.amount;
-                break;
-        }
+         if (provider === 'Mixx') {
+             if (t.type === 'deposit') balance += t.amount;
+             else if (t.type === 'withdrawal') balance -= t.amount;
+             else if (t.type === 'adjustment') balance += t.amount;
+         } else {
+             switch (t.type) {
+                case 'purchase':
+                    balance += t.amount;
+                    break;
+                case 'withdrawal':
+                    balance = balance - t.amount + t.commission;
+                    break;
+                case 'deposit':
+                    balance -= t.amount;
+                    break;
+                case 'collect_commission':
+                     balance += t.amount;
+                     break;
+                case 'virtual_return':
+                case 'transfer_to_pos':
+                case 'pos_transfer':
+                    balance -= t.amount;
+                    break;
+                 case 'transfer_from_pos':
+                    balance += t.amount;
+                    break;
+                 case 'adjustment':
+                    balance += t.amount;
+                    break;
+            }
+         }
          return { ...t, balance };
      });
 
