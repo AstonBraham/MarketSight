@@ -18,8 +18,19 @@ interface MobileMoneyContextType {
 
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
 
+const initialMixxBalance: MobileMoneyTransaction = {
+    id: 'INITIAL_MIXX_BALANCE',
+    type: 'adjustment',
+    provider: 'Mixx',
+    amount: 2164,
+    commission: 0,
+    date: '2020-01-01T00:00:00.000Z', // Very old date
+    description: 'Solde initial reporté',
+};
+
+
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
+  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', [initialMixxBalance]);
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
     const newTransaction: MobileMoneyTransaction = {
@@ -38,21 +49,24 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     }));
     
     setTransactions(prev => {
-        const otherProviderTransactions = providerToClear 
-            ? prev.filter(t => t.provider !== providerToClear)
-            : []; 
+        let existingTransactions = prev.filter(t => t.id !== initialMixxBalance.id);
         
-        return [...otherProviderTransactions, ...fullTransactions];
+        if (providerToClear) {
+            existingTransactions = existingTransactions.filter(t => t.provider !== providerToClear);
+        }
+        
+        return [initialMixxBalance, ...existingTransactions, ...fullTransactions];
     });
 
   }, [setTransactions]);
 
   const removeTransaction = useCallback((id: string) => {
+    if (id === initialMixxBalance.id) return; // Prevent deleting the initial balance
     setTransactions(prev => prev.filter(t => t.id !== id));
   }, [setTransactions]);
 
   const clearMobileMoneyTransactions = useCallback(() => {
-    setTransactions([]);
+    setTransactions([initialMixxBalance]);
   }, [setTransactions]);
 
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
