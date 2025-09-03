@@ -49,18 +49,20 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     }));
     
     setTransactions(prev => {
-        let existingTransactions = prev;
+        let transactionsToKeep = prev;
         
         if (providerToClear) {
-            const transactionsToKeep = existingTransactions.filter(t => t.provider !== providerToClear);
-            // Ensure initial balance for Mixx is not cleared if we clear Mixx
-            if (providerToClear === 'Mixx' && !transactionsToKeep.some(t => t.id === initialMixxBalance.id)) {
-                 transactionsToKeep.push(initialMixxBalance);
-            }
-            existingTransactions = transactionsToKeep;
+            transactionsToKeep = prev.filter(t => t.provider !== providerToClear);
         }
         
-        return [...existingTransactions, ...fullTransactions];
+        // Always ensure the initial mixx balance is present if it was there before or if we are clearing Mixx
+        if (!transactionsToKeep.some(t => t.id === initialMixxBalance.id)) {
+            if (prev.some(t => t.id === initialMixxBalance.id) || providerToClear === 'Mixx') {
+                transactionsToKeep.push(initialMixxBalance);
+            }
+        }
+        
+        return [...transactionsToKeep, ...fullTransactions];
     });
 
   }, [setTransactions]);
@@ -71,21 +73,22 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   }, [setTransactions]);
 
   const clearMobileMoneyTransactions = useCallback(() => {
-    setTransactions([initialMixxBalance]);
+    setTransactions(prev => prev.filter(t => t.id === initialMixxBalance.id));
   }, [setTransactions]);
 
-  const calculateBalance = (transactions: MobileMoneyTransaction[]) => {
-    return transactions.reduce((acc, t) => {
+  const getBalance = useCallback((provider: MobileMoneyProvider) => {
+    const providerTransactions = transactions.filter(t => t.provider === provider);
+    return providerTransactions.reduce((acc, t) => {
         let newBalance = acc;
         switch (t.type) {
             case 'purchase':
-                newBalance += t.amount;
+                newBalance += t.amount; // Achat de virtuel augmente le solde
                 break;
             case 'withdrawal':
-                newBalance += t.amount + t.commission;
+                newBalance += t.amount; // Retrait par client augmente le solde
                 break;
             case 'deposit':
-                newBalance -= (t.amount - t.commission);
+                newBalance -= t.amount; // Dépôt par client diminue le solde
                 break;
             case 'collect_commission':
                 newBalance += t.amount;
@@ -104,13 +107,9 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             default:
                 break;
         }
+        newBalance += t.commission; // Commissions always increase balance
         return newBalance;
     }, 0);
-  }
-
-  const getBalance = useCallback((provider: MobileMoneyProvider) => {
-    const providerTransactions = transactions.filter(t => t.provider === provider);
-    return calculateBalance(providerTransactions);
   }, [transactions]);
   
   const getProcessedTransactions = useCallback((provider: MobileMoneyProvider) => {
@@ -125,10 +124,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
                 newBalance += t.amount;
                 break;
             case 'withdrawal':
-                newBalance += t.amount + t.commission;
+                newBalance += t.amount;
                 break;
             case 'deposit':
-                newBalance -= (t.amount - t.commission);
+                newBalance -= t.amount;
                 break;
             case 'collect_commission':
                 newBalance += t.amount;
@@ -147,6 +146,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             default:
                 break;
         }
+        newBalance += t.commission; // Commissions always increase balance
         runningBalance = newBalance;
         return { ...t, balance: runningBalance };
      });
