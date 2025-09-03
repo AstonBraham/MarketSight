@@ -5,7 +5,7 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { CashflowChart } from '@/components/dashboard/cashflow-chart';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
 import { PageHeader } from '@/components/page-header';
-import { DollarSign, ShoppingCart, Boxes, Smartphone, Landmark } from 'lucide-react';
+import { DollarSign, ShoppingCart, Boxes, Smartphone, Landmark, Send, Wallet } from 'lucide-react';
 import { useTransactions } from '@/context/transaction-context';
 import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
@@ -48,8 +48,6 @@ export default function DashboardPage() {
     const mobileMoneyBalanceMixx = getMobileMoneyBalance('Mixx');
     const mobileMoneyBalanceCauris = getMobileMoneyBalance('Cauris');
 
-    const totalVirtualBalance = airtimeStockMoov + airtimeStockYas + mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCauris;
-
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
@@ -79,11 +77,6 @@ export default function DashboardPage() {
           icon={<DollarSign className="h-6 w-6 text-primary" />}
         />
         <StatCard
-          title="Soldes Virtuels"
-          value={formatCurrency(totalVirtualBalance)}
-          icon={<Smartphone className="h-6 w-6 text-primary" />}
-        />
-        <StatCard
           title="Valeur du Stock"
           value={formatCurrency(inventoryValue)}
           icon={<Boxes className="h-6 w-6 text-primary" />}
@@ -99,6 +92,34 @@ export default function DashboardPage() {
           icon={<Landmark className="h-6 w-6 text-primary" />}
         />
       </div>
+      
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+         <StatCard
+          title="Stock Airtime Moov"
+          value={formatCurrency(airtimeStockMoov)}
+          icon={<Smartphone className="h-6 w-6 text-blue-600" />}
+        />
+         <StatCard
+          title="Stock Airtime Yas"
+          value={formatCurrency(airtimeStockYas)}
+          icon={<Smartphone className="h-6 w-6 text-yellow-600" />}
+        />
+         <StatCard
+          title="Solde MM Flooz"
+          value={formatCurrency(mobileMoneyBalanceFlooz)}
+          icon={<Send className="h-6 w-6 text-blue-600" />}
+        />
+         <StatCard
+          title="Solde MM Mixx"
+          value={formatCurrency(mobileMoneyBalanceMixx)}
+          icon={<Send className="h-6 w-6 text-yellow-600" />}
+        />
+         <StatCard
+          title="Solde MM Cauris"
+          value={formatCurrency(mobileMoneyBalanceCauris)}
+          icon={<Send className="h-6 w-6 text-red-600" />}
+        />
+       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 grid gap-8">
