@@ -52,7 +52,12 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let existingTransactions = prev;
         
         if (providerToClear) {
-            existingTransactions = existingTransactions.filter(t => t.provider !== providerToClear);
+            const transactionsToKeep = existingTransactions.filter(t => t.provider !== providerToClear);
+            // Ensure initial balance for Mixx is not cleared if we clear Mixx
+            if (providerToClear === 'Mixx' && !transactionsToKeep.some(t => t.id === initialMixxBalance.id)) {
+                 transactionsToKeep.push(initialMixxBalance);
+            }
+            existingTransactions = transactionsToKeep;
         }
         
         return [...existingTransactions, ...fullTransactions];
@@ -69,81 +74,81 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions([initialMixxBalance]);
   }, [setTransactions]);
 
+  const calculateBalance = (transactions: MobileMoneyTransaction[]) => {
+    return transactions.reduce((acc, t) => {
+        let newBalance = acc;
+        switch (t.type) {
+            case 'purchase':
+                newBalance += t.amount;
+                break;
+            case 'withdrawal':
+                newBalance += t.amount + t.commission;
+                break;
+            case 'deposit':
+                newBalance -= (t.amount - t.commission);
+                break;
+            case 'collect_commission':
+                newBalance += t.amount;
+                break;
+            case 'virtual_return':
+            case 'transfer_from_pos':
+                 newBalance += t.amount;
+                break;
+            case 'transfer_to_pos':
+            case 'pos_transfer':
+                newBalance -= t.amount;
+                break;
+            case 'adjustment':
+                newBalance += t.amount;
+                break;
+            default:
+                break;
+        }
+        return newBalance;
+    }, 0);
+  }
+
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     const providerTransactions = transactions.filter(t => t.provider === provider);
-
-    if (provider === 'Mixx') {
-        return providerTransactions.reduce((acc, t) => {
-             if (t.type === 'deposit') return acc + t.amount;
-             if (t.type === 'withdrawal') return acc - t.amount;
-             if (t.type === 'adjustment') return acc + t.amount; // For initial balance
-             return acc;
-        }, 0);
-    }
-    
-    // Original logic for other providers
-    return providerTransactions.reduce((acc, t) => {
-            switch (t.type) {
-                case 'purchase':
-                    return acc + t.amount;
-                case 'withdrawal':
-                    return acc - t.amount + t.commission;
-                case 'deposit':
-                    return acc - t.amount;
-                case 'collect_commission':
-                    return acc + t.amount;
-                case 'virtual_return':
-                case 'transfer_to_pos':
-                case 'pos_transfer':
-                    return acc - t.amount;
-                case 'transfer_from_pos':
-                    return acc + t.amount;
-                case 'adjustment':
-                    return acc + t.amount;
-                default:
-                    return acc;
-            }
-        }, 0);
+    return calculateBalance(providerTransactions);
   }, [transactions]);
   
   const getProcessedTransactions = useCallback((provider: MobileMoneyProvider) => {
      const providerTransactions = transactions.filter(t => t.provider === provider);
-     let balance = 0;
      const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
      
+     let runningBalance = 0;
      const withBalance = sorted.map(t => {
-         if (provider === 'Mixx') {
-             if (t.type === 'deposit') balance += t.amount;
-             else if (t.type === 'withdrawal') balance -= t.amount;
-             else if (t.type === 'adjustment') balance += t.amount;
-         } else {
-             switch (t.type) {
-                case 'purchase':
-                    balance += t.amount;
-                    break;
-                case 'withdrawal':
-                    balance = balance - t.amount + t.commission;
-                    break;
-                case 'deposit':
-                    balance -= t.amount;
-                    break;
-                case 'collect_commission':
-                     balance += t.amount;
-                     break;
-                case 'virtual_return':
-                case 'transfer_to_pos':
-                case 'pos_transfer':
-                    balance -= t.amount;
-                    break;
-                 case 'transfer_from_pos':
-                    balance += t.amount;
-                    break;
-                 case 'adjustment':
-                    balance += t.amount;
-                    break;
-            }
-         }
-         return { ...t, balance };
+        let newBalance = runningBalance;
+         switch (t.type) {
+            case 'purchase':
+                newBalance += t.amount;
+                break;
+            case 'withdrawal':
+                newBalance += t.amount + t.commission;
+                break;
+            case 'deposit':
+                newBalance -= (t.amount - t.commission);
+                break;
+            case 'collect_commission':
+                newBalance += t.amount;
+                break;
+            case 'virtual_return':
+            case 'transfer_from_pos':
+                 newBalance += t.amount;
+                break;
+            case 'transfer_to_pos':
+            case 'pos_transfer':
+                newBalance -= t.amount;
+                break;
+            case 'adjustment':
+                newBalance += t.amount;
+                break;
+            default:
+                break;
+        }
+        runningBalance = newBalance;
+        return { ...t, balance: runningBalance };
      });
 
      return withBalance.reverse();
