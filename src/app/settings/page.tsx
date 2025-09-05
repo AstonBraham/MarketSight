@@ -241,7 +241,7 @@ function MaintenanceActions() {
                  <AlertDialog>
                     <AlertDialogTrigger asChild><Button variant="outline">Vider les données Mobile Money</Button></AlertDialogTrigger>
                     <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>Vider les données Mobile Money ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Mobile Money (Flooz, Mixx, Cauris) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogHeader><AlertDialogTitle>Vider les données Mobile Money ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Mobile Money (Flooz, Mixx, Coris) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearMobileMoneyTransactions, "Données Mobile Money")}>Confirmer</AlertDialogAction></AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -599,7 +599,7 @@ export default function SettingsPage() {
           <ExcelImport title="Importer Airtime Yas" onImport={handleAirtimeImport('Yas')} />
           <ExcelImport title="Importer Mobile Money Flooz" onImport={handleMobileMoneyImport('Flooz')} />
           <ExcelImport title="Importer Mobile Money Mixx" onImport={handleMobileMoneyImport('Mixx')} />
-          <ExcelImport title="Importer Mobile Money Cauris" onImport={handleMobileMoneyImport('Cauris')} />
+          <ExcelImport title="Importer Mobile Money Coris" onImport={handleMobileMoneyImport('Coris')} />
         </CardContent>
        </Card>
     </div>

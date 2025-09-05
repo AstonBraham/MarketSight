@@ -80,29 +80,29 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             return otherTransactions;
         });
     } else {
-        // Clear all except the initial balance
-        setTransactions([initialMixxBalance]);
+        // Clear all except the initial balance for Mixx
+        const nonMixxTransactions = transactions.filter(t => t.provider !== 'Mixx');
+        setTransactions([initialMixxBalance, ...nonMixxTransactions]);
     }
-  }, [setTransactions]);
+  }, [setTransactions, transactions]);
 
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     const providerTransactions = transactions.filter(t => t.provider === provider);
     return providerTransactions.reduce((acc, t) => {
         let newBalance = acc;
         switch (t.type) {
-            case 'purchase':
-            case 'withdrawal':
-            case 'collect_commission':
-            case 'transfer_from_pos':
-                newBalance += t.amount;
-                break;
-            case 'deposit':
-            case 'transfer_to_pos':
-            case 'pos_transfer':
-            case 'virtual_return':
+            case 'purchase': // Achat de virtuel
+            case 'withdrawal': // Retrait
+            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
+                 newBalance += t.amount;
+                 break;
+            case 'deposit': // Dépôt client
+            case 'transfer_to_pos': // Transfert vers un autre PDV
+            case 'virtual_return': // Retour de virtuel à l'opérateur
                 newBalance -= t.amount;
                 break;
-            case 'adjustment':
+            case 'adjustment': // Ajustement manuel
+            case 'collect_commission': // Collecte de commission (ajout au solde)
                 newBalance += t.amount;
                 break;
             default:
@@ -121,19 +121,18 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
      const withBalance = sorted.map(t => {
         let newBalance = runningBalance;
          switch (t.type) {
-            case 'purchase':
-            case 'withdrawal':
-            case 'collect_commission':
-            case 'transfer_from_pos':
-                newBalance += t.amount;
-                break;
-            case 'deposit':
-            case 'transfer_to_pos':
-            case 'pos_transfer':
-            case 'virtual_return':
+            case 'purchase': // Achat de virtuel
+            case 'withdrawal': // Retrait
+            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
+                 newBalance += t.amount;
+                 break;
+            case 'deposit': // Dépôt client
+            case 'transfer_to_pos': // Transfert vers un autre PDV
+            case 'virtual_return': // Retour de virtuel à l'opérateur
                 newBalance -= t.amount;
                 break;
-            case 'adjustment':
+            case 'adjustment': // Ajustement manuel
+            case 'collect_commission': // Collecte de commission (ajout au solde)
                 newBalance += t.amount;
                 break;
             default:

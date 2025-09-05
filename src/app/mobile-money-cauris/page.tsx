@@ -10,7 +10,7 @@ import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-m
 import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo, useState, useEffect } from 'react';
 
-export default function MobileMoneyCaurisPage() {
+export default function MobileMoneyCorisPage() {
     const { transactions, getBalance, getProcessedTransactions } = useMobileMoney();
     const [isClient, setIsClient] = useState(false);
 
@@ -18,24 +18,24 @@ export default function MobileMoneyCaurisPage() {
         setIsClient(true);
     }, []);
 
-    const caurisTransactions = transactions.filter(t => t.provider === 'Cauris');
-    const caurisBalance = getBalance('Cauris');
+    const corisTransactions = transactions.filter(t => t.provider === 'Coris');
+    const corisBalance = getBalance('Coris');
 
-     const dailyDeposits = caurisTransactions
+     const dailyDeposits = corisTransactions
         .filter(t => t.type === 'deposit' && new Date(t.date).toDateString() === new Date().toDateString())
         .reduce((acc, t) => acc + t.amount, 0);
 
-    const dailyWithdrawals = caurisTransactions
+    const dailyWithdrawals = corisTransactions
         .filter(t => t.type === 'withdrawal' && new Date(t.date).toDateString() === new Date().toDateString())
         .reduce((acc, t) => acc + t.commission, 0);
 
-    const dailyCommissions = caurisTransactions
+    const dailyCommissions = corisTransactions
         .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
         .reduce((acc, t) => acc + t.commission, 0);
     
     const processedTransactions = useMemo(() => {
-        return getProcessedTransactions('Cauris');
-    }, [getProcessedTransactions, caurisTransactions]);
+        return getProcessedTransactions('Coris');
+    }, [getProcessedTransactions, corisTransactions]);
 
   if (!isClient) {
     return null; // ou un skeleton/loader
@@ -44,11 +44,11 @@ export default function MobileMoneyCaurisPage() {
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
       <PageHeader 
-        title="Gestion Mobile Money Cauris" 
+        title="Gestion Mobile Money Coris" 
         action={
             <div className="flex items-center gap-2">
-                <AdjustMobileMoneyBalanceDialog provider="Cauris" currentBalance={caurisBalance} />
-                <AddMobileMoneyTransactionDialog provider="Cauris"/>
+                <AdjustMobileMoneyBalanceDialog provider="Coris" currentBalance={corisBalance} />
+                <AddMobileMoneyTransactionDialog provider="Coris"/>
             </div>
         }
       />
@@ -56,10 +56,10 @@ export default function MobileMoneyCaurisPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Solde Cauris</CardTitle>
+                <CardTitle className="text-sm font-medium">Solde Coris</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('fr-FR').format(caurisBalance)} F</div>
+                <div className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('fr-FR').format(corisBalance)} F</div>
             </CardContent>
         </Card>
         <Card>
@@ -90,8 +90,8 @@ export default function MobileMoneyCaurisPage() {
 
        <Card>
         <CardHeader>
-            <CardTitle>Opérations Cauris</CardTitle>
-            <CardDescription>Historique des transactions pour Cauris.</CardDescription>
+            <CardTitle>Opérations Coris</CardTitle>
+            <CardDescription>Historique des transactions pour Coris.</CardDescription>
         </CardHeader>
         <CardContent>
             <DataTable data={processedTransactions} columns={columns} />

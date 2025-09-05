@@ -104,7 +104,7 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
         const provider = row.getValue('provider') as string;
         if (provider === 'Flooz') return <Badge variant="outline" className="border-blue-500 text-blue-600">{provider}</Badge>
         if (provider === 'Mixx') return <Badge variant="outline" className="border-yellow-500 text-yellow-600">{provider}</Badge>
-        if (provider === 'Cauris') return <Badge variant="outline" className="border-red-500 text-red-600">{provider}</Badge>
+        if (provider === 'Coris') return <Badge variant="outline" className="border-red-500 text-red-600">{provider}</Badge>
         return <Badge variant="outline">{provider}</Badge>
     }
   },

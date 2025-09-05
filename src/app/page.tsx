@@ -46,7 +46,7 @@ export default function DashboardPage() {
     const airtimeStockYas = getAirtimeStock('Yas');
     const mobileMoneyBalanceFlooz = getMobileMoneyBalance('Flooz');
     const mobileMoneyBalanceMixx = getMobileMoneyBalance('Mixx');
-    const mobileMoneyBalanceCauris = getMobileMoneyBalance('Cauris');
+    const mobileMoneyBalanceCoris = getMobileMoneyBalance('Coris');
 
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -115,8 +115,8 @@ export default function DashboardPage() {
           icon={<Send className="h-6 w-6 text-yellow-600" />}
         />
          <StatCard
-          title="Solde MM Cauris"
-          value={formatCurrency(mobileMoneyBalanceCauris)}
+          title="Solde MM Coris"
+          value={formatCurrency(mobileMoneyBalanceCoris)}
           icon={<Send className="h-6 w-6 text-red-600" />}
         />
        </div>
