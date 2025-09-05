@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,9 +11,10 @@ import { useToast } from '@/hooks/use-toast';
 interface ExcelImportProps {
   title: string;
   onImport: (data: any[]) => void;
+  icon?: React.ReactNode;
 }
 
-export function ExcelImport({ title, onImport }: ExcelImportProps) {
+export function ExcelImport({ title, onImport, icon }: ExcelImportProps) {
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
 
@@ -64,7 +66,7 @@ export function ExcelImport({ title, onImport }: ExcelImportProps) {
 
   return (
     <div className="p-4 border rounded-lg space-y-4 bg-background/50">
-        <h3 className="font-medium">{title}</h3>
+        <h3 className="font-medium flex items-center gap-2">{icon}{title}</h3>
         <div className="flex items-center gap-4">
             <Input id={`import-file-${title.replace(/\s+/g, '-')}`} type="file" onChange={handleFileChange} className="flex-1" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
             <Button onClick={handleImport} disabled={!file}>

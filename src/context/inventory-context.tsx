@@ -5,6 +5,11 @@ import { createContext, useContext, useState, ReactNode, useMemo, useCallback } 
 import type { InventoryItem, Sale } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
+type PhysicalCountData = {
+  identifier: string;
+  realStock: number;
+}
+
 interface InventoryContextType {
   inventory: InventoryItem[];
   setInventory: (inventory: InventoryItem[]) => void;
@@ -16,6 +21,7 @@ interface InventoryContextType {
   itemCategories: string[];
   addCategory: (category: string) => void;
   calculateAndSetReorderLevels: (sales: Sale[], bufferDays: number) => void;
+  applyPhysicalCount: (countData: PhysicalCountData[]) => { updatedCount: number; notFoundCount: number };
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -78,6 +84,26 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
     setInventory(updatedInventory);
   }, [inventory, setInventory]);
+  
+  const applyPhysicalCount = useCallback((countData: PhysicalCountData[]) => {
+    let updatedCount = 0;
+    let notFoundCount = 0;
+    
+    const updatedInventory = inventory.map(item => {
+      const countItem = countData.find(c => c.identifier === item.sku || c.identifier === item.reference);
+      if (countItem) {
+        updatedCount++;
+        return { ...item, inStock: countItem.realStock };
+      }
+      return item;
+    });
+
+    notFoundCount = countData.length - updatedCount;
+
+    setInventory(updatedInventory);
+
+    return { updatedCount, notFoundCount };
+  }, [inventory, setInventory]);
 
   const value = useMemo(() => ({
     inventory,
@@ -90,7 +116,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     itemCategories,
     addCategory,
     calculateAndSetReorderLevels,
-  }), [inventory, setInventory, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory, calculateAndSetReorderLevels]);
+    applyPhysicalCount,
+  }), [inventory, setInventory, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory, calculateAndSetReorderLevels, applyPhysicalCount]);
 
   return (
     <InventoryContext.Provider value={value}>

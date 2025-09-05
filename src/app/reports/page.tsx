@@ -30,6 +30,7 @@ const IMPORT_TEMPLATES = {
     { date: '2024-08-28', type: 'collect_commission', transactionId: 'CC104', amount: 5500, commission: 0, phoneNumber: '' },
     { date: '2024-08-28', type: 'adjustment', transactionId: 'ADJ105', amount: -50, commission: 0, phoneNumber: 'Erreur de saisie' },
   ],
+  physical_count: [{ sku_ou_reference: '', stock_reel: 0 }],
 };
 
 
@@ -141,6 +142,10 @@ export default function ReportsPage() {
            <Button variant="secondary" onClick={() => handleDownloadTemplate('mobile_money', IMPORT_TEMPLATES.mobile_money)}>
             <Download className="mr-2 h-4 w-4" />
             Modèle pour Mobile Money
+          </Button>
+          <Button variant="secondary" onClick={() => handleDownloadTemplate('inventaire_physique', IMPORT_TEMPLATES.physical_count)}>
+            <Download className="mr-2 h-4 w-4" />
+            Modèle pour Comptage Physique
           </Button>
         </CardContent>
        </Card>

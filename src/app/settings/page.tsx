@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
-import { Save, Upload, BrainCircuit, Trash2 } from 'lucide-react';
+import { Save, Upload, BrainCircuit, Trash2, FileCheck2 } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 import {
   AlertDialog,
@@ -275,7 +275,7 @@ function MaintenanceActions() {
 
 
 export default function SettingsPage() {
-  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels, inventory } = useInventory();
+  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels, inventory, applyPhysicalCount } = useInventory();
   const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings, addBulkAdjustments, sales } = useTransactions();
   const { addBulkTransactions: addBulkAirtime, setTransactions: setAirtimeTransactions } = useAirtime();
   const { addBulkTransactions: addBulkMobileMoney, setTransactions: setMobileMoneyTransactions } = useMobileMoney();
@@ -518,6 +518,30 @@ export default function SettingsPage() {
     })
   }
 
+  const handlePhysicalCountImport = (data: any[]) => {
+    try {
+        const countData = data.map((row, index) => {
+            const line = index + 2;
+            const identifier = String(row['sku_ou_reference'] || '').trim();
+            const realStock = row['stock_reel'];
+
+            if (!identifier || realStock === undefined || realStock === null) {
+                throw new Error(`Ligne ${line}: Les colonnes sku_ou_reference et stock_reel sont obligatoires.`);
+            }
+            return { identifier, realStock: parseInt(String(realStock), 10) };
+        });
+
+        const { updatedCount, notFoundCount } = applyPhysicalCount(countData);
+
+        toast({
+            title: 'Importation du comptage terminée',
+            description: `${updatedCount} articles mis à jour. ${notFoundCount} articles non trouvés.`,
+        });
+    } catch (error: any) {
+        toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
+    }
+  };
+
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -560,6 +584,7 @@ export default function SettingsPage() {
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
           <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
           <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
+          <ExcelImport title="Importer un Comptage Physique" onImport={handlePhysicalCountImport} icon={<FileCheck2 />} />
           <div className="p-4 border rounded-lg space-y-4 bg-background/50 flex flex-col justify-center items-start">
              <h3 className="font-medium">Niveaux de Réapprovisionnement</h3>
              <p className="text-sm text-muted-foreground">Après avoir importé vos produits et vos ventes, cliquez ici pour calculer automatiquement les stocks d'alerte.</p>
@@ -580,7 +605,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
-
-    
