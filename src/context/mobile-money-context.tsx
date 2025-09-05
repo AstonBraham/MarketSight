@@ -102,10 +102,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             case 'collect_commission':
                 newBalance += t.amount;
                 break;
-            case 'virtual_return':
             case 'transfer_from_pos':
                  newBalance += t.amount;
                 break;
+            case 'virtual_return':
             case 'transfer_to_pos':
             case 'pos_transfer':
                 newBalance -= t.amount;
@@ -141,10 +141,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
             case 'collect_commission':
                 newBalance += t.amount;
                 break;
-            case 'virtual_return':
             case 'transfer_from_pos':
                  newBalance += t.amount;
                 break;
+            case 'virtual_return':
             case 'transfer_to_pos':
             case 'pos_transfer':
                 newBalance -= t.amount;
