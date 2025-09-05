@@ -27,6 +27,7 @@ import { useMobileMoney } from '@/context/mobile-money-context';
 import type { MobileMoneyTransactionType, MobileMoneyProvider } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { useTransactions } from '@/context/transaction-context';
 
 type AddMobileMoneyTransactionDialogProps = {
     provider: MobileMoneyProvider;
@@ -36,6 +37,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { addTransaction } = useMobileMoney();
+  const { addAdjustment } = useTransactions();
   
   const [type, setType] = useState<MobileMoneyTransactionType | ''>('');
   const [amount, setAmount] = useState(0);
@@ -82,15 +84,24 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
 
+    const transactionAmount = parseFloat(data.amount as string);
+
     addTransaction({
         transactionId: data.transactionId as string,
         type: type as MobileMoneyTransactionType,
         provider: provider,
-        amount: parseFloat(data.amount as string),
+        amount: transactionAmount,
         commission: parseFloat(data.commission as string) || 0,
         phoneNumber: data.phoneNumber as string,
         affectsCash: affectsCash
     });
+
+    if (type === 'virtual_return') {
+      addAdjustment({
+        amount: transactionAmount,
+        description: `Encaissement suite au retour de virtuel ${provider}`
+      });
+    }
     
     toast({
       title: 'Opération Ajoutée',

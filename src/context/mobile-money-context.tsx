@@ -74,8 +74,8 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         setTransactions(prev => {
             const otherTransactions = prev.filter(t => t.provider !== providerToClear);
             // If clearing Mixx, ensure the initial balance is the only Mixx transaction left.
-            if (providerToClear === 'Mixx' && !otherTransactions.some(t => t.id === initialMixxBalance.id)) {
-                return [initialMixxBalance, ...otherTransactions.filter(t => t.provider !== 'Mixx')];
+            if (providerToClear === 'Mixx') {
+                 return [initialMixxBalance, ...otherTransactions.filter(t => t.provider !== 'Mixx')];
             }
             return otherTransactions;
         });
@@ -91,23 +91,15 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let newBalance = acc;
         switch (t.type) {
             case 'purchase':
-                newBalance += t.amount; // Achat de virtuel augmente le solde
-                break;
             case 'withdrawal':
-                newBalance += t.amount; // Retrait par client augmente le solde
-                break;
-            case 'deposit':
-                newBalance -= t.amount; // Dépôt par client diminue le solde
-                break;
             case 'collect_commission':
+            case 'transfer_from_pos':
                 newBalance += t.amount;
                 break;
-            case 'transfer_from_pos':
-                 newBalance += t.amount;
-                break;
-            case 'virtual_return':
+            case 'deposit':
             case 'transfer_to_pos':
             case 'pos_transfer':
+            case 'virtual_return':
                 newBalance -= t.amount;
                 break;
             case 'adjustment':
@@ -130,23 +122,15 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let newBalance = runningBalance;
          switch (t.type) {
             case 'purchase':
-                newBalance += t.amount;
-                break;
             case 'withdrawal':
+            case 'collect_commission':
+            case 'transfer_from_pos':
                 newBalance += t.amount;
                 break;
             case 'deposit':
-                newBalance -= t.amount;
-                break;
-            case 'collect_commission':
-                newBalance += t.amount;
-                break;
-            case 'transfer_from_pos':
-                 newBalance += t.amount;
-                break;
-            case 'virtual_return':
             case 'transfer_to_pos':
             case 'pos_transfer':
+            case 'virtual_return':
                 newBalance -= t.amount;
                 break;
             case 'adjustment':
