@@ -41,7 +41,7 @@ export function AddPurchaseDialog() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast();
   const { addPurchase } = useTransactions();
-  const { inventory, updateItem } = useInventory();
+  const { inventory } = useInventory();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalCost, setTotalCost] = useState(0);
@@ -73,31 +73,14 @@ export function AddPurchaseDialog() {
         return;
     }
 
-    // Add purchase to transactions
     addPurchase({
       supplier: selectedItem.supplier,
       product: selectedItem.productName,
       description: `Achat de ${quantity} x ${selectedItem.productName}`,
       amount: totalCost,
-      status: isPaid ? 'paid' : 'unpaid'
-    });
-
-    // --- CUMP Calculation ---
-    const oldStock = selectedItem.inStock;
-    const oldCostPrice = selectedItem.costPrice || 0;
-    const oldStockValue = oldStock * oldCostPrice;
-
-    const purchaseValue = totalCost;
-    const newStock = oldStock + quantity;
-
-    const newCostPrice = (oldStockValue + purchaseValue) / newStock;
-    // --- End CUMP Calculation ---
-
-
-    // Update inventory
-    updateItem(selectedItem.id, {
-        inStock: newStock,
-        costPrice: newCostPrice,
+      status: isPaid ? 'paid' : 'unpaid',
+      inventoryId: selectedItem.id,
+      quantity: quantity
     });
     
     toast({

@@ -26,7 +26,6 @@ export function QuickSaleDialog({ item, children }: { item: InventoryItem, child
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
   const { addSale } = useTransactions();
-  const { updateItem } = useInventory();
   
   const price = item.defaultPrice || 0;
   const total = price * quantity;
@@ -58,11 +57,8 @@ export function QuickSaleDialog({ item, children }: { item: InventoryItem, child
       itemType: item.category,
       price: price,
       quantity: quantity,
-      amount: total
-    });
-
-    updateItem(item.id, {
-        inStock: item.inStock - quantity
+      amount: total,
+      inventoryId: item.id,
     });
     
     toast({

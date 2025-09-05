@@ -29,7 +29,7 @@ interface InvoiceItem extends InventoryItem {
 
 export default function NewInvoicePage() {
     const { inventory, updateItem } = useInventory();
-    const { addSale, addInvoice } = useTransactions();
+    const { addInvoice } = useTransactions();
     const { toast } = useToast();
     const router = useRouter();
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -95,25 +95,10 @@ export default function NewInvoicePage() {
         const finalInvoiceId = addInvoice({
             clientName: clientName || 'Client Facturé',
             date: invoiceDate,
-            items: invoiceItems.map(i => ({ id: i.id, productName: i.productName, quantity: i.quantity, price: i.price, total: i.total })),
+            items: invoiceItems.map(i => ({ id: i.id, productName: i.productName, quantity: i.quantity, price: i.price, total: i.total, inventoryId: i.id })),
             subtotal,
             tax,
             total,
-        });
-
-        // Process transactions and update inventory
-        invoiceItems.forEach(item => {
-            addSale({
-                invoiceId: finalInvoiceId,
-                client: clientName || 'Client Facturé',
-                product: item.productName,
-                reference: item.reference,
-                itemType: item.category,
-                price: item.price,
-                quantity: item.quantity,
-                amount: item.total
-            });
-            updateItem(item.id, { inStock: item.inStock - item.quantity });
         });
 
         toast({ title: 'Facture Enregistrée', description: `La facture ${finalInvoiceId} a été enregistrée avec succès.`});

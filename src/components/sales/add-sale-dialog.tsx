@@ -40,7 +40,7 @@ export function AddSaleDialog() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast();
   const { addSale } = useTransactions();
-  const { inventory, updateItem } = useInventory();
+  const { inventory } = useInventory();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
@@ -94,7 +94,6 @@ export function AddSaleDialog() {
     const saleData = Object.fromEntries(formData.entries());
     const amount = price * quantity;
 
-    // Add sale to transactions
     addSale({
       client: saleData.client as string,
       product: selectedItem.productName,
@@ -102,12 +101,8 @@ export function AddSaleDialog() {
       itemType: selectedItem.category,
       price: price,
       quantity: quantity,
-      amount: amount
-    });
-
-    // Update inventory
-    updateItem(selectedItem.id, {
-        inStock: selectedItem.inStock - quantity
+      amount: amount,
+      inventoryId: selectedItem.id,
     });
     
     toast({

@@ -5,6 +5,8 @@ import type { StockMovement } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
 import { ArrowUp, ArrowDown, Settings2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export const columns: ColumnDef<StockMovement>[] = [
   {
@@ -16,7 +18,7 @@ export const columns: ColumnDef<StockMovement>[] = [
     }
   },
   {
-    accessorKey: 'productId',
+    accessorKey: 'productName',
     header: 'Produit',
   },
   {
@@ -38,16 +40,31 @@ export const columns: ColumnDef<StockMovement>[] = [
     accessorKey: 'quantity',
     header: 'Quantité',
     cell: ({ row }) => {
-        const type = row.original.type;
         const quantity = row.original.quantity;
-        const sign = type === 'out' || quantity < 0 ? '-' : '+';
-        const color = type === 'out' || quantity < 0 ? 'text-destructive' : 'text-green-600';
+        const sign = quantity > 0 ? '+' : '';
+        const color = quantity > 0 ? 'text-green-600' : 'text-destructive';
 
-        return <div className={`font-medium ${color}`}>{sign} {Math.abs(quantity)}</div>
+        return <div className={`font-medium font-mono ${color}`}>{sign} {Math.abs(quantity)}</div>
     }
+  },
+   {
+    accessorKey: 'balanceAfter',
+    header: 'Solde',
+    cell: ({ row }) => <span className="font-mono font-semibold">{row.getValue('balanceAfter')}</span>
   },
   {
     accessorKey: 'reason',
     header: 'Raison',
+     cell: ({ row }) => {
+        const movement = row.original;
+        if (movement.relatedTransactionId && movement.reason.startsWith('Vente sur Facture')) {
+            return (
+                <Link href={`/invoices/${movement.relatedTransactionId}`} className="hover:underline text-blue-600">
+                    {movement.reason}
+                </Link>
+            );
+        }
+        return movement.reason;
+    }
   },
 ];

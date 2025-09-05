@@ -8,6 +8,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { startOfDay, endOfDay, isEqual } from 'date-fns';
 import { useAirtime } from './airtime-context';
 import { useMobileMoney } from './mobile-money-context';
+import { useInventory } from './inventory-context';
 
 type HistoryTransaction = Transaction & { 
     source?: string, 
@@ -57,6 +58,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   
   const { transactions: airtimeTransactions } = useAirtime();
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
+  const { inventory, updateItem: updateInventoryItem } = useInventory();
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -78,7 +80,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: 'Vente',
     };
     setTransactions(prev => [newSale, ...prev]);
-  }, [setTransactions]);
+
+    if (newSale.inventoryId && newSale.quantity) {
+        const item = inventory.find(i => i.id === newSale.inventoryId);
+        if (item) {
+            updateInventoryItem(
+                item.id, 
+                { inStock: item.inStock - newSale.quantity }, 
+                `Vente (Client: ${newSale.client})`,
+                newSale.id
+            );
+        }
+    }
+  }, [setTransactions, inventory, updateInventoryItem]);
 
   const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
     const newSales: Sale[] = sales.map((sale, index) => ({
@@ -89,6 +103,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         category: 'Vente',
     }));
     setTransactions(prev => [...prev, ...newSales]);
+    // Note: Bulk sale import currently does not update inventory stock.
+    // This could be a future improvement if needed.
   }, [setTransactions]);
   
   const clearWifiSales = useCallback(() => {
@@ -115,7 +131,28 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         const otherTransactions = transactions.filter(t => t.type !== 'purchase');
         setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
     }
-  }, [transactions, setTransactions]);
+
+    if (newPurchase.inventoryId && newPurchase.quantity) {
+        const item = inventory.find(i => i.id === newPurchase.inventoryId);
+        if (item) {
+            const oldStock = item.inStock;
+            const oldCostPrice = item.costPrice || 0;
+            const oldStockValue = oldStock * oldCostPrice;
+
+            const purchaseValue = newPurchase.amount;
+            const newStock = oldStock + newPurchase.quantity;
+            const newCostPrice = (oldStockValue + purchaseValue) / newStock;
+
+            updateInventoryItem(
+                item.id,
+                { inStock: newStock, costPrice: newCostPrice },
+                `Achat (Fournisseur: ${newPurchase.supplier})`,
+                newPurchase.id
+            );
+        }
+    }
+
+  }, [transactions, setTransactions, inventory, updateInventoryItem]);
   
   const payPurchase = useCallback((purchaseId: string) => {
     let purchaseToPay: Purchase | undefined;
@@ -200,8 +237,35 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: newId,
     };
     setInvoices(prev => [newInvoice, ...prev]);
+
+    // Create a single cash transaction for the whole invoice
+    addSale({
+        invoiceId: newId,
+        client: invoiceData.clientName,
+        product: `Facture ${newId}`,
+        price: invoiceData.total,
+        quantity: 1,
+        amount: invoiceData.total,
+        itemType: 'Facture'
+    });
+    
+    // Update inventory for each item
+    invoiceData.items.forEach(item => {
+        if (item.inventoryId && item.quantity) {
+            const inventoryItem = inventory.find(i => i.id === item.inventoryId);
+            if (inventoryItem) {
+                updateInventoryItem(
+                    inventoryItem.id,
+                    { inStock: inventoryItem.inStock - item.quantity },
+                    `Vente sur Facture ${newId}`,
+                    newId
+                );
+            }
+        }
+    });
+
     return newId;
-  }, [setInvoices]);
+  }, [setInvoices, addSale, inventory, updateInventoryItem]);
   
   const getInvoice = useCallback((id: string) => {
     return invoices.find(invoice => invoice.id === id);
@@ -260,7 +324,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 const sale = t as Sale;
                 amount = sale.amount;
                 if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
-                if (sale.invoiceId) {
+                if (sale.itemType === 'Facture') {
                     type = 'Facture';
                     link = `/invoices/${sale.invoiceId}`;
                 }
@@ -295,7 +359,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 case 'deposit': cashFlowImpact = mt.amount; description = `Dépôt MM ${mt.provider}`; break;
                 case 'withdrawal': cashFlowImpact = -mt.amount; description = `Retrait MM ${mt.provider}`; break;
                 case 'purchase': cashFlowImpact = -mt.amount; type = 'MM Purchase'; description = `Achat virtuel ${mt.provider}`; break;
-                case 'virtual_return': cashFlowImpact = mt.amount; type = 'MM Virtual Return'; description = `Retour virtuel ${mt.provider}`; break;
+                case 'virtual_return': cashFlowImpact = mt.amount; type = 'Retour Virtuel Caisse'; description = `Retour virtuel ${mt.provider}`; break;
                 case 'transfer_to_pos': if (mt.affectsCash) { cashFlowImpact = mt.amount; type = 'MM Transfer'; description = `Transfert vers PDV ${mt.phoneNumber}`; } break;
                 case 'transfer_from_pos': if (mt.affectsCash) { cashFlowImpact = -mt.amount; type = 'MM Transfer'; description = `Transfert depuis PDV ${mt.phoneNumber}`; } break;
                 case 'collect_commission': cashFlowImpact = mt.amount; type = 'MM Commission'; description = `Collecte commission ${mt.provider}`; break;

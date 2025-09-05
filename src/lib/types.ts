@@ -20,6 +20,7 @@ export type Sale = Transaction & {
   itemType?: string;
   discount?: number;
   invoiceId?: string;
+  inventoryId?: string;
 };
 
 export type Purchase = Transaction & {
@@ -27,6 +28,8 @@ export type Purchase = Transaction & {
   supplier: string;
   product: string;
   status?: 'paid' | 'unpaid';
+  inventoryId?: string;
+  quantity?: number;
 };
 
 export type Expense = Transaction & {
@@ -53,11 +56,15 @@ export type InventoryItem = {
 
 export type StockMovement = {
   id: string;
-  productId: string;
+  inventoryId: string;
+  productName: string;
   type: 'in' | 'out' | 'adjustment';
   quantity: number;
   date: string;
   reason: string;
+  balanceBefore: number;
+  balanceAfter: number;
+  relatedTransactionId?: string;
 };
 
 export type UserRole = 'admin' | 'user';
@@ -105,6 +112,7 @@ export interface InvoiceItem {
   quantity: number;
   price: number;
   total: number;
+  inventoryId?: string;
 }
 
 export interface Invoice {

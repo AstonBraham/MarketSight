@@ -19,6 +19,7 @@ import { useUser } from '@/context/user-context';
 import { EditInventoryItemDialog } from './edit-inventory-item-dialog';
 import { DeleteInventoryItemDialog } from './delete-inventory-item-dialog';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 
 function ActionsCell({ row }: { row: any }) {
@@ -52,6 +53,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
   {
     accessorKey: 'productName',
     header: 'Produit',
+    cell: ({ row }) => {
+        const item = row.original;
+        return (
+            <Link href={`/inventory/${item.id}`} className="hover:underline font-medium">
+                {item.productName}
+            </Link>
+        )
+    }
   },
   {
     accessorKey: 'category',
