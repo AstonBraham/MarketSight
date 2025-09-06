@@ -233,7 +233,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: `ADJ${Date.now()}`,
       type: 'adjustment',
       date: adjustment.date || new Date().toISOString(),
-      category: adjustment.category || 'Ajustement'
+      category: adjustment.category || 'Encaissement'
     };
     setTransactions(prev => [newAdjustment, ...prev]);
   }, [setTransactions]);
@@ -244,7 +244,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: `ADJ-BULK-${Date.now()}-${index}`,
       type: 'adjustment',
       date: adj.date || new Date().toISOString(),
-      category: 'Encaissement', // Corrected category
+      category: 'Encaissement',
     }));
     setTransactions(prev => [...prev, ...newAdjustments]);
   }, [setTransactions]);
@@ -429,7 +429,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             } else if (at.type === 'adjustment') {
                 amount = 0; // Purely virtual
             }
-            allDailyTransactions.push({ ...at, type, source: at.provider, amount, description: at.description || `Airtime ${at.provider}`, affectsCash });
+            if(affectsCash) {
+              allDailyTransactions.push({ ...at, type, source: at.provider, amount, description: at.description || `Airtime ${at.provider}`, affectsCash });
+            }
         });
     
     // Mobile Money Transactions
@@ -450,7 +452,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 case 'collect_commission': amount = mt.amount; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
                 case 'adjustment': amount = 0; break; // Purely virtual
             }
-            allDailyTransactions.push({ ...mt, amount, type, source: mt.provider, description, affectsCash });
+
+            if(affectsCash){
+              allDailyTransactions.push({ ...mt, amount, type, source: mt.provider, description, affectsCash });
+            }
         });
 
     // Stock Movements
