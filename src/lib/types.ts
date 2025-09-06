@@ -21,6 +21,8 @@ export type Sale = Transaction & {
   discount?: number;
   invoiceId?: string;
   inventoryId?: string;
+  costPrice?: number; // coût d'achat unitaire au moment de la vente
+  margin?: number; // Marge sur la vente (amount - (costPrice * quantity))
 };
 
 export type Purchase = Transaction & {

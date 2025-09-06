@@ -72,17 +72,22 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>) => {
+    const item = inventory.find(i => i.id === sale.inventoryId);
+    const costPrice = item?.costPrice || 0;
+    const margin = sale.amount - (costPrice * (sale.quantity || 1));
+
     const newSale: Sale = {
       ...sale,
       id: `SALE${Date.now()}`,
       type: 'sale',
       date: sale.date || new Date().toISOString(),
       category: 'Vente',
+      costPrice: costPrice,
+      margin: margin,
     };
     setTransactions(prev => [newSale, ...prev]);
 
     if (newSale.inventoryId && newSale.quantity) {
-        const item = inventory.find(i => i.id === newSale.inventoryId);
         if (item) {
             updateInventoryItem(
                 item.id, 
@@ -95,17 +100,26 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [setTransactions, inventory, updateInventoryItem]);
 
   const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
-    const newSales: Sale[] = sales.map((sale, index) => ({
+    const newSales: Sale[] = sales.map((sale, index) => {
+      const item = inventory.find(i => (i.sku && i.sku === sale.reference) || (i.reference && i.reference === sale.reference));
+      const costPrice = item?.costPrice || 0;
+      const margin = sale.amount - (costPrice * (sale.quantity || 1));
+      
+      return {
         ...sale,
         id: `SALE-BULK-${Date.now()}-${index}`,
         type: 'sale',
         date: sale.date || new Date().toISOString(),
         category: 'Vente',
-    }));
+        costPrice: costPrice,
+        margin: margin,
+        inventoryId: item?.id
+      }
+    });
     setTransactions(prev => [...prev, ...newSales]);
     // Note: Bulk sale import currently does not update inventory stock.
     // This could be a future improvement if needed.
-  }, [setTransactions]);
+  }, [setTransactions, inventory]);
   
   const clearWifiSales = useCallback(() => {
     setTransactions(prev => prev.filter(t => (t as Sale).itemType !== 'Ticket Wifi'));

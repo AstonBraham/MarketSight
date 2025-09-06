@@ -34,7 +34,8 @@ import {
   Wifi,
   Archive,
   History,
-  LineChart
+  LineChart,
+  BarChart2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -52,6 +53,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
   { href: '/client-analysis', label: 'Analyse Clients', icon: LineChart, roles: ['admin', 'user'] },
+  { href: '/sales-analysis', label: 'Analyse des Ventes', icon: BarChart2, roles: ['admin', 'user'] },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
@@ -66,7 +68,7 @@ const allMenuItems = [
   { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin', 'user'] },
   { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin', 'user'] },
   { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin', 'user'] },
-  { href: '/mobile-money-cauris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
+  { href: '/mobile-money-coris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
   { href: '/history', label: 'Historique', icon: History, roles: ['admin', 'user'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
