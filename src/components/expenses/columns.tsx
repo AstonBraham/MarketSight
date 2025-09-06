@@ -4,7 +4,7 @@
 import type { Expense } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Trash2, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, Trash2, CheckCircle, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
 import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { useTransactions } from '@/context/transaction-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { EditExpenseDialog } from './edit-expense-dialog';
 
 
 function ActionsCell({ row }: { row: { original: Expense }}) {
@@ -39,7 +40,7 @@ function ActionsCell({ row }: { row: { original: Expense }}) {
               Copier l'ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>Modifier</DropdownMenuItem>
+            <EditExpenseDialog expense={expense} />
             <DeleteTransactionDialog 
                 transactionId={expense.id}
                 onDelete={() => removeExpense(expense.id)}

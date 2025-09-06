@@ -27,6 +27,7 @@ interface TransactionContextType {
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   payPurchase: (purchaseId: string) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
+  updateExpense: (id: string, updatedExpense: Partial<Omit<Expense, 'id' | 'type' | 'currency'>>) => void;
   addBulkExpenses: (expenses: Omit<Expense, 'id' | 'type' | 'currency'>[]) => void;
   removeExpense: (id: string) => void;
   addExpenseCategory: (category: string) => void;
@@ -199,6 +200,15 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       category: expense.category || 'Dépense',
     };
     setTransactions(prev => [newExpense, ...prev]);
+  }, [setTransactions]);
+  
+  const updateExpense = useCallback((id: string, updatedExpense: Partial<Omit<Expense, 'id' | 'type' | 'currency'>>) => {
+    setTransactions(prev => prev.map(t => {
+      if (t.id === id && t.type === 'expense') {
+        return { ...t, ...updatedExpense };
+      }
+      return t;
+    }));
   }, [setTransactions]);
 
   const addBulkExpenses = useCallback((expenses: Omit<Expense, 'id'|'type'|'currency'>[]) => {
@@ -492,8 +502,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addPurchase,
     payPurchase,
     addExpense,
+    updateExpense,
     addBulkExpenses,
-    removeExpense,
+    removeExpense, 
     addExpenseCategory,
     addAdjustment,
     addBulkAdjustments,
@@ -509,7 +520,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     clearCashClosings,
   }), [
       transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, cashClosings, setCashClosings, 
-      expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, 
+      expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
       addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
       airtimeTransactions, mobileMoneyTransactions
