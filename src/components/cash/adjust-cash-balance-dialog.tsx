@@ -74,7 +74,7 @@ export function AdjustCashBalanceDialog({ currentBalance }: AdjustCashBalanceDia
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><SlidersHorizontal className="mr-2 h-4 w-4" /> Ajuster la Caisse</Button>
+        <Button variant="outline"><SlidersHorizontal className="mr-2 h-4 w-4" /> Nouvel Ajustement de Caisse</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
