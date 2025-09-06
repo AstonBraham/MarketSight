@@ -40,10 +40,10 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.map(t => {
       if (t.id === id) {
         logAction('UPDATE_AIRTIME_TRANSACTION', `Modification transaction Airtime ID ${id}.`);
-        return { ...t, ...updatedTransaction, date: updatedTransaction.date || new Date().toISOString() };
+        return { ...t, ...updatedTransaction };
       }
       return t;
-    }));
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   }, [setTransactions, logAction]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => {
