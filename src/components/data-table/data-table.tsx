@@ -41,18 +41,11 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [{ pageIndex, pageSize }, setPagination] = React.useState<PaginationState>({
+  
+  const [pagination, setPagination] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
-
-  const pagination = React.useMemo(
-    () => ({
-      pageIndex,
-      pageSize,
-    }),
-    [pageIndex, pageSize]
-  );
 
   const table = useReactTable({
     data,
@@ -73,6 +66,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
+      <DataTablePagination table={table} />
       <DataTableToolbar table={table} filterColumn={filterColumn} filterPlaceholder={filterPlaceholder} />
       <div className="rounded-md border">
         <Table>
