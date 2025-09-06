@@ -37,11 +37,11 @@ export default function CashPage() {
   
   const today = new Date().toDateString();
   const dailyIncome = allTransactions
-    .filter(t => t.type === 'sale' && new Date(t.date).toDateString() === today)
+    .filter(t => (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) && new Date(t.date).toDateString() === today)
     .reduce((acc, t) => acc + t.amount, 0);
 
   const dailyOutcome = allTransactions
-    .filter(t => (t.type === 'purchase' || t.type === 'expense') && new Date(t.date).toDateString() === today)
+    .filter(t => (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) && new Date(t.date).toDateString() === today)
     .reduce((acc, t) => acc + t.amount, 0);
   
   const netFlow = dailyIncome - dailyOutcome;

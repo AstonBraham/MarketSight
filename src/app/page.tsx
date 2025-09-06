@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 import { UnpaidPurchases } from '@/components/dashboard/unpaid-purchases';
 import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-chart';
 import { CashflowChartLast6Months } from '@/components/dashboard/cashflow-chart-last-6-months';
+import type { Transaction } from '@/lib/types';
 
 export default function DashboardPage() {
     const { getAllTransactions, sales } = useTransactions();

@@ -302,18 +302,64 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [addAdjustment, setCashClosings]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
-    const allCashTransactions: Transaction[] = [...transactions];
+    let allCashTransactions: Transaction[] = [];
+
+    // 1. Core transactions (sales, paid purchases, expenses, adjustments)
+    transactions.forEach(t => {
+      if (t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment') {
+        allCashTransactions.push(t);
+      } else if (t.type === 'purchase' && (t as Purchase).status !== 'unpaid') {
+        allCashTransactions.push(t);
+      }
+    });
+
+    // 2. Airtime transactions
+    airtimeTransactions.forEach(t => {
+      if (t.type === 'sale') {
+        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.amount, description: `Vente Airtime ${t.provider}`});
+      } else if (t.type === 'purchase') {
+        allCashTransactions.push({ id: t.id, type: 'purchase', date: t.date, amount: t.amount, description: `Achat Airtime ${t.provider}`});
+      }
+    });
+
+    // 3. Mobile Money transactions
+    mobileMoneyTransactions.forEach(t => {
+      let cashFlowImpact = 0;
+      let type: 'sale' | 'purchase' = 'sale';
+      let description = '';
+
+      switch (t.type) {
+        case 'deposit':
+          cashFlowImpact = t.amount;
+          type = 'sale';
+          description = `Encaissement Dépôt MM ${t.provider}`;
+          break;
+        case 'withdrawal':
+          cashFlowImpact = -t.amount;
+          type = 'purchase';
+          description = `Décaissement Retrait MM ${t.provider}`;
+          break;
+        case 'purchase':
+          cashFlowImpact = -t.amount;
+          type = 'purchase';
+          description = `Achat de virtuel ${t.provider}`;
+          break;
+        case 'virtual_return':
+           cashFlowImpact = t.amount;
+           type = 'sale';
+           description = `Retour de virtuel ${t.provider}`;
+           break;
+        // Transfers are excluded as per user request
+      }
+      
+      if (cashFlowImpact !== 0) {
+        allCashTransactions.push({ id: t.id, type, date: t.date, amount: Math.abs(cashFlowImpact), description });
+      }
+    });
 
     return allCashTransactions
-      .filter(t => {
-        if (t.type === 'purchase') {
-            const p = t as Purchase;
-            return p.status !== 'unpaid';
-        }
-        return t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment';
-      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
-  }, [transactions]);
+  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
   
   const getDailyHistory = useCallback((date: Date): HistoryTransaction[] => {
     const start = startOfDay(date);
