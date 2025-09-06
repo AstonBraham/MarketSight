@@ -36,7 +36,8 @@ import {
   History,
   LineChart,
   BarChart2,
-  ListChecks
+  ListChecks,
+  Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -62,6 +63,7 @@ const allMenuItems = [
   { 
     label: 'Trésorerie', icon: Wallet, roles: ['admin'], subItems: [
       { href: '/cash', label: 'Mouvements de caisse' },
+      { href: '/receipts', label: 'Encaissements' },
       { href: '/cash-closing', label: 'Arrêtés de caisse' },
     ]
   },

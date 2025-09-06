@@ -42,10 +42,11 @@ export function AddCashEntryDialog() {
     addAdjustment({
       amount: numericAmount,
       description: description,
+      category: 'Encaissement'
     });
 
     toast({
-      title: 'Entrée de Caisse Enregistrée',
+      title: 'Encaissement Enregistré',
       description: `Une entrée de ${new Intl.NumberFormat('fr-FR').format(numericAmount)} F a été ajoutée.`,
     });
     setOpen(false);
@@ -56,12 +57,12 @@ export function AddCashEntryDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter une entrée</Button>
+        <Button variant="secondary"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un encaissement</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Ajouter une Entrée de Caisse</DialogTitle>
+            <DialogTitle>Ajouter un Encaissement</DialogTitle>
             <DialogDescription>
               Enregistrez une entrée de fonds qui n'est pas liée à une vente (ex: apport du propriétaire).
             </DialogDescription>
@@ -92,7 +93,7 @@ export function AddCashEntryDialog() {
              </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Enregistrer l'Entrée</Button>
+            <Button type="submit">Enregistrer l'Encaissement</Button>
           </DialogFooter>
         </form>
       </DialogContent>

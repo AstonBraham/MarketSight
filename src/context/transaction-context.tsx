@@ -16,6 +16,7 @@ interface TransactionContextType {
   sales: Sale[];
   purchases: Purchase[];
   expenses: Expense[];
+  receipts: Transaction[];
   invoices: Invoice[];
   setInvoices: (invoices: Invoice[]) => void;
   cashClosings: CashClosing[];
@@ -29,7 +30,7 @@ interface TransactionContextType {
   addBulkExpenses: (expenses: Omit<Expense, 'id' | 'type' | 'currency'>[]) => void;
   removeExpense: (id: string) => void;
   addExpenseCategory: (category: string) => void;
-  addAdjustment: (adjustment: { amount: number; description: string, date?: string }) => void;
+  addAdjustment: (adjustment: { amount: number; description: string, date?: string, category?: string }) => void;
   addBulkAdjustments: (adjustments: Omit<Transaction, 'id' | 'type' | 'category'>[]) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
@@ -216,13 +217,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.filter(t => t.id !== id && t.type === 'expense'));
   }, [setTransactions]);
 
-  const addAdjustment = useCallback((adjustment: { amount: number; description: string, date?: string }) => {
+  const addAdjustment = useCallback((adjustment: { amount: number; description: string, date?: string, category?: string }) => {
     const newAdjustment: Transaction = {
       ...adjustment,
       id: `ADJ${Date.now()}`,
       type: 'adjustment',
       date: adjustment.date || new Date().toISOString(),
-      category: 'Ajustement'
+      category: adjustment.category || 'Ajustement'
     };
     setTransactions(prev => [newAdjustment, ...prev]);
   }, [setTransactions]);
@@ -472,6 +473,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
   const purchases = useMemo(() => transactions.filter(t => t.type === 'purchase') as Purchase[], [transactions]);
   const expenses = useMemo(() => transactions.filter(t => t.type === 'expense') as Expense[], [transactions]);
+  const receipts = useMemo(() => transactions.filter(t => t.type === 'adjustment' && t.category === 'Encaissement' && t.amount > 0) as Transaction[], [transactions]);
 
   const value = useMemo(() => ({
     transactions,
@@ -479,6 +481,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     sales,
     purchases,
     expenses,
+    receipts,
     invoices,
     setInvoices,
     cashClosings,
@@ -505,7 +508,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     clearInvoices,
     clearCashClosings,
   }), [
-      transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, 
+      transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, cashClosings, setCashClosings, 
       expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, 
       addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,

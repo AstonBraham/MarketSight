@@ -52,7 +52,6 @@ export default function CashPage() {
         title="Gestion de la Trésorerie" 
         action={
             <div className="flex items-center gap-2">
-                <AddCashEntryDialog />
                 <AdjustCashBalanceDialog currentBalance={currentBalance || 0} />
             </div>
         } 
@@ -72,7 +71,7 @@ export default function CashPage() {
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold text-green-600">+{new Intl.NumberFormat('fr-FR').format(dailyIncome)} F</div>
-                 <p className="text-xs text-muted-foreground">Total des ventes</p>
+                 <p className="text-xs text-muted-foreground">Total des ventes et encaissements</p>
             </CardContent>
         </Card>
         <Card>

@@ -20,6 +20,8 @@ import { useTransactions } from '@/context/transaction-context';
 import { useToast } from '@/hooks/use-toast';
 import type { Sale } from '@/lib/types';
 import type { ColumnDef } from '@tanstack/react-table';
+import { CheckCircle } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const WIFI_TICKETS = [
   { name: 'Ticket 50F', price: 50 },
@@ -56,10 +58,30 @@ export const columns: ColumnDef<Sale>[] = [
         accessorKey: 'amount',
         header: () => <div className="text-right">Montant Total</div>,
         cell: ({ row }) => (
-            <div className="text-right font-bold">
-                {new Intl.NumberFormat('fr-FR').format(row.original.amount)} F
+            <div className="text-right font-bold text-green-600">
+                +{new Intl.NumberFormat('fr-FR').format(row.original.amount)} F
             </div>
         ),
+    },
+    {
+        id: 'affectsCash',
+        header: () => <div className="text-center">Impact Caisse</div>,
+        cell: ({ row }) => {
+        return (
+            <div className="flex justify-center">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger>
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Cette opération a affecté la trésorerie.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            </div>
+        );
+        }
     },
 ];
 

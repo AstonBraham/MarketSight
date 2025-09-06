@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Expense } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal, Trash2, CheckCircle } from 'lucide-react';
@@ -18,10 +18,11 @@ import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { useTransactions } from '@/context/transaction-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
-
-function ActionsCell({ row }: { row: { original: Expense }}) {
-    const { removeExpense } = useTransactions();
-    const expense = row.original;
+// Note: This needs a way to delete adjustments, which is not implemented yet in the context.
+// For now, delete is disabled.
+function ActionsCell({ row }: { row: { original: Transaction }}) {
+    // const { removeAdjustment } = useTransactions();
+    const transaction = row.original;
 
     return (
         <DropdownMenu>
@@ -34,22 +35,22 @@ function ActionsCell({ row }: { row: { original: Expense }}) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(expense.id)}
+              onClick={() => navigator.clipboard.writeText(transaction.id)}
             >
               Copier l'ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem disabled>Modifier</DropdownMenuItem>
-            <DeleteTransactionDialog 
-                transactionId={expense.id}
-                onDelete={() => removeExpense(expense.id)}
-            />
+            <DropdownMenuItem disabled className="text-destructive">
+                 <Trash2 className="mr-2 h-4 w-4" />
+                 Supprimer
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
 }
 
-export const columns: ColumnDef<Expense>[] = [
+export const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'description',
     header: 'Description',
@@ -62,17 +63,8 @@ export const columns: ColumnDef<Expense>[] = [
       const amount = parseFloat(row.getValue('amount'));
       const formatted = new Intl.NumberFormat('fr-FR').format(amount);
 
-      return <div className="text-right font-mono text-destructive">-{formatted} F</div>;
+      return <div className="text-right font-mono text-green-600">+{formatted} F</div>;
     },
-  },
-  {
-    accessorKey: 'category',
-    header: 'Catégorie',
-    cell: ({ row }) => {
-        const category = row.getValue('category') as string;
-        if (!category) return null;
-        return <Badge variant="secondary">{category}</Badge>
-    }
   },
   {
     accessorKey: 'date',
