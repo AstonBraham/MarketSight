@@ -450,7 +450,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 case 'collect_commission': amount = mt.amount; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
                 case 'adjustment': amount = 0; break; // Purely virtual
             }
-            allDailyTransactions.push({ ...mt, amount, type, description, affectsCash });
+            allDailyTransactions.push({ ...mt, amount, type, source: mt.provider, description, affectsCash });
         });
 
     // Stock Movements
@@ -462,6 +462,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
           amount: 0,
           description: `${sm.reason} (${sm.productName})`,
           type: 'Mouvement Stock',
+          source: 'Inventaire',
           affectsCash: false,
         });
       });

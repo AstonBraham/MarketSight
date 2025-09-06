@@ -53,6 +53,23 @@ export const columns: ColumnDef<HistoryTransaction>[] = [
         return <span>{date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
     }
   },
+   {
+    accessorKey: 'source',
+    header: 'Source',
+    cell: ({ row }) => {
+      const source = row.original.source;
+      if (!source) return <Badge variant="secondary">Caisse</Badge>;
+
+      let style = 'border-gray-500';
+      if (source.includes('Moov')) style = 'border-blue-500 text-blue-600';
+      else if (source.includes('Yas')) style = 'border-yellow-500 text-yellow-600';
+      else if (source.includes('Flooz')) style = 'border-blue-500 text-blue-600';
+      else if (source.includes('Mixx')) style = 'border-yellow-500 text-yellow-600';
+      else if (source.includes('Coris')) style = 'border-red-500 text-red-600';
+
+      return <Badge variant="outline" className={cn('whitespace-nowrap', style)}>{source}</Badge>;
+    }
+  },
   {
     accessorKey: 'type',
     header: 'Type',
@@ -64,7 +81,7 @@ export const columns: ColumnDef<HistoryTransaction>[] = [
   },
   {
     accessorKey: 'description',
-    header: 'Description',
+    header: 'Description & Détails',
      cell: ({ row }) => {
         const transaction = row.original;
         const description = transaction.description;
@@ -76,7 +93,6 @@ export const columns: ColumnDef<HistoryTransaction>[] = [
             <div>
                 <div className="flex items-center">
                    <span className="font-medium">{description}</span>
-                    {transaction.affectsCash && <CheckCircle className="ml-2 h-4 w-4 text-green-500" />}
                     {link && (
                         <Button asChild variant="link" size="icon" className="h-5 w-5 ml-1">
                             <Link href={link} target="_blank">
@@ -86,10 +102,10 @@ export const columns: ColumnDef<HistoryTransaction>[] = [
                     )}
                 </div>
                  {(phoneNumber || transactionId) && (
-                    <div className="text-xs text-muted-foreground">
-                        {phoneNumber && <span>Tél: {phoneNumber}</span>}
-                        {phoneNumber && transactionId && <span> &bull; </span>}
-                        {transactionId && <span>ID: {transactionId}</span>}
+                    <div className="text-xs text-muted-foreground font-mono">
+                        {phoneNumber && <span>{phoneNumber}</span>}
+                        {phoneNumber && transactionId && <span> / </span>}
+                        {transactionId && <span>{transactionId}</span>}
                     </div>
                 )}
             </div>
@@ -109,5 +125,19 @@ export const columns: ColumnDef<HistoryTransaction>[] = [
 
       return <div className={cn("text-right font-mono font-semibold", colorClass)}>{sign}{formatted} F</div>;
     },
+  },
+  {
+    id: 'affectsCash',
+    header: () => <div className="text-center">Impact Caisse</div>,
+    cell: ({ row }) => {
+        const { affectsCash } = row.original;
+        if (!affectsCash) return null;
+
+        return (
+            <div className="flex justify-center">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+            </div>
+        );
+    }
   },
 ];
