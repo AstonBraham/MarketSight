@@ -10,7 +10,7 @@ import { useAuditLog } from './audit-log-context';
 interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
   setTransactions: (transactions: MobileMoneyTransaction[]) => void;
-  addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => void;
+  addTransaction: (transaction: Omit<MobileMoneyTransaction, 'id'>) => void;
   updateTransaction: (id: string, updatedTransaction: Partial<Omit<MobileMoneyTransaction, 'id'>>) => void;
   addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => void;
   removeTransaction: (id: string) => void;
@@ -36,11 +36,11 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', [initialMixxBalance]);
   const { logAction } = useAuditLog();
 
-  const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
+  const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
     const newTransaction: MobileMoneyTransaction = {
       ...transaction,
       id: `MM${Date.now()}`,
-      date: new Date().toISOString(),
+      date: transaction.date || new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
     logAction('CREATE_MM_TRANSACTION', `Ajout transaction MM ${transaction.provider} de type ${transaction.type} pour ${transaction.amount}F.`);
@@ -50,7 +50,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.map(t => {
       if (t.id === id) {
         logAction('UPDATE_MM_TRANSACTION', `Modification transaction MM ID ${id}.`);
-        return { ...t, ...updatedTransaction, date: new Date().toISOString() };
+        return { ...t, ...updatedTransaction, date: updatedTransaction.date || new Date().toISOString() };
       }
       return t;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));

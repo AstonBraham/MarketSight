@@ -14,9 +14,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAirtime } from '@/context/airtime-context';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type AdjustBalanceDialogProps = {
     provider: 'Moov' | 'Yas';
@@ -26,6 +30,7 @@ type AdjustBalanceDialogProps = {
 export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceDialogProps) {
   const [open, setOpen] = useState(false);
   const [realBalance, setRealBalance] = useState('');
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   const { addTransaction } = useAirtime();
 
@@ -36,6 +41,10 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
     if (isNaN(realBalanceValue)) {
         toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide.', variant: 'destructive' });
         return;
+    }
+     if (!date) {
+      toast({ title: 'Erreur', description: 'Veuillez sélectionner une date.', variant: 'destructive' });
+      return;
     }
 
     const adjustmentAmount = realBalanceValue - currentBalance;
@@ -52,6 +61,7 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
         amount: adjustmentAmount,
         commission: 0,
         description: 'Ajustement commissions spéciales',
+        date: date.toISOString()
     });
 
     toast({
@@ -60,6 +70,7 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
     });
     setOpen(false);
     setRealBalance('');
+    setDate(new Date());
   };
   
   return (
@@ -76,6 +87,29 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             <div className="space-y-2">
+                <Label htmlFor="date">Date de l'ajustement</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal"
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        locale={fr}
+                    />
+                    </PopoverContent>
+                </Popover>
+             </div>
              <div className="space-y-2">
                 <Label htmlFor="current-balance">Solde Actuel (calculé)</Label>
                 <Input id="current-balance" value={new Intl.NumberFormat('fr-FR').format(currentBalance) + ' F'} readOnly />
