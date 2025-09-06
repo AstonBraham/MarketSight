@@ -4,7 +4,7 @@
 import type { AirtimeTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils';
 import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { useAirtime } from '@/context/airtime-context';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 
 function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
@@ -129,6 +130,29 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
       const formatted = new Intl.NumberFormat('fr-FR').format(balance);
       return <div className="text-right font-mono font-semibold">{formatted} F</div>;
     },
+  },
+  {
+    id: 'affectsCash',
+    header: () => <div className="text-center">Impact Caisse</div>,
+    cell: ({ row }) => {
+      const type = row.original.type;
+      if (type !== 'sale' && type !== 'purchase') return null;
+
+      return (
+        <div className="flex justify-center">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger>
+                         <CheckCircle className="h-5 w-5 text-green-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Cette opération a affecté la trésorerie.</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        </div>
+      );
+    }
   },
   {
     id: 'actions',

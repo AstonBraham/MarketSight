@@ -144,7 +144,26 @@ export const columns: ColumnDef<MobileMoneyTransaction>[] = [
     accessorKey: 'affectsCash',
     header: () => <div className="text-center">Impact Caisse</div>,
     cell: ({ row }) => {
-      const affectsCash = row.original.affectsCash;
+      const transaction = row.original;
+      let affectsCash = false;
+      
+      switch (transaction.type) {
+        case 'deposit':
+        case 'withdrawal':
+        case 'purchase':
+        case 'virtual_return':
+        case 'collect_commission':
+            affectsCash = true;
+            break;
+        case 'transfer_to_pos':
+        case 'transfer_from_pos':
+            affectsCash = transaction.affectsCash ?? false;
+            break;
+        default:
+            affectsCash = false;
+            break;
+      }
+      
       if (!affectsCash) return null;
       
       return (

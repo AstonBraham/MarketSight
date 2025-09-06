@@ -4,7 +4,7 @@
 import type { Transaction, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { ArrowUp, ArrowDown, ShoppingCart, Truck, Banknote, SlidersHorizontal, Smartphone, Send, Repeat, HandCoins, Wifi, Receipt, FileCheck2, SquareArrowOutUpRight } from 'lucide-react';
+import { ArrowUp, ArrowDown, ShoppingCart, Truck, Banknote, SlidersHorizontal, Smartphone, Send, Repeat, HandCoins, Wifi, Receipt, FileCheck2, SquareArrowOutUpRight, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '../ui/button';
@@ -13,7 +13,8 @@ type HistoryTransaction = Transaction & {
     source?: string, 
     link?: string, 
     phoneNumber?: string, 
-    transactionId?: string 
+    transactionId?: string,
+    affectsCash?: boolean,
 };
 
 
@@ -75,6 +76,7 @@ export const columns: ColumnDef<HistoryTransaction>[] = [
             <div>
                 <div className="flex items-center">
                    <span className="font-medium">{description}</span>
+                    {transaction.affectsCash && <CheckCircle className="ml-2 h-4 w-4 text-green-500" />}
                     {link && (
                         <Button asChild variant="link" size="icon" className="h-5 w-5 ml-1">
                             <Link href={link} target="_blank">
