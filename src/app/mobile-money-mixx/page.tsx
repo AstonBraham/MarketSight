@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -10,10 +9,24 @@ import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
 import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo, useState, useEffect } from 'react';
+import type { MobileMoneyTransaction, MobileMoneyTransactionType } from '@/lib/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
+
+type TransactionFilter = "all" | "deposit" | "withdrawal" | "transfer" | "purchase" | "other";
+
 
 export default function MobileMoneyMixxPage() {
     const { transactions, getBalance, getProcessedTransactions } = useMobileMoney();
     const [isClient, setIsClient] = useState(false);
+    const [filter, setFilter] = useState<TransactionFilter>("all");
+
 
     useEffect(() => {
         setIsClient(true);
@@ -37,6 +50,21 @@ export default function MobileMoneyMixxPage() {
     const processedTransactions = useMemo(() => {
         return getProcessedTransactions('Mixx');
     }, [getProcessedTransactions, mixxTransactions]);
+
+    const filteredTransactions = useMemo(() => {
+        if (filter === "all") {
+            return processedTransactions;
+        }
+        if (filter === "transfer") {
+            return processedTransactions.filter(t => t.type === 'transfer_from_pos' || t.type === 'transfer_to_pos');
+        }
+        if (filter === 'other') {
+            const mainTypes: MobileMoneyTransactionType[] = ['deposit', 'withdrawal', 'transfer_from_pos', 'transfer_to_pos', 'purchase'];
+            return processedTransactions.filter(t => !mainTypes.includes(t.type));
+        }
+        return processedTransactions.filter(t => t.type === filter);
+
+    }, [processedTransactions, filter]);
 
   if (!isClient) {
     return null; // ou un skeleton/loader
@@ -92,10 +120,28 @@ export default function MobileMoneyMixxPage() {
        <Card>
         <CardHeader>
             <CardTitle>Opérations Mixx</CardTitle>
-            <CardDescription>Historique des transactions pour Mixx.</CardDescription>
+            <div className="flex justify-between items-center">
+                 <CardDescription>Historique des transactions pour Mixx.</CardDescription>
+                 <div className="flex items-center gap-2">
+                    <Label htmlFor="filter">Filtrer par type</Label>
+                     <Select value={filter} onValueChange={(value) => setFilter(value as TransactionFilter)}>
+                        <SelectTrigger className="w-[200px]" id="filter">
+                            <SelectValue placeholder="Filtrer par type..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Toutes les opérations</SelectItem>
+                            <SelectItem value="deposit">Dépôts</SelectItem>
+                            <SelectItem value="withdrawal">Retraits</SelectItem>
+                            <SelectItem value="transfer">Transferts (PDV)</SelectItem>
+                            <SelectItem value="purchase">Achat de virtuel</SelectItem>
+                            <SelectItem value="other">Autres</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 </div>
+            </div>
         </CardHeader>
         <CardContent>
-            <DataTable data={processedTransactions} columns={columns} />
+            <DataTable data={filteredTransactions} columns={columns} />
         </CardContent>
       </Card>
     </div>
