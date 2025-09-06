@@ -102,32 +102,27 @@ export default function SalesAnalysisPage() {
     }, [sales]);
 
     const monthlyMarginData = useMemo(() => {
-        const data: { [key: string]: { Marge: number, CA: number } } = {};
-        const today = new Date();
-        
-        for (let i = 5; i >= 0; i--) {
-            const date = subMonths(today, i);
-            const monthName = format(date, 'MMM', { locale: fr });
-            data[monthName] = { Marge: 0, CA: 0 };
-        }
-
-        const sixMonthsAgo = startOfMonth(subMonths(today, 5));
+        const data: { [key: string]: { Marge: number, CA: number, name: string } } = {};
 
         sales.forEach(t => {
             const transactionDate = new Date(t.date);
-            if (transactionDate >= sixMonthsAgo) {
-                const monthName = format(transactionDate, 'MMM', { locale: fr });
-                if (data[monthName]) {
-                    data[monthName].Marge += t.margin || 0;
-                    data[monthName].CA += t.amount;
-                }
+            const monthYear = format(transactionDate, 'yyyy-MM', { locale: fr });
+            const monthName = format(transactionDate, 'MMM yy', { locale: fr });
+            
+            if (!data[monthYear]) {
+                data[monthYear] = { Marge: 0, CA: 0, name: monthName };
             }
+            data[monthYear].Marge += t.margin || 0;
+            data[monthYear].CA += t.amount;
         });
-        return Object.keys(data).map(name => ({
-            name,
-            Marge: data[name].Marge,
-            "Chiffre d'Affaires": data[name].CA,
-        }));
+        
+        return Object.keys(data)
+            .sort()
+            .map(key => ({
+                name: data[key].name,
+                Marge: data[key].Marge,
+                "Chiffre d'Affaires": data[key].CA,
+            }));
     }, [sales]);
 
     return (
@@ -178,14 +173,14 @@ export default function SalesAnalysisPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Évolution de la Marge</CardTitle>
-                            <CardDescription>Marge brute et CA sur les 6 derniers mois</CardDescription>
+                            <CardDescription>Marge brute et CA sur toutes les périodes</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="h-80 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={monthlyMarginData}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                                    <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
                                     <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR', {notation: 'compact'}).format(value as number)} />
                                     <Tooltip
                                     cursor={{ fill: 'hsl(var(--muted))' }}

@@ -20,62 +20,62 @@ import {
 } from '@/components/ui/card';
 import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
-import { format, subMonths, startOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth, getMonth, getYear } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function CashflowChart() {
-  const { getAllTransactions } = useTransactions();
+  const { getAllTransactions, sales } = useTransactions();
   const allTransactions = getAllTransactions();
 
   const monthlyData = useMemo(() => {
-    const data: { [key: string]: { Entrées: number, Sorties: number } } = {};
-    const today = new Date();
+    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number } } = {};
     
-    // Initialize the last 6 months
-    for (let i = 5; i >= 0; i--) {
-      const date = subMonths(today, i);
-      const monthName = format(date, 'MMM', { locale: fr });
-      data[monthName] = { Entrées: 0, Sorties: 0 };
-    }
+    const allRelevantTransactions = [...allTransactions, ...sales];
 
-    const sixMonthsAgo = startOfMonth(subMonths(today, 5));
+    allRelevantTransactions.forEach(t => {
+        const transactionDate = new Date(t.date);
+        const monthYear = format(transactionDate, 'yyyy-MM', { locale: fr });
+        const monthName = format(transactionDate, 'MMM yy', { locale: fr });
 
-    allTransactions.forEach(t => {
-      const transactionDate = new Date(t.date);
-      if (transactionDate >= sixMonthsAgo) {
-        const monthName = format(transactionDate, 'MMM', { locale: fr });
-        
-        if (data[monthName]) {
-            if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
-                data[monthName].Entrées += t.amount;
-            } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
-                data[monthName].Sorties += Math.abs(t.amount);
-            }
+        if (!data[monthYear]) {
+            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0 };
         }
-      }
+
+        if (t.type === 'sale') {
+            const sale = t as any;
+            data[monthYear].Entrées += sale.amount;
+            if (sale.margin !== undefined) {
+                 data[monthYear].Marge += sale.margin;
+            }
+        } else if (t.type === 'adjustment' && t.amount > 0) {
+            data[monthYear].Entrées += t.amount;
+        } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
+            data[monthYear].Sorties += Math.abs(t.amount);
+        }
     });
 
-    return Object.keys(data).map(name => ({
-      name,
-      Entrées: data[name].Entrées,
-      Sorties: data[name].Sorties,
+    return Object.keys(data).sort().map(key => ({
+      name: data[key].name,
+      Entrées: data[key].Entrées,
+      Sorties: data[key].Sorties,
+      Marge: data[key].Marge,
     }));
 
-  }, [allTransactions]);
+  }, [allTransactions, sales]);
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
       <CardHeader>
-        <CardTitle className="font-headline">Flux de Trésorerie</CardTitle>
-        <CardDescription>Entrées vs Sorties sur les 6 derniers mois</CardDescription>
+        <CardTitle className="font-headline">Aperçu Financier Mensuel</CardTitle>
+        <CardDescription>Entrées, Sorties et Marge sur toutes les périodes</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tickLine={false} axisLine={false} />
-                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR').format(value as number)} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
+                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value as number)} />
                 <Tooltip
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{
@@ -94,6 +94,11 @@ export function CashflowChart() {
                 <Bar
                   dataKey="Sorties"
                   fill="hsl(var(--chart-2))"
+                  radius={[4, 4, 0, 0]}
+                />
+                 <Bar
+                  dataKey="Marge"
+                  fill="hsl(var(--chart-3))"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
