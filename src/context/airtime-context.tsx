@@ -40,7 +40,7 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.map(t => {
       if (t.id === id) {
         logAction('UPDATE_AIRTIME_TRANSACTION', `Modification transaction Airtime ID ${id}.`);
-        return { ...t, ...updatedTransaction };
+        return { ...t, ...updatedTransaction, date: updatedTransaction.date || t.date };
       }
       return t;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));

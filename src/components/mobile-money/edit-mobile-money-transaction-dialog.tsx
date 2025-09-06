@@ -21,14 +21,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit } from 'lucide-react';
+import { Edit, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import type { MobileMoneyTransaction, MobileMoneyTransactionType } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import { useTransactions } from '@/context/transaction-context';
 import { DropdownMenuItem } from '../ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type EditMobileMoneyTransactionDialogProps = {
     transaction: MobileMoneyTransaction;
@@ -44,6 +47,7 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
   const [commission, setCommission] = useState(transaction.commission);
   const [isCommissionManual, setIsCommissionManual] = useState(false);
   const [affectsCash, setAffectsCash] = useState(transaction.affectsCash ?? false);
+  const [date, setDate] = useState<Date | undefined>(new Date(transaction.date));
 
   useEffect(() => {
     // We only auto-calculate on the add form. On edit, we assume the values are correct.
@@ -58,7 +62,13 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
 
     const transactionAmount = parseFloat(data.amount as string);
 
+     if (!date) {
+        toast({ title: 'Erreur', description: 'Veuillez sélectionner une date.', variant: 'destructive' });
+        return;
+    }
+
     updateTransaction(transaction.id, {
+        date: date.toISOString(),
         transactionId: data.transactionId as string,
         type: type as MobileMoneyTransactionType,
         provider: transaction.provider,
@@ -100,6 +110,29 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="date" className="text-right">Date</Label>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className="col-span-3 justify-start text-left font-normal"
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        locale={fr}
+                    />
+                    </PopoverContent>
+                </Popover>
+            </div>
              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="type" className="text-right">Type</Label>
                 <Select name="type" required value={type} onValueChange={(value) => setType(value as any)}>

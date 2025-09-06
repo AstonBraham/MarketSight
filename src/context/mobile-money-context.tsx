@@ -50,7 +50,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.map(t => {
       if (t.id === id) {
         logAction('UPDATE_MM_TRANSACTION', `Modification transaction MM ID ${id}.`);
-        return { ...t, ...updatedTransaction };
+        return { ...t, ...updatedTransaction, date: updatedTransaction.date || t.date };
       }
       return t;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));

@@ -225,7 +225,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.map(t => {
       if (t.id === id && t.type === 'expense') {
         logAction('UPDATE_EXPENSE', `Modification de la dépense ID ${id}.`);
-        return { ...t, ...updatedExpense };
+        return { ...t, ...updatedExpense, date: updatedExpense.date || t.date };
       }
       return t;
     }));
@@ -349,10 +349,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
     // 2. Airtime transactions
     airtimeTransactions.forEach(t => {
-      if (t.type === 'sale' || t.type === 'commission') {
-        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.type === 'sale' ? t.amount : t.commission, description: `Vente/Commission Airtime ${t.provider}`});
+      if (t.type === 'sale') {
+        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.amount, description: `Vente Airtime ${t.provider}`});
       } else if (t.type === 'purchase') {
         allCashTransactions.push({ id: t.id, type: 'purchase', date: t.date, amount: t.amount, description: `Achat Airtime ${t.provider}`});
+      } else if (t.type === 'commission') {
+        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.commission, description: `Commission Airtime ${t.provider}`});
       }
     });
 

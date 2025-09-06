@@ -21,11 +21,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit } from 'lucide-react';
+import { Edit, CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAirtime } from '@/context/airtime-context';
 import type { AirtimeTransaction } from '@/lib/types';
 import { DropdownMenuItem } from '../ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type EditAirtimeTransactionDialogProps = {
     transaction: AirtimeTransaction;
@@ -33,6 +37,7 @@ type EditAirtimeTransactionDialogProps = {
 
 export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransactionDialogProps) {
   const [open, setOpen] = useState(false);
+  const [date, setDate] = useState<Date | undefined>(new Date(transaction.date));
   const { toast } = useToast();
   const { updateTransaction } = useAirtime();
 
@@ -41,7 +46,13 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
 
+    if (!date) {
+        toast({ title: 'Erreur', description: 'Veuillez sélectionner une date.', variant: 'destructive' });
+        return;
+    }
+
     updateTransaction(transaction.id, {
+        date: date.toISOString(),
         type: data.type as 'purchase' | 'sale' | 'commission',
         provider: transaction.provider,
         amount: parseFloat(data.amount as string) || 0,
@@ -78,6 +89,29 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="date" className="text-right">Date</Label>
+                 <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className="col-span-3 justify-start text-left font-normal"
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        locale={fr}
+                    />
+                    </PopoverContent>
+                </Popover>
+            </div>
              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="type" className="text-right">Type</Label>
                 <Select name="type" required defaultValue={transaction.type}>

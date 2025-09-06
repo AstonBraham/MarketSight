@@ -14,13 +14,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, Sparkles, Loader2 } from 'lucide-react';
+import { Edit, Sparkles, Loader2, CalendarIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { getExpenseCategory } from '@/app/expenses/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import type { Expense } from '@/lib/types';
 import { DropdownMenuItem } from '../ui/dropdown-menu';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Calendar } from '../ui/calendar';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export function EditExpenseDialog({ expense }: { expense: Expense }) {
   const [open, setOpen] = useState(false);
@@ -31,6 +35,7 @@ export function EditExpenseDialog({ expense }: { expense: Expense }) {
   const [category, setCategory] = useState(expense.category || '');
   const [description, setDescription] = useState(expense.description);
   const [amount, setAmount] = useState(String(expense.amount));
+  const [date, setDate] = useState<Date | undefined>(new Date(expense.date));
 
 
   const handleCategorize = async () => {
@@ -67,7 +72,7 @@ export function EditExpenseDialog({ expense }: { expense: Expense }) {
     e.preventDefault();
     
     const numericAmount = parseFloat(amount);
-    if (!description || !category || isNaN(numericAmount) || numericAmount <= 0) {
+    if (!description || !category || isNaN(numericAmount) || numericAmount <= 0 || !date) {
       toast({ title: 'Données invalides', description: 'Veuillez remplir tous les champs correctement.', variant: 'destructive'});
       return;
     }
@@ -76,6 +81,7 @@ export function EditExpenseDialog({ expense }: { expense: Expense }) {
       description,
       category,
       amount: numericAmount,
+      date: date.toISOString(),
     });
     
     toast({
@@ -102,6 +108,29 @@ export function EditExpenseDialog({ expense }: { expense: Expense }) {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className="w-full justify-start text-left font-normal"
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                    <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                        locale={fr}
+                    />
+                    </PopoverContent>
+                </Popover>
+             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
