@@ -22,6 +22,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Textarea } from '../ui/textarea';
 
 type AdjustMobileMoneyBalanceDialogProps = {
     provider: MobileMoneyProvider;
@@ -30,17 +31,18 @@ type AdjustMobileMoneyBalanceDialogProps = {
 
 export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: AdjustMobileMoneyBalanceDialogProps) {
   const [open, setOpen] = useState(false);
-  const [realBalance, setRealBalance] = useState('');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   const { addTransaction } = useMobileMoney();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const realBalanceValue = parseFloat(realBalance);
+    const adjustmentAmount = parseFloat(amount);
 
-    if (isNaN(realBalanceValue)) {
-        toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide.', variant: 'destructive' });
+    if (isNaN(adjustmentAmount) || adjustmentAmount === 0) {
+        toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide et non nul.', variant: 'destructive' });
         return;
     }
     
@@ -48,13 +50,10 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
       toast({ title: 'Erreur', description: 'Veuillez sélectionner une date.', variant: 'destructive' });
       return;
     }
-
-    const adjustmentAmount = realBalanceValue - currentBalance;
     
-    if (adjustmentAmount === 0) {
-        toast({ title: 'Information', description: 'Aucun ajustement nécessaire, les soldes sont identiques.' });
-        setOpen(false);
-        return;
+    if (!description) {
+      toast({ title: 'Erreur', description: 'Veuillez saisir une description.', variant: 'destructive' });
+      return;
     }
 
     addTransaction({
@@ -62,16 +61,17 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
         provider,
         amount: adjustmentAmount,
         commission: 0,
-        description: `Ajustement de solde ${provider}`,
+        description: description,
         date: date.toISOString()
     });
 
     toast({
         title: 'Solde Ajusté',
-        description: `Un ajustement de ${new Intl.NumberFormat('fr-FR').format(adjustmentAmount)} F a été appliqué.`,
+        description: `Un ajustement de ${new Intl.NumberFormat('fr-FR').format(adjustmentAmount)} F a été appliqué au solde ${provider}.`,
     });
     setOpen(false);
-    setRealBalance('');
+    setAmount('');
+    setDescription('');
     setDate(new Date());
   };
   
@@ -83,9 +83,9 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Ajuster le Solde Mobile Money ({provider})</DialogTitle>
+            <DialogTitle>Ajustement de Solde Mobile Money ({provider})</DialogTitle>
             <DialogDescription>
-              Saisissez le solde réel de la plateforme pour calculer et appliquer l'ajustement.
+              Saisissez un montant pour corriger le solde. Utilisez un montant positif pour ajouter, négatif pour retirer.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -113,24 +113,31 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
                 </Popover>
              </div>
              <div className="space-y-2">
-                <Label htmlFor="current-balance">Solde Actuel (calculé)</Label>
-                <Input id="current-balance" value={new Intl.NumberFormat('fr-FR').format(currentBalance) + ' F'} readOnly />
-             </div>
-             <div className="space-y-2">
-                <Label htmlFor="real-balance">Solde Réel (plateforme)</Label>
+                <Label htmlFor="amount">Montant de l'Ajustement</Label>
                 <Input 
-                    id="real-balance" 
-                    name="realBalance" 
+                    id="amount" 
+                    name="amount" 
                     type="number" 
-                    placeholder="Saisir le solde réel" 
-                    value={realBalance}
-                    onChange={(e) => setRealBalance(e.target.value)}
+                    placeholder="Ex: 20000 ou -15000" 
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
                     required 
+                />
+             </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Raison de l'ajustement</Label>
+                <Textarea
+                    id="description"
+                    name="description"
+                    placeholder="Ex: Frais de maintenance de compte"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
                 />
              </div>
           </div>
           <DialogFooter>
-            <Button type="submit">Calculer et Ajuster</Button>
+            <Button type="submit">Enregistrer l'Ajustement</Button>
           </DialogFooter>
         </form>
       </DialogContent>

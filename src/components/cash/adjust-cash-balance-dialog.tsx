@@ -21,6 +21,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Textarea } from '../ui/textarea';
 
 type AdjustCashBalanceDialogProps = {
     currentBalance: number;
@@ -28,17 +29,18 @@ type AdjustCashBalanceDialogProps = {
 
 export function AdjustCashBalanceDialog({ currentBalance }: AdjustCashBalanceDialogProps) {
   const [open, setOpen] = useState(false);
-  const [realBalance, setRealBalance] = useState('');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   const { addAdjustment } = useTransactions();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const realBalanceValue = parseFloat(realBalance);
+    const adjustmentAmount = parseFloat(amount);
 
-    if (isNaN(realBalanceValue)) {
-        toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide.', variant: 'destructive' });
+    if (isNaN(adjustmentAmount) || adjustmentAmount === 0) {
+        toast({ title: 'Erreur', description: 'Veuillez saisir un montant valide et non nul.', variant: 'destructive' });
         return;
     }
     
@@ -46,19 +48,17 @@ export function AdjustCashBalanceDialog({ currentBalance }: AdjustCashBalanceDia
       toast({ title: 'Erreur', description: 'Veuillez sélectionner une date.', variant: 'destructive' });
       return;
     }
-
-    const adjustmentAmount = realBalanceValue - currentBalance;
     
-    if (adjustmentAmount === 0) {
-        toast({ title: 'Information', description: 'Aucun ajustement nécessaire, les soldes sont identiques.' });
-        setOpen(false);
-        return;
+    if (!description) {
+      toast({ title: 'Erreur', description: 'Veuillez saisir une description.', variant: 'destructive' });
+      return;
     }
 
     addAdjustment({
         amount: adjustmentAmount,
-        description: 'Ajustement de caisse',
+        description: description,
         date: date.toISOString(),
+        category: 'Ajustement'
     });
 
     toast({
@@ -66,7 +66,8 @@ export function AdjustCashBalanceDialog({ currentBalance }: AdjustCashBalanceDia
         description: `Un ajustement de ${new Intl.NumberFormat('fr-FR').format(adjustmentAmount)} F a été appliqué.`,
     });
     setOpen(false);
-    setRealBalance('');
+    setAmount('');
+    setDescription('');
     setDate(new Date());
   };
   
@@ -78,9 +79,9 @@ export function AdjustCashBalanceDialog({ currentBalance }: AdjustCashBalanceDia
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Ajuster le Solde de Caisse</DialogTitle>
+            <DialogTitle>Nouvel Ajustement de Caisse</DialogTitle>
             <DialogDescription>
-              Saisissez le solde physique réel de la caisse pour enregistrer un ajustement.
+              Enregistrez une correction manuelle du solde de caisse. Utilisez un montant positif pour une entrée, négatif pour une sortie.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -108,19 +109,26 @@ export function AdjustCashBalanceDialog({ currentBalance }: AdjustCashBalanceDia
                 </Popover>
              </div>
              <div className="space-y-2">
-                <Label htmlFor="current-balance">Solde Actuel (calculé)</Label>
-                <Input id="current-balance" value={new Intl.NumberFormat('fr-FR').format(currentBalance) + ' F'} readOnly />
+                <Label htmlFor="amount">Montant de l'Ajustement</Label>
+                <Input 
+                    id="amount" 
+                    name="amount" 
+                    type="number" 
+                    placeholder="Ex: 10000 ou -5000" 
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required 
+                />
              </div>
              <div className="space-y-2">
-                <Label htmlFor="real-balance">Solde Réel (physique)</Label>
-                <Input 
-                    id="real-balance" 
-                    name="realBalance" 
-                    type="number" 
-                    placeholder="Saisir le solde réel" 
-                    value={realBalance}
-                    onChange={(e) => setRealBalance(e.target.value)}
-                    required 
+                <Label htmlFor="description">Raison de l'ajustement</Label>
+                <Textarea
+                    id="description"
+                    name="description"
+                    placeholder="Ex: Correction erreur de caisse"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
                 />
              </div>
           </div>
