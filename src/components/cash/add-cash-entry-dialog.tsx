@@ -42,7 +42,7 @@ export function AddCashEntryDialog() {
     addAdjustment({
       amount: numericAmount,
       description: description,
-      category: 'Encaissement'
+      category: 'Encaissement' // Corrected category
     });
 
     toast({
@@ -100,3 +100,5 @@ export function AddCashEntryDialog() {
     </Dialog>
   );
 }
+
+    

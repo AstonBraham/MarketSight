@@ -244,7 +244,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: `ADJ-BULK-${Date.now()}-${index}`,
       type: 'adjustment',
       date: adj.date || new Date().toISOString(),
-      category: 'Ajustement',
+      category: 'Encaissement', // Corrected category
     }));
     setTransactions(prev => [...prev, ...newAdjustments]);
   }, [setTransactions]);
@@ -444,7 +444,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 case 'deposit': amount = mt.amount; description = `Dépôt MM ${mt.provider}`; affectsCash=true; break;
                 case 'withdrawal': amount = -mt.amount; description = `Retrait MM ${mt.provider}`; affectsCash=true; break;
                 case 'purchase': amount = -mt.amount; type = 'MM Purchase' as any; description = `Achat virtuel ${mt.provider}`; affectsCash=true; break;
-                case 'virtual_return': amount = mt.amount; type = 'Retour Virtuel Caisse' as any; description = `Retour virtuel ${mt.provider}`; affectsCash=true; break;
+                case 'virtual_return': amount = t.amount; type = 'Retour Virtuel Caisse' as any; description = `Retour virtuel ${mt.provider}`; affectsCash=true; break;
                 case 'transfer_to_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? mt.amount : 0; description = `Transfert vers PDV ${mt.phoneNumber}`; break;
                 case 'transfer_from_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? -mt.amount : 0; description = `Transfert depuis PDV ${mt.phoneNumber}`; break;
                 case 'collect_commission': amount = mt.amount; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
@@ -540,3 +540,5 @@ export function useTransactions() {
   }
   return context;
 }
+
+    
