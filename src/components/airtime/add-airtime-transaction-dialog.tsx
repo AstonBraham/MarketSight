@@ -40,9 +40,9 @@ export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionD
     const data = Object.fromEntries(formData.entries());
 
     addTransaction({
-        type: data.type as 'purchase' | 'sale',
+        type: data.type as 'purchase' | 'sale' | 'commission',
         provider: provider,
-        amount: parseFloat(data.amount as string),
+        amount: parseFloat(data.amount as string) || 0,
         commission: data.commission ? parseFloat(data.commission as string) : 0,
         phoneNumber: data.phoneNumber as string,
         transactionId: data.transactionId as string
@@ -82,12 +82,13 @@ export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionD
                     <SelectContent>
                         <SelectItem value="purchase">Achat</SelectItem>
                         <SelectItem value="sale">Vente</SelectItem>
+                        <SelectItem value="commission">Commission sur Vente</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Montant</Label>
-              <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required />
+              <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0 (non requis pour commission)" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="commission" className="text-right">Commission</Label>

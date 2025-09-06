@@ -23,6 +23,7 @@ const getIconAndStyle = (type: string) => {
         case 'sale': return { icon: <ShoppingCart className="mr-1 h-3 w-3" />, style: 'bg-green-100 text-green-700 hover:bg-green-200' };
         case 'Vente Wifi': return { icon: <Wifi className="mr-1 h-3 w-3" />, style: 'bg-sky-100 text-sky-700 hover:bg-sky-200' };
         case 'Vente Airtime': return { icon: <Smartphone className="mr-1 h-3 w-3" />, style: 'bg-blue-100 text-blue-700 hover:bg-blue-200' };
+        case 'Commission Airtime': return { icon: <HandCoins className="mr-1 h-3 w-3" />, style: 'bg-teal-100 text-teal-700 hover:bg-teal-200' };
         case 'Facture': return { icon: <Receipt className="mr-1 h-3 w-3" />, style: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200' };
         
         case 'purchase': return { icon: <Truck className="mr-1 h-3 w-3" />, style: 'bg-red-100 text-red-700 hover:bg-red-200' };

@@ -4,7 +4,7 @@
 import type { AirtimeTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2, CheckCircle, HandCoins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -70,6 +70,9 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
         if (type === 'adjustment') {
             return <Badge variant="outline" className="border-orange-500 text-orange-600"><SlidersHorizontal className="mr-1 h-3 w-3"/>Ajustement</Badge>
         }
+        if (type === 'commission') {
+            return <Badge variant="default" className="bg-teal-500 hover:bg-teal-600"><HandCoins className="mr-1 h-3 w-3" /> Commission</Badge>
+        }
         return <Badge variant="default">Vente</Badge>
     }
   },
@@ -105,6 +108,7 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
       if(isCredit) colorClass = 'text-green-600';
       if(isDebit) colorClass = 'text-red-600';
       if(row.original.type === 'adjustment') colorClass = 'text-orange-600';
+      if(row.original.type === 'commission') return null;
 
 
       return <div className={cn("text-right font-mono", colorClass)}>{sign}{formatted} F</div>;
@@ -136,7 +140,7 @@ export const columns: ColumnDef<AirtimeTransaction>[] = [
     header: () => <div className="text-center">Impact Caisse</div>,
     cell: ({ row }) => {
       const type = row.original.type;
-      if (type !== 'sale' && type !== 'purchase') return null;
+      if (type !== 'sale' && type !== 'purchase' && type !== 'commission') return null;
 
       return (
         <div className="flex justify-center">

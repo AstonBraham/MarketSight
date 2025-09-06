@@ -320,8 +320,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
     // 2. Airtime transactions
     airtimeTransactions.forEach(t => {
-      if (t.type === 'sale') {
-        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.amount, description: `Vente Airtime ${t.provider}`});
+      if (t.type === 'sale' || t.type === 'commission') {
+        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.type === 'sale' ? t.amount : t.commission, description: `Vente/Commission Airtime ${t.provider}`});
       } else if (t.type === 'purchase') {
         allCashTransactions.push({ id: t.id, type: 'purchase', date: t.date, amount: t.amount, description: `Achat Airtime ${t.provider}`});
       }
@@ -426,6 +426,10 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 amount = -at.amount;
                 type = 'Achat Airtime' as any;
                 affectsCash = true;
+            } else if (at.type === 'commission') {
+                amount = at.commission;
+                type = 'Commission Airtime' as any;
+                affectsCash = true;
             } else if (at.type === 'adjustment') {
                 amount = 0; // Purely virtual
             }
@@ -449,7 +453,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 case 'virtual_return': amount = mt.amount; type = 'Retour Virtuel Caisse' as any; description = `Retour virtuel ${mt.provider}`; affectsCash=true; break;
                 case 'transfer_to_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? mt.amount : 0; description = `Transfert vers PDV ${mt.phoneNumber}`; break;
                 case 'transfer_from_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? -mt.amount : 0; description = `Transfert depuis PDV ${mt.phoneNumber}`; break;
-                case 'collect_commission': amount = mt.amount; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
+                case 'collect_commission': amount = mt.commission; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
                 case 'adjustment': amount = 0; break; // Purely virtual
             }
 
@@ -548,3 +552,4 @@ export function useTransactions() {
 }
 
     
+

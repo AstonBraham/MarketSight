@@ -59,8 +59,8 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     return transactions
       .filter(t => t.provider === provider)
       .reduce((acc, t) => {
-        if (t.type === 'purchase' || t.type === 'adjustment') return acc + t.amount;
-        if (t.type === 'sale') return acc - t.amount;
+        if (t.type === 'purchase' || (t.type === 'adjustment' && t.amount > 0)) return acc + t.amount;
+        if (t.type === 'sale' || (t.type === 'adjustment' && t.amount < 0)) return acc - t.amount;
         return acc;
       }, 0);
   }, [transactions]);
@@ -71,11 +71,12 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     const withBalance = sorted.map(t => {
-        if (t.type === 'purchase' || t.type === 'adjustment') {
+        if (t.type === 'purchase' || (t.type === 'adjustment' && t.amount > 0)) {
             balance += t.amount;
-        } else if (t.type === 'sale') {
+        } else if (t.type === 'sale' || (t.type === 'adjustment' && t.amount < 0)) {
             balance -= t.amount;
         }
+        // Commissions do not affect airtime stock balance
         return { ...t, balance };
     });
 

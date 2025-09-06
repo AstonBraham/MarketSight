@@ -87,7 +87,7 @@ export type User = {
 
 export type AirtimeTransaction = {
   id: string;
-  type: 'purchase' | 'sale' | 'adjustment';
+  type: 'purchase' | 'sale' | 'adjustment' | 'commission';
   provider: 'Moov' | 'Yas';
   amount: number;
   commission: number;

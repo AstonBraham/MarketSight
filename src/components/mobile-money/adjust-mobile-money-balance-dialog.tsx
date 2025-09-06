@@ -52,7 +52,7 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
         provider,
         amount: adjustmentAmount,
         commission: 0,
-        description: 'Ajustement de solde',
+        description: `Ajustement de solde ${provider}`,
     });
 
     toast({
