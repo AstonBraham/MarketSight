@@ -12,7 +12,7 @@ import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useMemo } from 'react';
-import type { MobileMoneyProvider } from '@/lib/types';
+import type { MobileMoneyProvider, AirtimeTransaction } from '@/lib/types';
 
 const IMPORT_TEMPLATES = {
   products: [{ productName: '', sku: '', category: '', brand: '', reference: '', inStock: 0, reorderLevel: 10, supplier: '', defaultPrice: 0, costPrice: 0 }],
@@ -39,8 +39,8 @@ export default function ReportsPage() {
   const { toast } = useToast();
   const { sales, purchases, expenses } = useTransactions();
   const { inventory } = useInventory();
-  const { transactions: airtimeTransactions } = useAirtime();
-  const { getProcessedTransactions } = useMobileMoney();
+  const { getProcessedTransactions: getProcessedAirtimeTransactions } = useAirtime();
+  const { getProcessedTransactions: getProcessedMobileMoneyTransactions } = useMobileMoney();
 
   const wifiSales = useMemo(() => {
     return sales.filter(s => s.itemType === 'Ticket Wifi');
@@ -49,7 +49,7 @@ export default function ReportsPage() {
   const handleMobileMoneyExport = () => {
     const providers: MobileMoneyProvider[] = ['Flooz', 'Mixx', 'Coris'];
     const allProcessedTransactions = providers
-        .flatMap(provider => getProcessedTransactions(provider))
+        .flatMap(provider => getProcessedMobileMoneyTransactions(provider))
         .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         
     if (allProcessedTransactions.length === 0) {
@@ -65,6 +65,28 @@ export default function ReportsPage() {
     toast({
       title: 'Exportation Réussie',
       description: 'Le fichier rapport_mobile_money.csv a été téléchargé.',
+    });
+  }
+
+  const handleAirtimeExport = () => {
+    const providers: ('Moov' | 'Yas')[] = ['Moov', 'Yas'];
+    const allProcessedTransactions = providers
+        .flatMap(provider => getProcessedAirtimeTransactions(provider))
+        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+    if (allProcessedTransactions.length === 0) {
+      toast({
+        title: 'Exportation annulée',
+        description: 'Il n\'y a aucune donnée Airtime à exporter.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    exportToCsv('rapport_airtime.csv', allProcessedTransactions);
+    toast({
+      title: 'Exportation Réussie',
+      description: 'Le fichier rapport_airtime.csv a été téléchargé.',
     });
   }
 
@@ -121,7 +143,7 @@ export default function ReportsPage() {
             <FileDown className="mr-2 h-4 w-4" />
             Exporter les Ventes Wifi
           </Button>
-           <Button variant="outline" onClick={() => handleExport('transactions_airtime', airtimeTransactions)}>
+           <Button variant="outline" onClick={handleAirtimeExport}>
             <FileDown className="mr-2 h-4 w-4" />
             Exporter les Transactions Airtime
           </Button>
