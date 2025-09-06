@@ -145,4 +145,12 @@ export interface CashClosing {
     closedBy: string;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  date: string;
+  user: string;
+  action: string;
+  details: string;
+}
     
+

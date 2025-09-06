@@ -13,6 +13,7 @@ import { TransactionProvider } from '@/context/transaction-context';
 import { AirtimeProvider } from '@/context/airtime-context';
 import { MobileMoneyProvider } from '@/context/mobile-money-context';
 import { useEffect, useState } from 'react';
+import { AuditLogProvider } from '@/context/audit-log-context';
 
 // We can't use Metadata here because we are using 'use client'
 // export const metadata: Metadata = {
@@ -45,6 +46,7 @@ export default function RootLayout({
       </head>
       <body className={cn('min-h-screen bg-background font-body antialiased')}>
         <UserProvider>
+         <AuditLogProvider>
           <InventoryProvider>
             <AirtimeProvider>
               <MobileMoneyProvider>
@@ -60,6 +62,7 @@ export default function RootLayout({
               </MobileMoneyProvider>
             </AirtimeProvider>
           </InventoryProvider>
+         </AuditLogProvider>
         </UserProvider>
       </body>
     </html>

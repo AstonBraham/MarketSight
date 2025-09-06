@@ -9,6 +9,7 @@ import { startOfDay, endOfDay, isEqual } from 'date-fns';
 import { useAirtime } from './airtime-context';
 import { useMobileMoney } from './mobile-money-context';
 import { useInventory } from './inventory-context';
+import { useAuditLog } from './audit-log-context';
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -51,6 +52,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
+  const { logAction } = useAuditLog();
   
   const { transactions: airtimeTransactions } = useAirtime();
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
@@ -64,8 +66,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [transactions]);
   
   const addExpenseCategory = useCallback((category: string) => {
-    console.log(`Expense category "${category}" will be available for selection.`);
-  }, []);
+    logAction('CREATE_CATEGORY', `Création d'une nouvelle catégorie de dépense : ${category}.`);
+  }, [logAction]);
 
   const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>) => {
     const item = inventory.find(i => i.id === sale.inventoryId);
@@ -82,6 +84,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       margin: margin,
     };
     setTransactions(prev => [newSale, ...prev]);
+    logAction('CREATE_SALE', `Vente de "${sale.product}" pour ${sale.amount}F.`);
 
     if (newSale.inventoryId && newSale.quantity) {
         if (item) {
@@ -93,7 +96,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             );
         }
     }
-  }, [setTransactions, inventory, updateInventoryItem]);
+  }, [setTransactions, inventory, updateInventoryItem, logAction]);
 
   const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
     const newSales: Sale[] = sales.map((sale, index) => {
@@ -113,17 +116,30 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       }
     });
     setTransactions(prev => [...prev, ...newSales]);
+    logAction('IMPORT_SALES', `Importation de ${sales.length} ventes.`);
     // Note: Bulk sale import currently does not update inventory stock.
     // This could be a future improvement if needed.
-  }, [setTransactions, inventory]);
+  }, [setTransactions, inventory, logAction]);
   
   const clearWifiSales = useCallback(() => {
+    logAction('CLEAR_WIFI_SALES', 'Suppression de toutes les ventes Wifi.');
     setTransactions(prev => prev.filter(t => (t as Sale).itemType !== 'Ticket Wifi'));
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
   
-  const clearCashTransactions = useCallback(() => setTransactions([]), [setTransactions]);
-  const clearInvoices = useCallback(() => setInvoices([]), [setInvoices]);
-  const clearCashClosings = useCallback(() => setCashClosings([]), [setCashClosings]);
+  const clearCashTransactions = useCallback(() => {
+    logAction('CLEAR_CASH_TRANSACTIONS', 'Suppression de toutes les transactions de caisse.');
+    setTransactions([]);
+  }, [setTransactions, logAction]);
+
+  const clearInvoices = useCallback(() => {
+    logAction('CLEAR_INVOICES', 'Suppression de toutes les factures.');
+    setInvoices([]);
+  }, [setInvoices, logAction]);
+
+  const clearCashClosings = useCallback(() => {
+    logAction('CLEAR_CASH_CLOSINGS', 'Suppression de tous les arrêtés de caisse.');
+    setCashClosings([]);
+  }, [setCashClosings, logAction]);
 
   const addPurchase = useCallback((purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => {
     const newPurchase: Purchase = {
@@ -133,6 +149,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
       category: 'Achat',
     };
+    logAction('CREATE_PURCHASE', `Achat de "${purchase.product}" pour ${purchase.amount}F. Statut: ${newPurchase.status}.`);
 
     if (newPurchase.status === 'paid') {
         setTransactions(prev => [newPurchase, ...prev]);
@@ -162,7 +179,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         }
     }
 
-  }, [transactions, setTransactions, inventory, updateInventoryItem]);
+  }, [transactions, setTransactions, inventory, updateInventoryItem, logAction]);
   
   const payPurchase = useCallback((purchaseId: string) => {
     let purchaseToPay: Purchase | undefined;
@@ -184,10 +201,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             description: `Paiement achat: ${purchaseToPay.description}`,
             category: 'Paiement Achat',
         };
+        logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} pour ${purchaseToPay.amount}F.`);
         const filteredTransactions = transactions.filter(t => t.id !== purchaseId);
         setTransactions([paymentTransaction, ...filteredTransactions]);
     }
-  }, [transactions, setTransactions]);
+  }, [transactions, setTransactions, logAction]);
 
 
   const addExpense = useCallback((expense: Omit<Expense, 'id' | 'type' | 'currency'>) => {
@@ -199,17 +217,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       currency: 'F',
       category: expense.category || 'Dépense',
     };
+    logAction('CREATE_EXPENSE', `Ajout dépense "${expense.description}" pour ${expense.amount}F.`);
     setTransactions(prev => [newExpense, ...prev]);
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
   
   const updateExpense = useCallback((id: string, updatedExpense: Partial<Omit<Expense, 'id' | 'type' | 'currency'>>) => {
     setTransactions(prev => prev.map(t => {
       if (t.id === id && t.type === 'expense') {
+        logAction('UPDATE_EXPENSE', `Modification de la dépense ID ${id}.`);
         return { ...t, ...updatedExpense };
       }
       return t;
     }));
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
 
   const addBulkExpenses = useCallback((expenses: Omit<Expense, 'id'|'type'|'currency'>[]) => {
     const newExpenses: Expense[] = expenses.map((expense, index) => ({
@@ -220,12 +240,17 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         currency: 'F',
         category: expense.category || 'Dépense',
     }));
+    logAction('IMPORT_EXPENSES', `Importation de ${expenses.length} dépenses.`);
     setTransactions(prev => [...prev, ...newExpenses]);
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
 
   const removeExpense = useCallback((id: string) => {
+    const trx = transactions.find(t => t.id === id && t.type === 'expense');
+    if(trx) {
+      logAction('DELETE_EXPENSE', `Suppression de la dépense ID ${id} (${trx.description}).`);
+    }
     setTransactions(prev => prev.filter(t => t.id !== id && t.type === 'expense'));
-  }, [setTransactions]);
+  }, [transactions, setTransactions, logAction]);
 
   const addAdjustment = useCallback((adjustment: { amount: number; description: string, date?: string, category?: string }) => {
     const newAdjustment: Transaction = {
@@ -235,8 +260,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: adjustment.date || new Date().toISOString(),
       category: adjustment.category || 'Encaissement'
     };
+    logAction('CREATE_ADJUSTMENT', `Ajout d'un ajustement de caisse: "${adjustment.description}" pour ${adjustment.amount}F.`);
     setTransactions(prev => [newAdjustment, ...prev]);
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
 
   const addBulkAdjustments = useCallback((adjustments: Omit<Transaction, 'id' | 'type' | 'category'>[]) => {
     const newAdjustments: Transaction[] = adjustments.map((adj, index) => ({
@@ -246,8 +272,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: adj.date || new Date().toISOString(),
       category: 'Encaissement',
     }));
+    logAction('IMPORT_RECEIPTS', `Importation de ${adjustments.length} encaissements.`);
     setTransactions(prev => [...prev, ...newAdjustments]);
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
   
   const addInvoice = useCallback((invoiceData: Omit<Invoice, 'id'>): string => {
     const newId = `INV-${Date.now()}`;
@@ -256,6 +283,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: newId,
     };
     setInvoices(prev => [newInvoice, ...prev]);
+    logAction('CREATE_INVOICE', `Création de la facture ${newId} pour ${invoiceData.clientName} d'un montant de ${invoiceData.total}F.`);
 
     // Create a single cash transaction for the whole invoice
     addSale({
@@ -284,7 +312,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     });
 
     return newId;
-  }, [setInvoices, addSale, inventory, updateInventoryItem]);
+  }, [setInvoices, addSale, inventory, updateInventoryItem, logAction]);
   
   const getInvoice = useCallback((id: string) => {
     return invoices.find(invoice => invoice.id === id);
@@ -297,6 +325,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setCashClosings(prev => [newClosing, ...prev]);
+    logAction('CASH_CLOSING', `Arrêté de caisse effectué avec un écart de ${closing.variance}F.`);
 
     if (newClosing.variance !== 0) {
       addAdjustment({
@@ -304,7 +333,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         description: `Ajustement suite à l'arrêté de caisse du ${new Date(newClosing.date).toLocaleDateString()}`,
       });
     }
-  }, [addAdjustment, setCashClosings]);
+  }, [addAdjustment, setCashClosings, logAction]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
     let allCashTransactions: Transaction[] = [];
@@ -552,4 +581,3 @@ export function useTransactions() {
 }
 
     
-

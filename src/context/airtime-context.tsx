@@ -6,6 +6,7 @@ import { createContext, useContext, useState, ReactNode, useMemo, useCallback } 
 import type { AirtimeTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useTransactions } from './transaction-context';
+import { useAuditLog } from './audit-log-context';
 
 interface AirtimeContextType {
   transactions: AirtimeTransaction[];
@@ -23,6 +24,7 @@ const AirtimeContext = createContext<AirtimeContextType | undefined>(undefined);
 
 export function AirtimeProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<AirtimeTransaction[]>('airtimeTransactions', []);
+  const { logAction } = useAuditLog();
 
   const addTransaction = useCallback((transaction: Omit<AirtimeTransaction, 'id' | 'date'>) => {
     const newTransaction: AirtimeTransaction = {
@@ -31,16 +33,18 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  }, [setTransactions]);
+    logAction('CREATE_AIRTIME_TRANSACTION', `Ajout transaction Airtime ${transaction.provider} de type ${transaction.type} pour ${transaction.amount}F.`);
+  }, [setTransactions, logAction]);
 
   const updateTransaction = useCallback((id: string, updatedTransaction: Partial<Omit<AirtimeTransaction, 'id'>>) => {
     setTransactions(prev => prev.map(t => {
       if (t.id === id) {
+        logAction('UPDATE_AIRTIME_TRANSACTION', `Modification transaction Airtime ID ${id}.`);
         return { ...t, ...updatedTransaction, date: new Date().toISOString() };
       }
       return t;
     }));
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => {
     const fullTransactions = newTransactions.map((t, i) => ({
@@ -56,15 +60,21 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
         
         return [...otherProviderTransactions, ...fullTransactions];
     });
-  }, [setTransactions]);
+    logAction('IMPORT_AIRTIME', `Importation de ${newTransactions.length} transactions pour ${providerToClear || 'tous les fournisseurs'}.`);
+  }, [setTransactions, logAction]);
 
   const removeTransaction = useCallback((id: string) => {
+    const trx = transactions.find(t => t.id === id);
+    if(trx) {
+      logAction('DELETE_AIRTIME_TRANSACTION', `Suppression transaction Airtime ID ${id} (${trx.type} ${trx.provider} ${trx.amount}F).`);
+    }
     setTransactions(prev => prev.filter(t => t.id !== id));
-  }, [setTransactions]);
+  }, [setTransactions, transactions, logAction]);
 
   const clearAirtimeTransactions = useCallback(() => {
+    logAction('CLEAR_AIRTIME_DATA', 'Suppression de toutes les transactions Airtime.');
     setTransactions([]);
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
 
   const getStock = useCallback((provider: 'Moov' | 'Yas') => {
     return transactions

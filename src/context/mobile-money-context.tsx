@@ -5,6 +5,7 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useAuditLog } from './audit-log-context';
 
 interface MobileMoneyContextType {
   transactions: MobileMoneyTransaction[];
@@ -33,6 +34,7 @@ const initialMixxBalance: MobileMoneyTransaction = {
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', [initialMixxBalance]);
+  const { logAction } = useAuditLog();
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id' | 'date'>) => {
     const newTransaction: MobileMoneyTransaction = {
@@ -41,16 +43,18 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  }, [setTransactions]);
+    logAction('CREATE_MM_TRANSACTION', `Ajout transaction MM ${transaction.provider} de type ${transaction.type} pour ${transaction.amount}F.`);
+  }, [setTransactions, logAction]);
   
   const updateTransaction = useCallback((id: string, updatedTransaction: Partial<Omit<MobileMoneyTransaction, 'id'>>) => {
     setTransactions(prev => prev.map(t => {
       if (t.id === id) {
+        logAction('UPDATE_MM_TRANSACTION', `Modification transaction MM ID ${id}.`);
         return { ...t, ...updatedTransaction, date: new Date().toISOString() };
       }
       return t;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-  }, [setTransactions]);
+  }, [setTransactions, logAction]);
 
   const addBulkTransactions = useCallback((newTransactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => {
     const fullTransactions = newTransactions.map((t, i) => ({
@@ -72,16 +76,21 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         
         return [...transactionsToKeep, ...fullTransactions];
     });
-
-  }, [setTransactions]);
+    logAction('IMPORT_MM', `Importation de ${newTransactions.length} transactions MM pour ${providerToClear || 'tous les fournisseurs'}.`);
+  }, [setTransactions, logAction]);
 
   const removeTransaction = useCallback((id: string) => {
     if (id === initialMixxBalance.id) return; // Prevent deleting the initial balance
+    const trx = transactions.find(t => t.id === id);
+    if(trx) {
+      logAction('DELETE_MM_TRANSACTION', `Suppression transaction MM ID ${id} (${trx.type} ${trx.provider} ${trx.amount}F).`);
+    }
     setTransactions(prev => prev.filter(t => t.id !== id));
-  }, [setTransactions]);
+  }, [setTransactions, transactions, logAction]);
 
   const clearMobileMoneyTransactions = useCallback((providerToClear?: MobileMoneyProvider) => {
     if (providerToClear) {
+        logAction('CLEAR_MM_DATA', `Suppression des transactions MM pour ${providerToClear}.`);
         setTransactions(prev => {
             const otherTransactions = prev.filter(t => t.provider !== providerToClear);
             // If clearing Mixx, ensure the initial balance is the only Mixx transaction left.
@@ -92,10 +101,11 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         });
     } else {
         // Clear all except the initial balance for Mixx
+        logAction('CLEAR_MM_DATA', 'Suppression de toutes les transactions MM.');
         const nonMixxTransactions = transactions.filter(t => t.provider !== 'Mixx');
         setTransactions([initialMixxBalance, ...nonMixxTransactions]);
     }
-  }, [setTransactions, transactions]);
+  }, [setTransactions, transactions, logAction]);
 
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     const providerTransactions = transactions.filter(t => t.provider === provider);

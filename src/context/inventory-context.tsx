@@ -5,6 +5,7 @@
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { InventoryItem, Sale, StockMovement } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useAuditLog } from './audit-log-context';
 
 type PhysicalCountData = {
   identifier: string;
@@ -34,6 +35,7 @@ const InventoryContext = createContext<InventoryContextType | undefined>(undefin
 export function InventoryProvider({ children }: { children: ReactNode }) {
   const [inventory, setInventory] = useLocalStorage<InventoryItem[]>('inventory', []);
   const [stockMovements, setStockMovements] = useLocalStorage<StockMovement[]>('stockMovements', []);
+  const { logAction } = useAuditLog();
   
   const itemCategories = useMemo(() => {
     const categories = inventory.map(item => item.category);
@@ -48,8 +50,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   }, [setStockMovements]);
 
   const addCategory = useCallback((category: string) => {
+    logAction('CREATE_CATEGORY', `Création d'une nouvelle catégorie d'article : ${category}.`);
     console.log(`Category "${category}" will be available for selection.`);
-  }, []);
+  }, [logAction]);
 
   const addItem = useCallback((item: InventoryItem) => {
     setInventory(prev => [...prev, item]);
@@ -65,7 +68,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         balanceAfter: stock,
       });
     }
-  }, [setInventory, addStockMovement]);
+    logAction('CREATE_ITEM', `Ajout de l'article "${item.productName}" avec un stock initial de ${stock}.`);
+  }, [setInventory, addStockMovement, logAction]);
   
   const addItems = useCallback((items: InventoryItem[]) => {
     setInventory(prev => [...prev, ...items]);
@@ -83,7 +87,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             });
         }
     });
-  }, [setInventory, addStockMovement]);
+    logAction('IMPORT_ITEMS', `Importation de ${items.length} articles.`);
+  }, [setInventory, addStockMovement, logAction]);
 
   const updateItem = useCallback((id: string, updatedFields: Partial<InventoryItem>, reason: string = 'Ajustement manuel', relatedTransactionId?: string) => {
     const itemToUpdate = inventory.find(item => item.id === id);
@@ -93,6 +98,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     const newStock = updatedFields.inStock;
 
     setInventory(prev => prev.map(item => item.id === id ? { ...item, ...updatedFields } : item));
+    logAction('UPDATE_ITEM', `Modification de l'article "${itemToUpdate.productName}" (ID: ${id}).`);
     
     if (newStock !== undefined && newStock !== oldStock) {
         addStockMovement({
@@ -106,17 +112,22 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
             relatedTransactionId,
         });
     }
-  }, [inventory, setInventory, addStockMovement]);
+  }, [inventory, setInventory, addStockMovement, logAction]);
 
   const removeItem = useCallback((id: string) => {
+    const itemToRemove = inventory.find(item => item.id === id);
+    if(itemToRemove) {
+      logAction('DELETE_ITEM', `Suppression de l'article "${itemToRemove.productName}" (ID: ${id}).`);
+    }
     setInventory(prev => prev.filter(item => item.id !== id));
     setStockMovements(prev => prev.filter(m => m.inventoryId !== id));
-  }, [setInventory, setStockMovements]);
+  }, [inventory, setInventory, setStockMovements, logAction]);
 
   const clearInventory = useCallback(() => {
+    logAction('CLEAR_INVENTORY', 'Suppression de tout l\'inventaire.');
     setInventory([]);
     setStockMovements([]);
-  }, [setInventory, setStockMovements]);
+  }, [setInventory, setStockMovements, logAction]);
 
   const calculateAndSetReorderLevels = useCallback((sales: Sale[], bufferDays: number) => {
     const salesByProduct: { [inventoryId: string]: { totalQuantity: number, dates: Set<string> } } = {};
@@ -143,9 +154,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
       }
       return item; // Keep original reorder level if no sales history
     });
-
+    logAction('CALCULATE_REORDER_LEVELS', `Calcul des niveaux de réapprovisionnement pour ${updatedInventory.length} articles.`);
     setInventory(updatedInventory);
-  }, [inventory, setInventory]);
+  }, [inventory, setInventory, logAction]);
   
   const applyPhysicalCount = useCallback((countData: PhysicalCountData[]) => {
     let updatedCount = 0;
@@ -175,8 +186,9 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
 
     notFoundCount = countData.length - updatedCount;
     setInventory(updatedInventory);
+    logAction('PHYSICAL_COUNT', `Application d'un comptage physique. ${updatedCount} articles mis à jour, ${notFoundCount} non trouvés.`);
     return { updatedCount, notFoundCount };
-  }, [inventory, setInventory, addStockMovement]);
+  }, [inventory, setInventory, addStockMovement, logAction]);
   
   const getInventoryItem = useCallback((id: string) => {
     return inventory.find(item => item.id === id);

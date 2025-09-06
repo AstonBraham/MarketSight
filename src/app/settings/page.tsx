@@ -15,6 +15,7 @@ import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { Save, Upload, BrainCircuit, Trash2, FileCheck2 } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
+import { useAuditLog } from '@/context/audit-log-context';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ function CategoryManager({ title, categories, onAddCategory }: { title: string, 
 
 function BackupAndRestore() {
   const { toast } = useToast();
+  const { logAction } = useAuditLog();
   // Get all data sources
   const inventoryData = useInventory();
   const transactionData = useTransactions();
@@ -90,6 +92,7 @@ function BackupAndRestore() {
         title: 'Sauvegarde Réussie',
         description: 'Toutes les données ont été sauvegardées dans un fichier JSON.'
       });
+      logAction('BACKUP_DATA', 'Sauvegarde complète des données de l\'application.');
 
     } catch (error) {
       console.error(error);
@@ -130,6 +133,7 @@ function BackupAndRestore() {
             title: 'Restauration Réussie',
             description: `Données restaurées depuis la sauvegarde du ${new Date(data.backupDate).toLocaleString('fr-FR')}.`,
         });
+        logAction('RESTORE_DATA', 'Restauration des données depuis un fichier de sauvegarde.');
 
       } catch (error: any) {
         toast({

@@ -37,7 +37,8 @@ import {
   LineChart,
   BarChart2,
   ListChecks,
-  Download
+  Download,
+  ClipboardList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -74,6 +75,7 @@ const allMenuItems = [
   { href: '/mobile-money-coris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
   { href: '/history', label: 'Historique du jour', icon: History, roles: ['admin', 'user'] },
   { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin', 'user'] },
+  { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
 ];
