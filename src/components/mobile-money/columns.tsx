@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import type { MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal, CheckCircle, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { EditMobileMoneyTransactionDialog } from './edit-mobile-money-transaction-dialog';
 
 
 function ActionsCell({ row }: { row: { original: MobileMoneyTransaction }}) {
@@ -37,9 +39,7 @@ function ActionsCell({ row }: { row: { original: MobileMoneyTransaction }}) {
           <DropdownMenuItem disabled>
             Voir les détails
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
-            Modifier
-          </DropdownMenuItem>
+          <EditMobileMoneyTransactionDialog transaction={transaction} />
           <DropdownMenuSeparator />
           <DeleteTransactionDialog 
             transactionId={transaction.id} 
