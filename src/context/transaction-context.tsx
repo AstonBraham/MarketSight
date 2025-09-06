@@ -324,37 +324,52 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
     // 3. Mobile Money transactions
     mobileMoneyTransactions.forEach(t => {
-      let cashFlowImpact = 0;
-      let type: 'sale' | 'purchase' = 'sale';
-      let description = '';
+        let cashFlowImpact = 0;
+        let type: 'sale' | 'purchase' = 'sale';
+        let description = '';
 
-      switch (t.type) {
-        case 'deposit':
-          cashFlowImpact = t.amount;
-          type = 'sale';
-          description = `Encaissement Dépôt MM ${t.provider}`;
-          break;
-        case 'withdrawal':
-          cashFlowImpact = -t.amount;
-          type = 'purchase';
-          description = `Décaissement Retrait MM ${t.provider}`;
-          break;
-        case 'purchase':
-          cashFlowImpact = -t.amount;
-          type = 'purchase';
-          description = `Achat de virtuel ${t.provider}`;
-          break;
-        case 'virtual_return':
-           cashFlowImpact = t.amount;
-           type = 'sale';
-           description = `Retour de virtuel ${t.provider}`;
-           break;
-        // Transfers are excluded as per user request
-      }
-      
-      if (cashFlowImpact !== 0) {
-        allCashTransactions.push({ id: t.id, type, date: t.date, amount: Math.abs(cashFlowImpact), description });
-      }
+        const shouldAffectCash = t.affectsCash === undefined || t.affectsCash === true;
+
+        switch (t.type) {
+            case 'deposit':
+                cashFlowImpact = t.amount;
+                type = 'sale';
+                description = `Encaissement Dépôt MM ${t.provider}`;
+                break;
+            case 'withdrawal':
+                cashFlowImpact = -t.amount;
+                type = 'purchase';
+                description = `Décaissement Retrait MM ${t.provider}`;
+                break;
+            case 'purchase':
+                cashFlowImpact = -t.amount;
+                type = 'purchase';
+                description = `Achat de virtuel ${t.provider}`;
+                break;
+            case 'virtual_return':
+                cashFlowImpact = t.amount;
+                type = 'sale';
+                description = `Retour de virtuel ${t.provider}`;
+                break;
+            case 'transfer_to_pos':
+                if (shouldAffectCash) {
+                    cashFlowImpact = t.amount;
+                    type = 'sale';
+                    description = `Transfert vers PDV ${t.phoneNumber}`;
+                }
+                break;
+            case 'transfer_from_pos':
+                 if (shouldAffectCash) {
+                    cashFlowImpact = -t.amount;
+                    type = 'purchase';
+                    description = `Transfert depuis PDV ${t.phoneNumber}`;
+                }
+                break;
+        }
+        
+        if (cashFlowImpact !== 0) {
+            allCashTransactions.push({ id: t.id, type, date: t.date, amount: Math.abs(cashFlowImpact), description });
+        }
     });
 
     return allCashTransactions
