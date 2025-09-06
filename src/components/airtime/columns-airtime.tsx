@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { useAirtime } from '@/context/airtime-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { EditAirtimeTransactionDialog } from './edit-airtime-transaction-dialog';
 
 
 function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
@@ -37,9 +38,7 @@ function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
           <DropdownMenuItem disabled>
             Voir les détails
           </DropdownMenuItem>
-          <DropdownMenuItem disabled>
-            Modifier
-          </DropdownMenuItem>
+          <EditAirtimeTransactionDialog transaction={transaction} />
           <DropdownMenuSeparator />
           <DeleteTransactionDialog 
             transactionId={transaction.id} 
