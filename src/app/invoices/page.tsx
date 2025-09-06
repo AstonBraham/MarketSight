@@ -46,7 +46,7 @@ export default function InvoicesPage() {
     }, [invoices]);
 
     const cashSales = useMemo(() => {
-        return sales.filter(s => !s.invoiceId);
+        return sales.filter(s => !s.invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [sales]);
 
     const totalCashSales = useMemo(() => {

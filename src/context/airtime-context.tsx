@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
@@ -29,7 +30,7 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
       id: `AIR${Date.now()}`,
       date: new Date().toISOString(),
     };
-    setTransactions(prev => [newTransaction, ...prev]);
+    setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   }, [setTransactions]);
 
   const updateTransaction = useCallback((id: string, updatedTransaction: Partial<Omit<AirtimeTransaction, 'id'>>) => {

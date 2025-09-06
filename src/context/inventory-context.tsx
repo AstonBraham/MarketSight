@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
@@ -43,7 +44,7 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     setStockMovements(prev => [
       { ...movement, id: `SM-${Date.now()}`, date: new Date().toISOString() },
       ...prev
-    ]);
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
   }, [setStockMovements]);
 
   const addCategory = useCallback((category: string) => {

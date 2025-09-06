@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -25,7 +26,8 @@ export default function HistoryPage() {
   }, []);
 
   const dailyHistory = useMemo(() => {
-    return date ? getDailyHistory(date) : [];
+    const history = date ? getDailyHistory(date) : [];
+    return history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [date, getDailyHistory]);
 
   const stats = useMemo(() => {
