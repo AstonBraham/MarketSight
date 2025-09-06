@@ -2,12 +2,20 @@
 
 export type Transaction = {
   id: string;
-  type: 'sale' | 'purchase' | 'expense' | 'adjustment';
+  type: 'sale' | 'purchase' | 'expense' | 'adjustment' | string; // Allow string for custom types
   description: string;
   amount: number;
   date: string;
   category?: string;
   balance?: number;
+};
+
+export type HistoryTransaction = Transaction & { 
+    source?: string, 
+    link?: string, 
+    phoneNumber?: string, 
+    transactionId?: string,
+    affectsCash?: boolean,
 };
 
 export type Sale = Transaction & {

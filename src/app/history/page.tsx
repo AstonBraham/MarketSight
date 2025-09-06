@@ -42,7 +42,7 @@ export default function HistoryPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Historique des Opérations" />
+      <PageHeader title="Historique des Opérations du Jour" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-1 space-y-4">
            <Card>

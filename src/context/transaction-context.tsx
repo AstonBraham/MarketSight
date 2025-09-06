@@ -3,20 +3,12 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
-import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction } from '@/lib/types';
+import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction, HistoryTransaction, StockMovement } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { startOfDay, endOfDay, isEqual } from 'date-fns';
 import { useAirtime } from './airtime-context';
 import { useMobileMoney } from './mobile-money-context';
 import { useInventory } from './inventory-context';
-
-type HistoryTransaction = Transaction & { 
-    source?: string, 
-    link?: string, 
-    phoneNumber?: string, 
-    transactionId?: string,
-    affectsCash?: boolean,
-};
 
 interface TransactionContextType {
   transactions: (Sale | Purchase | Expense | Transaction)[];
@@ -43,6 +35,7 @@ interface TransactionContextType {
   getInvoice: (id: string) => Invoice | undefined;
   getAllTransactions: () => Transaction[];
   getDailyHistory: (date: Date) => HistoryTransaction[];
+  getAllHistory: () => HistoryTransaction[];
   addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
   clearWifiSales: () => void;
   clearCashTransactions: () => void;
@@ -59,7 +52,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   
   const { transactions: airtimeTransactions } = useAirtime();
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
-  const { inventory, updateItem: updateInventoryItem } = useInventory();
+  const { inventory, updateItem: updateInventoryItem, stockMovements } = useInventory();
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
@@ -375,80 +368,106 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) as Transaction[];
   }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
   
-  const getDailyHistory = useCallback((date: Date): HistoryTransaction[] => {
-    const start = startOfDay(date);
-    const end = endOfDay(date);
-
-    const filterByDate = (t: { date: string }) => {
-        const transactionDate = new Date(t.date);
-        return transactionDate >= start && transactionDate <= end;
-    };
-    
+  const getAllHistory = useCallback((): HistoryTransaction[] => {
     let allDailyTransactions: HistoryTransaction[] = [];
 
     // Base transactions (sales, expenses, purchases, adjustments)
     transactions
-        .filter(filterByDate)
-        .filter(t => t.type !== 'purchase' || (t as Purchase).status !== 'unpaid')
         .forEach(t => {
             let type = t.type;
             let link: string | undefined = undefined;
             let amount = 0;
+            let affectsCash = false;
+
             if (t.type === 'sale') {
                 const sale = t as Sale;
                 amount = sale.amount;
+                affectsCash = true;
                 if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
                 if (sale.itemType === 'Facture') {
                     type = 'Facture';
                     link = `/invoices/${sale.invoiceId}`;
                 }
-            } else if (t.type === 'purchase' || t.type === 'expense') {
-                amount = -t.amount;
+            } else if (t.type === 'purchase') {
+                amount = -(t.amount);
+                affectsCash = (t as Purchase).status !== 'unpaid';
+            } else if (t.type === 'expense') {
+                amount = -(t.amount);
+                affectsCash = true;
             } else if (t.type === 'adjustment') {
                 amount = t.amount;
+                affectsCash = true;
             }
-            allDailyTransactions.push({ ...t, amount, type, link, affectsCash: true });
+            allDailyTransactions.push({ ...t, amount, type, link, affectsCash });
         });
 
     // Airtime Transactions
     airtimeTransactions
-        .filter(filterByDate)
         .forEach(at => {
+            let amount = 0;
+            let type = at.type;
+            let affectsCash = false;
             if (at.type === 'sale') {
-                allDailyTransactions.push({ ...at, type: 'Vente Airtime', source: at.provider, amount: at.amount, description: `Vente Airtime ${at.provider}`, affectsCash: true });
+                amount = at.amount;
+                type = 'Vente Airtime' as any;
+                affectsCash = true;
             } else if (at.type === 'purchase') {
-                allDailyTransactions.push({ ...at, type: 'Achat Airtime', source: at.provider, amount: -at.amount, description: `Achat Airtime ${at.provider}`, affectsCash: true });
+                amount = -at.amount;
+                type = 'Achat Airtime' as any;
+                affectsCash = true;
+            } else if (at.type === 'adjustment') {
+                amount = 0; // Purely virtual
             }
+            allDailyTransactions.push({ ...at, type, source: at.provider, amount, description: at.description || `Airtime ${at.provider}`, affectsCash });
         });
     
     // Mobile Money Transactions
     mobileMoneyTransactions
-        .filter(filterByDate)
         .forEach(mt => {
-            let cashFlowImpact = 0;
+            let amount = 0;
             let type = mt.type;
             let description = mt.description || `${type} ${mt.provider}`;
             let affectsCash = false;
 
              switch (mt.type) {
-                case 'deposit': cashFlowImpact = mt.amount; description = `Dépôt MM ${mt.provider}`; affectsCash=true; break;
-                case 'withdrawal': cashFlowImpact = -mt.amount; description = `Retrait MM ${mt.provider}`; affectsCash=true; break;
-                case 'purchase': cashFlowImpact = -mt.amount; type = 'MM Purchase'; description = `Achat virtuel ${mt.provider}`; affectsCash=true; break;
-                case 'virtual_return': cashFlowImpact = mt.amount; type = 'Retour Virtuel Caisse'; description = `Retour virtuel ${mt.provider}`; affectsCash=true; break;
-                case 'transfer_to_pos': if (mt.affectsCash) { cashFlowImpact = mt.amount; type = 'MM Transfer'; description = `Transfert vers PDV ${mt.phoneNumber}`; affectsCash=true; } break;
-                case 'transfer_from_pos': if (mt.affectsCash) { cashFlowImpact = -mt.amount; type = 'MM Transfer'; description = `Transfert depuis PDV ${mt.phoneNumber}`; affectsCash=true; } break;
-                case 'collect_commission': cashFlowImpact = mt.amount; type = 'MM Commission'; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
+                case 'deposit': amount = mt.amount; description = `Dépôt MM ${mt.provider}`; affectsCash=true; break;
+                case 'withdrawal': amount = -mt.amount; description = `Retrait MM ${mt.provider}`; affectsCash=true; break;
+                case 'purchase': amount = -mt.amount; type = 'MM Purchase' as any; description = `Achat virtuel ${mt.provider}`; affectsCash=true; break;
+                case 'virtual_return': amount = mt.amount; type = 'Retour Virtuel Caisse' as any; description = `Retour virtuel ${mt.provider}`; affectsCash=true; break;
+                case 'transfer_to_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? mt.amount : 0; description = `Transfert vers PDV ${mt.phoneNumber}`; break;
+                case 'transfer_from_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? -mt.amount : 0; description = `Transfert depuis PDV ${mt.phoneNumber}`; break;
+                case 'collect_commission': amount = mt.amount; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
+                case 'adjustment': amount = 0; break; // Purely virtual
             }
-
-            if (cashFlowImpact !== 0) {
-                allDailyTransactions.push({ ...mt, amount: cashFlowImpact, type, description, affectsCash });
-            }
+            allDailyTransactions.push({ ...mt, amount, type, description, affectsCash });
         });
 
+    // Stock Movements
+    stockMovements
+      .forEach(sm => {
+        allDailyTransactions.push({
+          id: sm.id,
+          date: sm.date,
+          amount: 0,
+          description: `${sm.reason} (${sm.productName})`,
+          type: 'Mouvement Stock',
+          affectsCash: false,
+        });
+      });
 
     return allDailyTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, airtimeTransactions, mobileMoneyTransactions, stockMovements]);
 
-  }, [transactions, airtimeTransactions, mobileMoneyTransactions]);
+
+  const getDailyHistory = useCallback((date: Date): HistoryTransaction[] => {
+    const start = startOfDay(date);
+    const end = endOfDay(date);
+    return getAllHistory().filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= start && transactionDate <= end;
+    });
+
+  }, [getAllHistory]);
 
   const sales = useMemo(() => transactions.filter(t => t.type === 'sale') as Sale[], [transactions]);
   const purchases = useMemo(() => transactions.filter(t => t.type === 'purchase') as Purchase[], [transactions]);
@@ -479,6 +498,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     getInvoice,
     getAllTransactions,
     getDailyHistory,
+    getAllHistory,
     addCashClosing,
     clearWifiSales,
     clearCashTransactions,
@@ -487,7 +507,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }), [
       transactions, setTransactions, sales, purchases, expenses, invoices, setInvoices, cashClosings, setCashClosings, 
       expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, addBulkExpenses, removeExpense, 
-      addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, 
+      addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
       airtimeTransactions, mobileMoneyTransactions
     ]);
