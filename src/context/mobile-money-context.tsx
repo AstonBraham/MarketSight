@@ -36,6 +36,16 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', [initialMixxBalance]);
   const { logAction } = useAuditLog();
 
+  useState(() => {
+    setTransactions(prev => prev.filter(t => {
+      // This will remove any wrongly imported 'sale' type transactions for Mixx
+      if (t.provider === 'Mixx' && (t.type as any) === 'sale') {
+        return false;
+      }
+      return true;
+    }));
+  });
+
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
     const newTransaction: MobileMoneyTransaction = {
       ...transaction,
