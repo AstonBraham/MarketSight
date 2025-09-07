@@ -41,7 +41,7 @@ export default function MobileMoneyMixxPage() {
 
     const dailyWithdrawals = mixxTransactions
         .filter(t => t.type === 'withdrawal' && new Date(t.date).toDateString() === new Date().toDateString())
-        .reduce((acc, t) => acc + t.commission, 0);
+        .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyCommissions = mixxTransactions
         .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
