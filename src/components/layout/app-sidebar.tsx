@@ -59,24 +59,28 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
   { href: '/daily-report', label: 'Rapport Journalier', icon: FileText, roles: ['admin', 'user'] },
-  { href: '/client-analysis', label: 'Analyse Clients', icon: LineChart, roles: ['admin'] },
-  { href: '/sales-analysis', label: 'Analyse des Ventes', icon: BarChart2, roles: ['admin', 'user'] },
+  { 
+    label: 'Analyse', icon: LineChart, roles: ['admin', 'user'], subItems: [
+      { href: '/sales-analysis', label: 'Analyse des Ventes', roles: ['admin', 'user']},
+      { href: '/client-analysis', label: 'Analyse Clients', roles: ['admin']},
+    ]
+  },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
   { 
     label: 'Trésorerie', icon: Wallet, roles: ['admin'], subItems: [
-      { href: '/cash', label: 'Mouvements de caisse' },
-      { href: '/receipts', label: 'Encaissements' },
-      { href: '/cash-closing', label: 'Arrêtés de caisse' },
+      { href: '/cash', label: 'Mouvements de caisse', roles: ['admin'] },
+      { href: '/receipts', label: 'Encaissements', roles: ['admin'] },
+      { href: '/cash-closing', label: 'Arrêtés de caisse', roles: ['admin'] },
     ]
   },
   { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin', 'user'] },
   { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin', 'user'] },
   { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin', 'user'] },
   { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin', 'user'] },
-  { href: '/mobile-money-coris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
+  { href: '/mobile-money-cauris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
   { href: '/history', label: 'Historique du jour', icon: History, roles: ['admin', 'user'] },
   { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin'] },
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
@@ -117,45 +121,52 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarMenu className="flex-1 px-4">
-        {menuItems.map((item, index) => (
-          item.subItems ? (
-             <Collapsible key={item.label} className="w-full">
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                   <SidebarMenuButton>
+        {menuItems.map((item, index) => {
+           if (item.subItems) {
+              const visibleSubItems = item.subItems.filter(subItem => subItem.roles.includes(user.role));
+              if (visibleSubItems.length === 0) return null;
+
+              return (
+                 <Collapsible key={item.label} className="w-full">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                       <SidebarMenuButton>
+                          <item.icon />
+                          <span>{item.label}</span>
+                       </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                  </SidebarMenuItem>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {visibleSubItems.map(subItem => (
+                         <SidebarMenuSubItem key={subItem.href}>
+                          <Link href={subItem.href} passHref>
+                             <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                               <a>{subItem.label}</a>
+                            </SidebarMenuSubButton>
+                          </Link>
+                         </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
+              )
+           } else {
+             return (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href!}>
+                      <SidebarMenuButton
+                      isActive={pathname === item.href}
+                      tooltip={{ children: item.label, side: 'right' }}
+                    >
                       <item.icon />
                       <span>{item.label}</span>
-                   </SidebarMenuButton>
-                </CollapsibleTrigger>
-              </SidebarMenuItem>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.subItems.map(subItem => (
-                     <SidebarMenuSubItem key={subItem.href}>
-                      <Link href={subItem.href} passHref>
-                         <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                           <a>{subItem.label}</a>
-                        </SidebarMenuSubButton>
-                      </Link>
-                     </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-          ) : (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href!}>
-                  <SidebarMenuButton
-                  isActive={pathname === item.href}
-                  tooltip={{ children: item.label, side: 'right' }}
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          )
-        ))}
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+             )
+           }
+        })}
       </SidebarMenu>
 
       <SidebarFooter className="p-4">
