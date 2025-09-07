@@ -2,7 +2,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { AirtimeTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useTransactions } from './transaction-context';
@@ -119,9 +119,14 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
   }, [transactions]);
   
   // This will run once on component mount, and clear Moov transactions.
-  useState(() => {
-    clearAirtimeTransactions('Moov');
-  });
+  useEffect(() => {
+    // This flag prevents the effect from running multiple times in development with Strict Mode.
+    let isInitialized = false;
+    if (!isInitialized) {
+        // clearAirtimeTransactions('Moov');
+        isInitialized = true;
+    }
+  }, []);
 
   const value = useMemo(() => ({
     transactions,
