@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { cn } from '@/lib/utils';
 
 
@@ -40,12 +47,21 @@ export function AddSaleDialog() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast();
   const { addSale } = useTransactions();
-  const { inventory } = useInventory();
+  const { inventory, itemCategories } = useInventory();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [price, setPrice] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const selectedItem = inventory.find(i => i.id === selectedItemId);
+  
+  const filteredInventory = useMemo(() => {
+    if (categoryFilter === 'all') {
+      return inventory;
+    }
+    return inventory.filter(item => item.category === categoryFilter);
+  }, [inventory, categoryFilter]);
+
 
   const handleItemSelect = (itemId: string) => {
     const item = inventory.find(i => i.id === itemId);
@@ -114,6 +130,7 @@ export function AddSaleDialog() {
     setSelectedItemId(null);
     setQuantity(1);
     setPrice(0);
+    setCategoryFilter('all');
     setOpen(false);
   };
 
@@ -134,6 +151,20 @@ export function AddSaleDialog() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="category" className="text-right">Famille</Label>
+                 <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Filtrer par famille..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Toutes les familles</SelectItem>
+                        {itemCategories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="product" className="text-right">Produit</Label>
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -156,10 +187,10 @@ export function AddSaleDialog() {
                             <CommandList>
                                 <CommandEmpty>Aucun produit trouvé.</CommandEmpty>
                                 <CommandGroup>
-                                    {inventory.map((item) => (
+                                    {filteredInventory.map((item) => (
                                     <CommandItem
                                         key={item.id}
-                                        value={item.id}
+                                        value={item.productName}
                                         onSelect={() => handleItemSelect(item.id)}
                                     >
                                         <Check
