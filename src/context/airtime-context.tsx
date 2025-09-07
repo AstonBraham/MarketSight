@@ -15,7 +15,7 @@ interface AirtimeContextType {
   updateTransaction: (id: string, updatedTransaction: Partial<Omit<AirtimeTransaction, 'id'>>) => void;
   addBulkTransactions: (transactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => void;
   removeTransaction: (id: string) => void;
-  clearAirtimeTransactions: () => void;
+  clearAirtimeTransactions: (providerToClear?: 'Moov' | 'Yas') => void;
   getStock: (provider: 'Moov' | 'Yas') => number;
   getProcessedTransactions: (provider: 'Moov' | 'Yas') => AirtimeTransaction[];
 }
@@ -71,17 +71,29 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => prev.filter(t => t.id !== id));
   }, [setTransactions, transactions, logAction]);
 
-  const clearAirtimeTransactions = useCallback(() => {
-    logAction('CLEAR_AIRTIME_DATA', 'Suppression de toutes les transactions Airtime.');
-    setTransactions([]);
+  const clearAirtimeTransactions = useCallback((providerToClear?: 'Moov' | 'Yas') => {
+    if (providerToClear) {
+        logAction('CLEAR_AIRTIME_DATA', `Suppression des transactions Airtime pour ${providerToClear}.`);
+        setTransactions(prev => prev.filter(t => t.provider !== providerToClear));
+    } else {
+        logAction('CLEAR_AIRTIME_DATA', 'Suppression de toutes les transactions Airtime.');
+        setTransactions([]);
+    }
   }, [setTransactions, logAction]);
 
   const getStock = useCallback((provider: 'Moov' | 'Yas') => {
     return transactions
       .filter(t => t.provider === provider)
       .reduce((acc, t) => {
-        if (t.type === 'purchase' || (t.type === 'adjustment' && t.amount > 0)) return acc + t.amount;
-        if (t.type === 'sale' || (t.type === 'adjustment' && t.amount < 0)) return acc - t.amount;
+        if (t.type === 'purchase') {
+            return acc + t.amount;
+        }
+        if (t.type === 'sale') {
+            return acc - t.amount;
+        }
+        if (t.type === 'adjustment') {
+            return acc + t.amount;
+        }
         return acc;
       }, 0);
   }, [transactions]);
@@ -92,10 +104,12 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     const withBalance = sorted.map(t => {
-        if (t.type === 'purchase' || (t.type === 'adjustment' && t.amount > 0)) {
+        if (t.type === 'purchase') {
             balance += t.amount;
-        } else if (t.type === 'sale' || (t.type === 'adjustment' && t.amount < 0)) {
+        } else if (t.type === 'sale') {
             balance -= t.amount;
+        } else if (t.type === 'adjustment') {
+            balance += t.amount;
         }
         // Commissions do not affect airtime stock balance
         return { ...t, balance };
@@ -104,6 +118,10 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     return withBalance.reverse();
   }, [transactions]);
   
+  // This will run once on component mount, and clear Moov transactions.
+  useState(() => {
+    clearAirtimeTransactions('Moov');
+  });
 
   const value = useMemo(() => ({
     transactions,
