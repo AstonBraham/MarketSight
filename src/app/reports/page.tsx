@@ -4,7 +4,7 @@
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileDown, Download } from 'lucide-react';
+import { FileDown, Download, Wallet } from 'lucide-react';
 import { useTransactions } from '@/context/transaction-context';
 import { exportToCsv } from '@/lib/export';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +37,7 @@ const IMPORT_TEMPLATES = {
 
 export default function ReportsPage() {
   const { toast } = useToast();
-  const { sales, purchases, expenses } = useTransactions();
+  const { sales, purchases, expenses, getAllTransactions } = useTransactions();
   const { inventory } = useInventory();
   const { getProcessedTransactions: getProcessedAirtimeTransactions } = useAirtime();
   const { getProcessedTransactions: getProcessedMobileMoneyTransactions } = useMobileMoney();
@@ -45,6 +45,10 @@ export default function ReportsPage() {
   const wifiSales = useMemo(() => {
     return sales.filter(s => s.itemType === 'Ticket Wifi');
   }, [sales]);
+
+  const allCashTransactions = useMemo(() => {
+    return getAllTransactions();
+  }, [getAllTransactions]);
   
   const handleMobileMoneyExport = () => {
     const providers: MobileMoneyProvider[] = ['Flooz', 'Mixx', 'Coris'];
@@ -123,6 +127,10 @@ export default function ReportsPage() {
             <CardDescription>Générez des rapports et exportez-les au format CSV pour Excel.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Button variant="outline" onClick={() => handleExport('rapport_tresorerie', allCashTransactions)}>
+            <Wallet className="mr-2 h-4 w-4" />
+            Exporter les Mouvements de Trésorerie
+          </Button>
           <Button variant="outline" onClick={() => handleExport('rapport_ventes', sales)}>
             <FileDown className="mr-2 h-4 w-4" />
             Exporter le Rapport des Ventes
