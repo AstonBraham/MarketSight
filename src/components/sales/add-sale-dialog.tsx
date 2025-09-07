@@ -145,7 +145,7 @@ export function AddSaleDialog() {
                         className="col-span-3 justify-between"
                         >
                         {selectedItem
-                            ? selectedItem.productName
+                            ? `${selectedItem.productName} (Stock: ${selectedItem.inStock})`
                             : "Sélectionner un produit..."}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>

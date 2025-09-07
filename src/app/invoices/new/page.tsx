@@ -147,7 +147,7 @@ export default function NewInvoicePage() {
                                     className="w-[300px] justify-between"
                                     >
                                     {selectedProduct
-                                        ? selectedProduct.productName
+                                        ? `${selectedProduct.productName} (Stock: ${selectedProduct.inStock})`
                                         : "Sélectionner un article..."}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>

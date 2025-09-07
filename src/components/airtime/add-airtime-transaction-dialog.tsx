@@ -32,17 +32,31 @@ type AddAirtimeTransactionDialogProps = {
 export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { addTransaction } = useAirtime();
+  const { addTransaction, getStock } = useAirtime();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const data = Object.fromEntries(formData.entries());
+    const type = data.type as 'purchase' | 'sale' | 'commission';
+    const amount = parseFloat(data.amount as string) || 0;
+
+    if (type === 'sale') {
+      const currentStock = getStock(provider);
+      if (amount > currentStock) {
+        toast({
+          title: 'Stock Airtime Insuffisant',
+          description: `Le stock ${provider} est de ${new Intl.NumberFormat('fr-FR').format(currentStock)} F. Vous ne pouvez pas vendre pour ${new Intl.NumberFormat('fr-FR').format(amount)} F.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
 
     addTransaction({
-        type: data.type as 'purchase' | 'sale' | 'commission',
+        type: type,
         provider: provider,
-        amount: parseFloat(data.amount as string) || 0,
+        amount: amount,
         commission: data.commission ? parseFloat(data.commission as string) : 0,
         phoneNumber: data.phoneNumber as string,
         transactionId: data.transactionId as string

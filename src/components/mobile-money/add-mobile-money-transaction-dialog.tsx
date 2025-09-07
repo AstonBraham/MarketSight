@@ -36,7 +36,7 @@ type AddMobileMoneyTransactionDialogProps = {
 export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTransactionDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { addTransaction } = useMobileMoney();
+  const { addTransaction, getBalance } = useMobileMoney();
   const { addAdjustment } = useTransactions();
   
   const [type, setType] = useState<MobileMoneyTransactionType | ''>('');
@@ -106,6 +106,18 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     const data = Object.fromEntries(formData.entries());
 
     const transactionAmount = parseFloat(data.amount as string);
+    const currentBalance = getBalance(provider);
+
+    if (type === 'deposit' || type === 'transfer_to_pos') {
+        if (transactionAmount > currentBalance) {
+            toast({
+                title: 'Solde virtuel insuffisant',
+                description: `Le solde ${provider} est de ${new Intl.NumberFormat('fr-FR').format(currentBalance)} F. Opération impossible.`,
+                variant: 'destructive',
+            });
+            return;
+        }
+    }
 
     addTransaction({
         transactionId: data.transactionId as string,

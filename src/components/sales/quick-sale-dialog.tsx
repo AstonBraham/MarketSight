@@ -81,7 +81,7 @@ export function QuickSaleDialog({ item, children }: { item: InventoryItem, child
             <Zap className="text-yellow-500" /> Vente Rapide
           </DialogTitle>
           <DialogDescription>
-            Confirmez la quantité à vendre pour <strong>{item.productName}</strong>.
+            Confirmez la quantité à vendre pour <strong>{item.productName}</strong>. (Stock actuel: {item.inStock})
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,16 +19,34 @@ import { Textarea } from '@/components/ui/textarea';
 import { getExpenseCategory } from '@/app/expenses/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
+import type { Transaction } from '@/lib/types';
 
 export function AddExpenseDialog() {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const { addExpense } = useTransactions();
+  const { addExpense, getAllTransactions } = useTransactions();
 
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+
+  const currentBalance = useMemo(() => {
+    const allTransactions = getAllTransactions();
+    let balance = 0;
+    const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    sorted.forEach(t => {
+      if (t.type === 'sale') {
+        balance += t.amount;
+      } else if (t.type === 'purchase' || t.type === 'expense') {
+        balance -= t.amount;
+      } else if (t.type === 'adjustment') {
+        balance += t.amount;
+      }
+    });
+    return balance;
+  }, [getAllTransactions, open]); // Recalculate when dialog opens
 
 
   const handleCategorize = async () => {
@@ -67,6 +85,15 @@ export function AddExpenseDialog() {
     const numericAmount = parseFloat(amount);
     if (!description || !category || isNaN(numericAmount) || numericAmount <= 0) {
       toast({ title: 'Données invalides', description: 'Veuillez remplir tous les champs correctement.', variant: 'destructive'});
+      return;
+    }
+
+    if (numericAmount > currentBalance) {
+      toast({
+        title: 'Solde de caisse insuffisant',
+        description: `Votre solde de caisse est de ${new Intl.NumberFormat('fr-FR').format(currentBalance)} F. Vous ne pouvez pas enregistrer une dépense de ${new Intl.NumberFormat('fr-FR').format(numericAmount)} F.`,
+        variant: 'destructive',
+      });
       return;
     }
 
