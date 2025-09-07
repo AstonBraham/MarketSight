@@ -73,8 +73,13 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                 variant: "default"
           });
         }
-    } else if (type === 'withdrawal') {
-        if (amount <= 20000) calculatedCommission = 0; // Example, adjust as needed
+    } else if (provider === 'Mixx' && type === 'withdrawal') {
+        if (amount <= 499) calculatedCommission = 21;
+        else if (amount <= 5000) calculatedCommission = 21;
+        else if (amount <= 15000) calculatedCommission = 65;
+        else if (amount <= 20000) calculatedCommission = 65;
+        else if (amount <= 50000) calculatedCommission = 146;
+        else if (amount <= 100000) calculatedCommission = 329;
         else { 
             manual = true;
             toast({
