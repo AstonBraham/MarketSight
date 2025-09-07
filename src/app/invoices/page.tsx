@@ -39,7 +39,22 @@ export default function InvoicesPage() {
     const { invoices, sales } = useTransactions();
     const { inventory } = useInventory();
     
-    const quickSaleItems = inventory.filter(item => item.isQuickSale);
+    const topSellingItems = useMemo(() => {
+        const salesByItem: { [key: string]: number } = {};
+        sales.forEach(sale => {
+            if (sale.inventoryId && sale.quantity) {
+                salesByItem[sale.inventoryId] = (salesByItem[sale.inventoryId] || 0) + sale.quantity;
+            }
+        });
+
+        const sortedItems = Object.entries(salesByItem)
+            .sort(([, qtyA], [, qtyB]) => qtyB - qtyA)
+            .slice(0, 10)
+            .map(([inventoryId]) => inventory.find(item => item.id === inventoryId))
+            .filter((item): item is InventoryItem => !!item);
+
+        return sortedItems;
+    }, [sales, inventory]);
 
     const totalInvoiced = useMemo(() => {
         return invoices.reduce((acc, invoice) => acc + invoice.total, 0);
@@ -97,14 +112,14 @@ export default function InvoicesPage() {
             </Link>
         </div>
 
-        {quickSaleItems.length > 0 && (
+        {topSellingItems.length > 0 && (
             <Card>
                 <CardHeader>
-                    <CardTitle>Ventes Rapides</CardTitle>
+                    <CardTitle>Ventes Rapides (Top 10 articles)</CardTitle>
                     <CardDescription>Cliquez sur un article pour enregistrer une vente rapide au comptant.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4">
-                   {quickSaleItems.map(item => (
+                   {topSellingItems.map(item => (
                        <QuickSaleItem key={item.id} item={item} />
                    ))}
                 </CardContent>
