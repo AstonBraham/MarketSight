@@ -142,7 +142,12 @@ export default function AirtimeMoovPage() {
             <CardDescription>Historique des transactions pour Moov.</CardDescription>
             </CardHeader>
             <CardContent>
-                <DataTable data={processedTransactions} columns={airtimeColumns} />
+                <DataTable 
+                  data={processedTransactions} 
+                  columns={airtimeColumns} 
+                  filterColumn="phoneNumber" 
+                  filterPlaceholder="Filtrer par numéro..." 
+                />
             </CardContent>
         </Card>
     </div>

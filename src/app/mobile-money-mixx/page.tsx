@@ -141,7 +141,12 @@ export default function MobileMoneyMixxPage() {
             </div>
         </CardHeader>
         <CardContent>
-            <DataTable data={filteredTransactions} columns={columns} />
+            <DataTable 
+              data={filteredTransactions} 
+              columns={columns} 
+              filterColumn="phoneNumber" 
+              filterPlaceholder="Filtrer par numéro..."
+            />
         </CardContent>
       </Card>
     </div>

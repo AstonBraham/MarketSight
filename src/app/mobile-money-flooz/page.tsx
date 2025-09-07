@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -95,7 +94,12 @@ export default function MobileMoneyFloozPage() {
             <CardDescription>Historique des transactions pour Flooz.</CardDescription>
         </CardHeader>
         <CardContent>
-            <DataTable data={processedTransactions} columns={columns} />
+            <DataTable 
+              data={processedTransactions} 
+              columns={columns} 
+              filterColumn="phoneNumber" 
+              filterPlaceholder="Filtrer par numéro..."
+            />
         </CardContent>
       </Card>
     </div>

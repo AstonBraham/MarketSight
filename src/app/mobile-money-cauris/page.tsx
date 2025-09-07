@@ -94,7 +94,12 @@ export default function MobileMoneyCorisPage() {
             <CardDescription>Historique des transactions pour Coris.</CardDescription>
         </CardHeader>
         <CardContent>
-            <DataTable data={processedTransactions} columns={columns} />
+            <DataTable 
+              data={processedTransactions} 
+              columns={columns} 
+              filterColumn="phoneNumber" 
+              filterPlaceholder="Filtrer par numéro..."
+            />
         </CardContent>
       </Card>
     </div>

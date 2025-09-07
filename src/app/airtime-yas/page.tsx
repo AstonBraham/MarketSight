@@ -141,7 +141,12 @@ export default function AirtimeYasPage() {
             <CardDescription>Historique des transactions pour Yas.</CardDescription>
             </CardHeader>
             <CardContent>
-                <DataTable data={processedTransactions} columns={airtimeColumns} />
+                <DataTable 
+                  data={processedTransactions} 
+                  columns={airtimeColumns} 
+                  filterColumn="phoneNumber" 
+                  filterPlaceholder="Filtrer par numéro..." 
+                />
             </CardContent>
         </Card>
     </div>
