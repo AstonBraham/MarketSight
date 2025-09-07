@@ -117,16 +117,6 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
 
     return withBalance.reverse();
   }, [transactions]);
-  
-  // This will run once on component mount, and clear Moov transactions.
-  useEffect(() => {
-    // This flag prevents the effect from running multiple times in development with Strict Mode.
-    let isInitialized = false;
-    if (!isInitialized) {
-        // clearAirtimeTransactions('Moov');
-        isInitialized = true;
-    }
-  }, []);
 
   const value = useMemo(() => ({
     transactions,
