@@ -61,7 +61,7 @@ export default function DailyReportPage() {
             .reduce((acc, t) => acc + t.amount, 0);
 
         const totalRevenue = merchandiseSales + wifiSales + airtimeSales + dailyAirtimeCommissions + dailyMMCommissions;
-        const totalMargin = dailySales.reduce((acc, s) => acc + (s.margin || 0), 0);
+        const totalMargin = dailySales.reduce((acc, s) => acc + (s.margin || 0), 0) + dailyAirtimeCommissions + dailyMMCommissions;
         const totalExpenses = expenses.filter(e => isWithinInterval(new Date(e.date), todayInterval)).reduce((acc, e) => acc + e.amount, 0);
 
         const dailyPurchases = purchases.filter(p => p.status === 'paid' && isWithinInterval(new Date(p.date), todayInterval));
@@ -69,7 +69,10 @@ export default function DailyReportPage() {
 
         const allCashTransactions = getAllTransactions();
         const cashBalanceStartOfDay = allCashTransactions.filter(t => new Date(t.date) < todayInterval.start).reduce((acc, t) => {
-            return acc + (t.type === 'sale' ? t.amount : -t.amount);
+            if (t.type === 'sale') return acc + t.amount;
+            if (t.type === 'purchase' || t.type === 'expense') return acc - t.amount;
+            if (t.type === 'adjustment') return acc + t.amount;
+            return acc;
         }, 0);
         
         const cashIn = dailySales.reduce((acc, s) => acc + s.amount, 0) + dailyReceipts.reduce((acc, r) => acc + r.amount, 0);

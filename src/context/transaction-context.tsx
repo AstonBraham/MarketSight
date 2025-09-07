@@ -418,14 +418,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // 2. Airtime transactions
+    // 2. Airtime transactions that affect cash
     airtimeTransactions.forEach(t => {
-      if (t.type === 'sale') {
-        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.amount, description: `Vente Airtime ${t.provider}`});
-      } else if (t.type === 'purchase') {
-        allCashTransactions.push({ id: t.id, type: 'purchase', date: t.date, amount: t.amount, description: `Achat Airtime ${t.provider}`});
-      } else if (t.type === 'commission') {
-        allCashTransactions.push({ id: t.id, type: 'sale', date: t.date, amount: t.commission, description: `Commission Airtime ${t.provider}`});
+      if (t.type === 'sale' || t.type === 'purchase' || t.type === 'commission') {
+        const amount = t.type === 'commission' ? t.commission : t.amount;
+        const type = t.type === 'sale' || t.type === 'commission' ? 'sale' : 'purchase';
+        const description = t.type === 'commission' ? `Commission Airtime ${t.provider}` : `${type === 'sale' ? 'Vente' : 'Achat'} Airtime ${t.provider}`;
+        allCashTransactions.push({ id: t.id, type, date: t.date, amount, description });
       }
     });
 
@@ -435,16 +434,18 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         let type: 'sale' | 'purchase' = 'sale';
         let description = '';
 
+        const baseDesc = `${t.provider} (${t.phoneNumber || t.transactionId || ''})`
+
         switch (t.type) {
             case 'deposit':
                 cashFlowImpact = t.amount;
                 type = 'sale';
-                description = `Encaissement Dépôt MM ${t.provider}`;
+                description = `Encaissement Dépôt MM ${baseDesc}`;
                 break;
             case 'withdrawal':
                 cashFlowImpact = -t.amount;
                 type = 'purchase';
-                description = `Décaissement Retrait MM ${t.provider}`;
+                description = `Décaissement Retrait MM ${baseDesc}`;
                 break;
             case 'purchase':
                 cashFlowImpact = -t.amount;
@@ -456,20 +457,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 type = 'sale';
                 description = `Retour de virtuel ${t.provider}`;
                 break;
-            case 'transfer_to_pos':
+             case 'transfer_to_pos':
+             case 'transfer_from_pos':
                 if (t.affectsCash) {
-                    cashFlowImpact = t.amount;
-                    type = 'sale';
-                    description = `Transfert vers PDV ${t.phoneNumber}`;
+                  cashFlowImpact = t.type === 'transfer_to_pos' ? t.amount : -t.amount;
+                  type = t.type === 'transfer_to_pos' ? 'sale' : 'purchase';
+                  description = `Transfert caisse ${t.type === 'transfer_to_pos' ? 'vers' : 'depuis'} PDV ${t.phoneNumber}`;
                 }
                 break;
-            case 'transfer_from_pos':
-                 if (t.affectsCash) {
-                    cashFlowImpact = -t.amount;
-                    type = 'purchase';
-                    description = `Transfert depuis PDV ${t.phoneNumber}`;
-                }
-                break;
+            case 'collect_commission':
+              cashFlowImpact = t.commission;
+              type = 'sale';
+              description = `Collecte de commission ${t.provider}`;
+              break;
         }
         
         if (cashFlowImpact !== 0) {
