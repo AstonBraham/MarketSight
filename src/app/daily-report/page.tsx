@@ -5,7 +5,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
+import { Printer, FileCheck2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useTransactions } from '@/context/transaction-context';
 import { useAirtime } from '@/context/airtime-context';
@@ -15,6 +15,9 @@ import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import Link from 'next/link';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div className="border-t pt-4">
@@ -37,7 +40,7 @@ export default function DailyReportPage() {
         setIsClient(true);
     }, []);
 
-    const { sales, purchases, expenses, receipts, getAllTransactions } = useTransactions();
+    const { sales, purchases, expenses, receipts, getAllTransactions, cashClosings } = useTransactions();
     const { inventory } = useInventory();
     const { transactions: airtimeTransactions, getStock: getAirtimeStock } = useAirtime();
     const { transactions: mobileMoneyTransactions, getBalance: getMobileMoneyBalance } = useMobileMoney();
@@ -45,6 +48,10 @@ export default function DailyReportPage() {
     const todayInterval = { start: startOfDay(new Date()), end: endOfDay(new Date()) };
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
+    
+    const todaysClosing = useMemo(() => {
+        return cashClosings.find(c => isWithinInterval(new Date(c.date), todayInterval));
+    }, [cashClosings, todayInterval]);
 
     const dailyStats = useMemo(() => {
         const dailySales = sales.filter(s => isWithinInterval(new Date(s.date), todayInterval));
@@ -136,6 +143,24 @@ export default function DailyReportPage() {
     const handlePrint = () => {
         window.print();
     };
+    
+    if (!todaysClosing) {
+        return (
+             <div className="flex flex-col gap-8 p-4 md:p-8">
+                <PageHeader title="Rapport Journalier" />
+                 <Alert variant="default" className="border-primary">
+                    <FileCheck2 className="h-4 w-4" />
+                    <AlertTitle>Arrêté de Caisse Requis</AlertTitle>
+                    <AlertDescription>
+                        Pour générer le rapport final de la journée, veuillez d'abord effectuer l'arrêté de caisse.
+                        <Link href="/cash-closing" className="mt-4 block">
+                           <Button>Aller à la page des Arrêtés de Caisse</Button>
+                        </Link>
+                    </AlertDescription>
+                </Alert>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -199,8 +224,15 @@ export default function DailyReportPage() {
                                 <ReportRow label="Solde en début de journée" value={formatCurrency(dailyStats.cash.startOfDay)} />
                                 <ReportRow label="Total des entrées" value={formatCurrency(dailyStats.cash.in)} className="text-green-600" />
                                 <ReportRow label="Total des sorties" value={formatCurrency(dailyStats.cash.out)} className="text-destructive" />
+                                <ReportRow label="Solde final théorique" value={formatCurrency(dailyStats.cash.endOfDay)} className="font-bold" />
                                 <Separator />
-                                <ReportRow label="Solde final théorique" value={formatCurrency(dailyStats.cash.endOfDay)} className="font-bold text-lg text-primary" />
+                                <ReportRow label="Solde Réel Constaté" value={formatCurrency(todaysClosing.realBalance)} className="font-bold text-lg text-primary" />
+                                <ReportRow 
+                                    label="Écart de caisse" 
+                                    value={formatCurrency(todaysClosing.variance)} 
+                                    className={cn("font-bold", todaysClosing.variance !== 0 && "text-destructive")} 
+                                />
+
                             </Section>
 
                              <Section title="Détail des Opérations">
