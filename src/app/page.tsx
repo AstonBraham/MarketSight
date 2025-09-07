@@ -14,6 +14,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { UnpaidPurchases } from '@/components/dashboard/unpaid-purchases';
 import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-chart';
 import { CashflowChartLast6Months } from '@/components/dashboard/cashflow-chart-last-6-months';
+import { DashboardAlerts } from '@/components/dashboard/dashboard-alerts';
 import type { Transaction } from '@/lib/types';
 
 export default function DashboardPage() {
@@ -80,6 +81,8 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
       <PageHeader title="Tableau de Bord" />
+      
+      <DashboardAlerts />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard

@@ -4,7 +4,7 @@
 import type { Expense } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Trash2, CheckCircle, Edit } from 'lucide-react';
+import { MoreHorizontal, Trash2, CheckCircle, Edit, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,11 +18,20 @@ import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { useTransactions } from '@/context/transaction-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { EditExpenseDialog } from './edit-expense-dialog';
+import { useUser } from '@/context/user-context';
 
 
 function ActionsCell({ row }: { row: { original: Expense }}) {
-    const { removeExpense } = useTransactions();
+    const { removeExpense, getLastClosingDate } = useTransactions();
     const expense = row.original;
+    const { user } = useUser();
+    const lastClosingDate = getLastClosingDate();
+    
+    const isLocked = lastClosingDate && new Date(expense.date) <= lastClosingDate;
+    const isUser = user?.role === 'user';
+    const isAdmin = user?.role === 'admin';
+
+    const canEdit = isAdmin || (isUser && !isLocked);
 
     return (
         <DropdownMenu>
@@ -34,17 +43,24 @@ function ActionsCell({ row }: { row: { original: Expense }}) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(expense.id)}
-            >
-              Copier l'ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <EditExpenseDialog expense={expense} />
-            <DeleteTransactionDialog 
-                transactionId={expense.id}
-                onDelete={() => removeExpense(expense.id)}
-            />
+            {canEdit ? (
+                <>
+                    <DropdownMenuItem onClick={() => navigator.clipboard.writeText(expense.id)}>
+                        Copier l'ID
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <EditExpenseDialog expense={expense} />
+                    <DeleteTransactionDialog 
+                        transactionId={expense.id}
+                        onDelete={() => removeExpense(expense.id)}
+                    />
+                </>
+            ) : (
+                <DropdownMenuItem disabled>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Verrouillé
+                </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );

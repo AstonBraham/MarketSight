@@ -36,10 +36,12 @@ interface TransactionContextType {
   addBulkAdjustments: (adjustments: Omit<Transaction, 'id' | 'type' | 'category'>[]) => void;
   addInvoice: (invoice: Omit<Invoice, 'id'>) => string;
   getInvoice: (id: string) => Invoice | undefined;
+  removeInvoice: (invoiceId: string) => void;
   getAllTransactions: () => Transaction[];
   getDailyHistory: (date: Date) => HistoryTransaction[];
   getAllHistory: () => HistoryTransaction[];
   addCashClosing: (closing: Omit<CashClosing, 'id' | 'date'>) => void;
+  getLastClosingDate: () => Date | null;
   clearWifiSales: () => void;
   clearCashTransactions: () => void;
   clearInvoices: () => void;
@@ -339,42 +341,47 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setInvoices(prev => [newInvoice, ...prev]);
     logAction('CREATE_INVOICE', `Création de la facture ${newId} pour ${invoiceData.clientName} d'un montant de ${invoiceData.total}F.`);
 
-    // Create a single cash transaction for the whole invoice
-    const saleResult = addSale({
-        invoiceId: newId,
-        client: invoiceData.clientName,
-        product: `Facture ${newId}`,
-        price: invoiceData.total,
-        quantity: 1,
-        amount: invoiceData.total,
-        itemType: 'Facture'
-    });
-    
-    // Update inventory for each item
-    // This part is now handled by addSale, but we need to check the result
-    invoiceData.items.forEach(item => {
-        if (item.inventoryId && item.quantity) {
-             const salePayload = {
-                inventoryId: item.inventoryId,
-                quantity: item.quantity,
-                amount: item.total,
-                price: item.price,
-                product: item.productName,
-                client: invoiceData.clientName,
-                itemType: 'Facture Item', // A different item type for granular tracking if needed
-             };
-             // The inventory update is done via this call.
-             // We can check the result if needed.
-             addSale(salePayload);
-        }
-    });
+    const saleTransaction: Sale = {
+      id: `SALE-INV-${newId}`,
+      type: 'sale',
+      date: invoiceData.date,
+      category: 'Vente Facture',
+      description: `Vente sur Facture ${newId}`,
+      amount: invoiceData.total,
+      client: invoiceData.clientName,
+      product: `Facture ${newId}`,
+      invoiceId: newId,
+    }
+    setTransactions(prev => [saleTransaction, ...prev]);
 
     return newId;
-  }, [setInvoices, addSale, inventory, logAction]);
+  }, [setInvoices, logAction, setTransactions]);
   
   const getInvoice = useCallback((id: string) => {
     return invoices.find(invoice => invoice.id === id);
   }, [invoices]);
+  
+  const removeInvoice = useCallback((invoiceId: string) => {
+    const invoiceToRemove = invoices.find(inv => inv.id === invoiceId);
+    if (!invoiceToRemove) return;
+
+    logAction('DELETE_INVOICE', `Suppression de la facture ${invoiceId}.`);
+    setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+    setTransactions(prev => prev.filter(t => (t as Sale).invoiceId !== invoiceId));
+
+    invoiceToRemove.items.forEach(item => {
+      if (item.inventoryId && item.quantity) {
+        const inventoryItem = inventory.find(i => i.id === item.inventoryId);
+        if (inventoryItem) {
+          updateInventoryItem(item.inventoryId, 
+            { inStock: inventoryItem.inStock + item.quantity },
+            `Annulation Vente Facture ${invoiceId}`
+          );
+        }
+      }
+    });
+
+  }, [invoices, inventory, setInvoices, setTransactions, logAction, updateInventoryItem]);
 
   const addCashClosing = useCallback((closing: Omit<CashClosing, 'id' | 'date'>) => {
     const newClosing: CashClosing = {
@@ -392,6 +399,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       });
     }
   }, [addAdjustment, setCashClosings, logAction]);
+  
+  const getLastClosingDate = useCallback(() => {
+    if (cashClosings.length === 0) return null;
+    const sorted = [...cashClosings].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return new Date(sorted[0].date);
+  }, [cashClosings]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
     let allCashTransactions: Transaction[] = [];
@@ -484,7 +497,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 amount = sale.amount;
                 affectsCash = true;
                 if (sale.itemType === 'Ticket Wifi') type = 'Vente Wifi';
-                if (sale.itemType === 'Facture') {
+                if (sale.invoiceId) {
                     type = 'Facture';
                     link = `/invoices/${sale.invoiceId}`;
                 }
@@ -609,10 +622,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     addBulkAdjustments,
     addInvoice,
     getInvoice,
+    removeInvoice,
     getAllTransactions,
     getDailyHistory,
     getAllHistory,
     addCashClosing,
+    getLastClosingDate,
     clearWifiSales,
     clearCashTransactions,
     clearInvoices,
@@ -620,8 +635,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }), [
       transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, cashClosings, setCashClosings, 
       expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
-      addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, getAllTransactions, getDailyHistory, getAllHistory,
-      addCashClosing, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
+      addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, removeInvoice, getAllTransactions, getDailyHistory, getAllHistory,
+      addCashClosing, getLastClosingDate, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
       airtimeTransactions, mobileMoneyTransactions
     ]);
 

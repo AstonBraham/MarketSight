@@ -5,7 +5,7 @@
 import type { MobileMoneyTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal, CheckCircle, Edit } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, Repeat, ShoppingCart, Send, Undo2, HandCoins, SlidersHorizontal, CheckCircle, Edit, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -20,11 +20,20 @@ import { useMobileMoney } from '@/context/mobile-money-context';
 import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { EditMobileMoneyTransactionDialog } from './edit-mobile-money-transaction-dialog';
+import { useUser } from '@/context/user-context';
+import { useTransactions } from '@/context/transaction-context';
 
 
 function ActionsCell({ row }: { row: { original: MobileMoneyTransaction }}) {
     const { removeTransaction } = useMobileMoney();
     const transaction = row.original;
+    const { user } = useUser();
+    const { getLastClosingDate } = useTransactions();
+    const lastClosingDate = getLastClosingDate();
+
+    const isLocked = lastClosingDate && new Date(transaction.date) <= lastClosingDate;
+    const isUser = user?.role === 'user';
+    const canEdit = !isUser || (isUser && !isLocked);
 
     return (
       <DropdownMenu>
@@ -39,12 +48,21 @@ function ActionsCell({ row }: { row: { original: MobileMoneyTransaction }}) {
           <DropdownMenuItem disabled>
             Voir les détails
           </DropdownMenuItem>
-          <EditMobileMoneyTransactionDialog transaction={transaction} />
-          <DropdownMenuSeparator />
-          <DeleteTransactionDialog 
-            transactionId={transaction.id} 
-            onDelete={() => removeTransaction(transaction.id)} 
-          />
+          {canEdit ? (
+            <>
+              <EditMobileMoneyTransactionDialog transaction={transaction} />
+              <DropdownMenuSeparator />
+              <DeleteTransactionDialog 
+                transactionId={transaction.id} 
+                onDelete={() => removeTransaction(transaction.id)} 
+              />
+            </>
+          ) : (
+             <DropdownMenuItem disabled>
+              <Lock className="mr-2 h-4 w-4" />
+              Verrouillé
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     );

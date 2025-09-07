@@ -4,7 +4,7 @@
 import type { AirtimeTransaction } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2, CheckCircle, HandCoins } from 'lucide-react';
+import { MoreHorizontal, ArrowUp, ArrowDown, SlidersHorizontal, Trash2, CheckCircle, HandCoins, Edit, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,11 +19,21 @@ import { DeleteTransactionDialog } from '../delete-transaction-dialog';
 import { useAirtime } from '@/context/airtime-context';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { EditAirtimeTransactionDialog } from './edit-airtime-transaction-dialog';
+import { useUser } from '@/context/user-context';
+import { useTransactions } from '@/context/transaction-context';
 
 
 function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
     const { removeTransaction } = useAirtime();
     const transaction = row.original;
+    const { user } = useUser();
+    const { getLastClosingDate } = useTransactions();
+    const lastClosingDate = getLastClosingDate();
+    
+    const isLocked = lastClosingDate && new Date(transaction.date) <= lastClosingDate;
+    const isUser = user?.role === 'user';
+
+    const canEdit = !isUser || (isUser && !isLocked);
 
     return (
       <DropdownMenu>
@@ -38,12 +48,21 @@ function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
           <DropdownMenuItem disabled>
             Voir les détails
           </DropdownMenuItem>
-          <EditAirtimeTransactionDialog transaction={transaction} />
-          <DropdownMenuSeparator />
-          <DeleteTransactionDialog 
-            transactionId={transaction.id} 
-            onDelete={() => removeTransaction(transaction.id)} 
-          />
+          {canEdit ? (
+            <>
+              <EditAirtimeTransactionDialog transaction={transaction} />
+              <DropdownMenuSeparator />
+              <DeleteTransactionDialog 
+                transactionId={transaction.id} 
+                onDelete={() => removeTransaction(transaction.id)} 
+              />
+            </>
+          ) : (
+            <DropdownMenuItem disabled>
+              <Lock className="mr-2 h-4 w-4" />
+              Verrouillé
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     );
