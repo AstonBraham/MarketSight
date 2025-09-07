@@ -38,7 +38,8 @@ import {
   BarChart2,
   ListChecks,
   Download,
-  ClipboardList
+  ClipboardList,
+  LifeBuoy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -78,6 +79,7 @@ const allMenuItems = [
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
+  { href: '/help', label: 'Aide / Manuel', icon: LifeBuoy, roles: ['admin', 'user'] },
 ];
 
 export function AppSidebar() {
