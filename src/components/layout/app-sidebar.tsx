@@ -39,7 +39,8 @@ import {
   ListChecks,
   Download,
   ClipboardList,
-  LifeBuoy
+  LifeBuoy,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -56,6 +57,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
+  { href: '/daily-report', label: 'Rapport Journalier', icon: FileText, roles: ['admin', 'user'] },
   { href: '/client-analysis', label: 'Analyse Clients', icon: LineChart, roles: ['admin'] },
   { href: '/sales-analysis', label: 'Analyse des Ventes', icon: BarChart2, roles: ['admin', 'user'] },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
