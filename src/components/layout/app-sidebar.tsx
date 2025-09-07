@@ -76,11 +76,19 @@ const allMenuItems = [
       { href: '/cash-closing', label: 'Arrêtés de caisse', roles: ['admin'] },
     ]
   },
-  { href: '/airtime-moov', label: 'Airtime Moov', icon: Smartphone, roles: ['admin', 'user'] },
-  { href: '/airtime-yas', label: 'Airtime Yas', icon: Smartphone, roles: ['admin', 'user'] },
-  { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', icon: Send, roles: ['admin', 'user'] },
-  { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin', 'user'] },
-  { href: '/mobile-money-cauris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
+  { 
+    label: 'Airtime', icon: Smartphone, roles: ['admin', 'user'], subItems: [
+      { href: '/airtime-moov', label: 'Airtime Moov', roles: ['admin', 'user'] },
+      { href: '/airtime-yas', label: 'Airtime Yas', roles: ['admin', 'user'] },
+    ]
+  },
+  { 
+    label: 'Mobile Money', icon: Send, roles: ['admin', 'user'], subItems: [
+      { href: '/mobile-money-flooz', label: 'Mobile Money Flooz', roles: ['admin', 'user'] },
+      { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', roles: ['admin', 'user'] },
+      { href: '/mobile-money-cauris', label: 'Mobile Money Coris', roles: ['admin', 'user'] },
+    ]
+  },
   { href: '/history', label: 'Historique du jour', icon: History, roles: ['admin', 'user'] },
   { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin'] },
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
