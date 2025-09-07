@@ -55,7 +55,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
-  { href: '/client-analysis', label: 'Analyse Clients', icon: LineChart, roles: ['admin', 'user'] },
+  { href: '/client-analysis', label: 'Analyse Clients', icon: LineChart, roles: ['admin'] },
   { href: '/sales-analysis', label: 'Analyse des Ventes', icon: BarChart2, roles: ['admin', 'user'] },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
@@ -74,7 +74,7 @@ const allMenuItems = [
   { href: '/mobile-money-mixx', label: 'Mobile Money Mixx', icon: Send, roles: ['admin', 'user'] },
   { href: '/mobile-money-coris', label: 'Mobile Money Coris', icon: Send, roles: ['admin', 'user'] },
   { href: '/history', label: 'Historique du jour', icon: History, roles: ['admin', 'user'] },
-  { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin', 'user'] },
+  { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin'] },
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
