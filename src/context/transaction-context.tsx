@@ -59,10 +59,29 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const { inventory, updateItem: updateInventoryItem, stockMovements } = useInventory();
 
   useEffect(() => {
+    // This is a one-time data migration script to fix categories.
+    const descriptionsToFix = [
+        "Marge sur achat credit Togocel", "Marge sur achat credit Moov", "Entrée de caisse",
+        "Entrée de caisse Patron", "Encaissement", "Achat de boissons pour la boutique pour 34000",
+        "Achat de boissons pour la boutique pour 37350", "Complément pour achat de boissons",
+        "Entrée de caisse pour achat de lubrifiants", "Remboursement JP", "Du Patron",
+        "ENtrée en caisse du patron", "ADJ-BULK-1757154365827-107"
+    ];
+
     setTransactions(prev => {
-        const transactionToUpdate = prev.find(t => t.id === 'ADJ-BULK-1757154365827-107');
-        if (transactionToUpdate && transactionToUpdate.category !== 'Encaissement') {
-            return prev.map(t => t.id === 'ADJ-BULK-1757154365827-107' ? { ...t, category: 'Encaissement' } : t);
+        let hasChanged = false;
+        const updatedTransactions = prev.map(t => {
+            const descriptionMatches = descriptionsToFix.some(desc => t.description === desc || t.id === desc);
+            
+            if (t.type === 'adjustment' && descriptionMatches && t.category !== 'Encaissement') {
+                hasChanged = true;
+                return { ...t, category: 'Encaissement' };
+            }
+            return t;
+        });
+
+        if (hasChanged) {
+            return updatedTransactions;
         }
         return prev;
     });
