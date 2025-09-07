@@ -96,21 +96,12 @@ export function AddSaleDialog() {
         });
         return;
     }
-    
-    if (quantity > selectedItem.inStock) {
-         toast({
-            title: "Stock insuffisant",
-            description: `Le stock pour ${selectedItem.productName} est de ${selectedItem.inStock}.`,
-            variant: "destructive"
-        });
-        return;
-    }
 
     const formData = new FormData(e.currentTarget as HTMLFormElement);
     const saleData = Object.fromEntries(formData.entries());
     const amount = price * quantity;
 
-    addSale({
+    const saleResult = addSale({
       client: saleData.client as string,
       product: selectedItem.productName,
       reference: selectedItem.reference,
@@ -121,17 +112,25 @@ export function AddSaleDialog() {
       inventoryId: selectedItem.id,
     });
     
-    toast({
-      title: 'Vente Ajoutée',
-      description: 'La nouvelle vente a été enregistrée avec succès.',
-    });
+    if (saleResult.success) {
+        toast({
+          title: 'Vente Ajoutée',
+          description: 'La nouvelle vente a été enregistrée avec succès.',
+        });
 
-    // Reset form and close
-    setSelectedItemId(null);
-    setQuantity(1);
-    setPrice(0);
-    setCategoryFilter('all');
-    setOpen(false);
+        // Reset form and close
+        setSelectedItemId(null);
+        setQuantity(1);
+        setPrice(0);
+        setCategoryFilter('all');
+        setOpen(false);
+    } else {
+        toast({
+            title: 'Échec de la vente',
+            description: saleResult.message,
+            variant: 'destructive',
+        });
+    }
   };
 
   return (
@@ -220,7 +219,7 @@ export function AddSaleDialog() {
                         <Label htmlFor="quantity" className="text-right">
                             Quantité
                         </Label>
-                        <Input id="quantity" name="quantity" type="number" className="col-span-3" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10))} min="1" max={selectedItem.inStock} required/>
+                        <Input id="quantity" name="quantity" type="number" className="col-span-3" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10))} min="1" required/>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="client" className="text-right">

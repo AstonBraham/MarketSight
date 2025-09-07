@@ -28,8 +28,8 @@ interface InvoiceItem extends InventoryItem {
 }
 
 export default function NewInvoicePage() {
-    const { inventory, updateItem } = useInventory();
-    const { addInvoice } = useTransactions();
+    const { inventory } = useInventory();
+    const { addInvoice, addSale } = useTransactions();
     const { toast } = useToast();
     const router = useRouter();
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
@@ -80,15 +80,26 @@ export default function NewInvoicePage() {
             return;
         }
 
-        // Basic validation
-        for(const item of invoiceItems) {
-            if (item.quantity <= 0 || item.price < 0) {
-                toast({ title: 'Données invalides', description: `Veuillez vérifier la quantité et le prix pour ${item.productName}.`, variant: 'destructive'});
-                return;
-            }
-            if (item.quantity > item.inStock) {
-                toast({ title: 'Stock insuffisant', description: `Le stock pour ${item.productName} est de ${item.inStock}.`, variant: 'destructive'});
-                return;
+        // Check stock for all items before proceeding
+        for (const item of invoiceItems) {
+            const saleResult = addSale({
+                client: clientName || 'Client Facturé',
+                product: item.productName,
+                reference: item.reference,
+                itemType: item.category,
+                price: item.price,
+                quantity: item.quantity,
+                amount: item.total,
+                inventoryId: item.id,
+            });
+
+            if (!saleResult.success) {
+                toast({
+                    title: 'Erreur de Stock',
+                    description: saleResult.message,
+                    variant: 'destructive'
+                });
+                return; // Stop the invoice creation process
             }
         }
         
@@ -199,7 +210,7 @@ export default function NewInvoicePage() {
                                             <TableRow key={item.id}>
                                                 <TableCell className="font-medium">{item.productName}</TableCell>
                                                 <TableCell>
-                                                    <Input type="number" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', parseInt(e.target.value))} min="1" max={item.inStock} className="h-8 w-20"/>
+                                                    <Input type="number" value={item.quantity} onChange={(e) => handleItemChange(item.id, 'quantity', parseInt(e.target.value))} min="1" className="h-8 w-20"/>
                                                 </TableCell>
                                                 <TableCell>
                                                      <Input type="number" value={item.price} onChange={(e) => handleItemChange(item.id, 'price', parseFloat(e.target.value))} min="0" className="h-8 w-24"/>

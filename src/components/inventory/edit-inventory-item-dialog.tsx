@@ -18,11 +18,13 @@ import { Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 export function EditInventoryItemDialog({ item, isIcon = true }: { item: InventoryItem, isIcon?: boolean }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { updateItem } = useInventory();
+  const { inventory, updateItem } = useInventory();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,14 +32,18 @@ export function EditInventoryItemDialog({ item, isIcon = true }: { item: Invento
     const updatedData = Object.fromEntries(formData.entries());
     
     // Convert string numbers to actual numbers
-    const numericFields = ['inStock', 'inTransit', 'reorderLevel', 'defaultPrice'];
+    const numericFields = ['inStock', 'inTransit', 'reorderLevel', 'defaultPrice', 'unitsPerParent'];
     numericFields.forEach(field => {
       if (updatedData[field]) {
         updatedData[field] = parseFloat(updatedData[field] as string);
       }
     });
+
+     if (updatedData.parentItemId === 'none') {
+        updatedData.parentItemId = undefined;
+    }
     
-    updateItem(item.id, updatedData);
+    updateItem(item.id, updatedData as Partial<InventoryItem>);
     
     toast({
       title: 'Article Modifié',
@@ -45,6 +51,9 @@ export function EditInventoryItemDialog({ item, isIcon = true }: { item: Invento
     });
     setOpen(false);
   };
+  
+  // Filter out the current item from the list of potential parents
+  const potentialParents = inventory.filter(p => p.id !== item.id && !p.parentItemId);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -102,6 +111,29 @@ export function EditInventoryItemDialog({ item, isIcon = true }: { item: Invento
               <Label htmlFor="defaultPrice" className="text-right">Prix de vente</Label>
               <Input id="defaultPrice" name="defaultPrice" type="number" defaultValue={item.defaultPrice} className="col-span-3" placeholder="0" />
             </div>
+
+            <div className="my-2 border-t pt-4 space-y-4">
+                <h4 className="font-medium text-sm">Gestion des Packs</h4>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="parentItemId" className="text-right">Article Parent (Pack)</Label>
+                    <Select name="parentItemId" defaultValue={item.parentItemId || 'none'}>
+                        <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Sélectionner un article parent" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Aucun</SelectItem>
+                            {potentialParents.map(p => (
+                                <SelectItem key={p.id} value={p.id}>{p.productName}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="unitsPerParent" className="text-right">Unités par Parent</Label>
+                    <Input id="unitsPerParent" name="unitsPerParent" type="number" defaultValue={item.unitsPerParent} className="col-span-3" placeholder="Ex: 12" />
+                </div>
+            </div>
+
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>

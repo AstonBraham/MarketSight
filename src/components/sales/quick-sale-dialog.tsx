@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
-import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 
 
@@ -40,17 +39,8 @@ export function QuickSaleDialog({ item, children }: { item: InventoryItem, child
         });
         return;
     }
-    
-    if (quantity > item.inStock) {
-         toast({
-            title: "Stock insuffisant",
-            description: `Le stock pour ${item.productName} est de ${item.inStock}. Vous ne pouvez pas en vendre ${quantity}.`,
-            variant: "destructive"
-        });
-        return;
-    }
 
-    addSale({
+    const saleResult = addSale({
       client: 'Client Rapide',
       product: item.productName,
       reference: item.reference,
@@ -61,13 +51,21 @@ export function QuickSaleDialog({ item, children }: { item: InventoryItem, child
       inventoryId: item.id,
     });
     
-    toast({
-      title: 'Vente Rapide Réussie',
-      description: `${quantity} x ${item.productName} vendu(s) pour ${new Intl.NumberFormat('fr-FR').format(total)} F.`,
-    });
+    if (saleResult.success) {
+        toast({
+          title: 'Vente Rapide Réussie',
+          description: `${quantity} x ${item.productName} vendu(s) pour ${new Intl.NumberFormat('fr-FR').format(total)} F.`,
+        });
 
-    setQuantity(1);
-    setOpen(false);
+        setQuantity(1);
+        setOpen(false);
+    } else {
+        toast({
+            title: "Échec de la vente",
+            description: saleResult.message,
+            variant: "destructive"
+        });
+    }
   };
 
   return (
@@ -103,7 +101,6 @@ export function QuickSaleDialog({ item, children }: { item: InventoryItem, child
                 value={quantity} 
                 onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)} 
                 min="1" 
-                max={item.inStock} 
                 required
               />
           </div>

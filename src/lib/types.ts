@@ -62,6 +62,9 @@ export type InventoryItem = {
   defaultPrice?: number;
   isQuickSale?: boolean;
   costPrice?: number;
+  // New fields for pack management
+  parentItemId?: string; 
+  unitsPerParent?: number;
 };
 
 export type StockMovement = {

@@ -3,7 +3,7 @@
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
-import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction, HistoryTransaction, StockMovement } from '@/lib/types';
+import type { Sale, Purchase, Expense, Transaction, Invoice, InvoiceItem, CashClosing, AirtimeTransaction, MobileMoneyTransaction, HistoryTransaction, StockMovement, InventoryItem } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { startOfDay, endOfDay, isEqual } from 'date-fns';
 import { useAirtime } from './airtime-context';
@@ -23,7 +23,7 @@ interface TransactionContextType {
   cashClosings: CashClosing[];
   setCashClosings: (cashClosings: CashClosing[]) => void;
   expenseCategories: string[];
-  addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => void;
+  addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => { success: boolean; message: string };
   addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   payPurchase: (purchaseId: string) => void;
@@ -98,10 +98,36 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     logAction('CREATE_CATEGORY', `Création d'une nouvelle catégorie de dépense : ${category}.`);
   }, [logAction]);
 
-  const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>) => {
-    const item = inventory.find(i => i.id === sale.inventoryId);
-    const costPrice = item?.costPrice || 0;
-    const margin = sale.amount - (costPrice * (sale.quantity || 1));
+  const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>): { success: boolean; message: string } => {
+    let item = inventory.find(i => i.id === sale.inventoryId);
+    if (!item) {
+        return { success: false, message: "Article non trouvé dans l'inventaire." };
+    }
+    let quantityToSell = sale.quantity || 0;
+
+    // Check stock and try to break a pack if needed
+    if (quantityToSell > item.inStock) {
+        if (item.parentItemId && item.unitsPerParent) {
+            const parentItem = inventory.find(p => p.id === item.parentItemId);
+            if (parentItem && parentItem.inStock > 0) {
+                // Break a pack
+                updateInventoryItem(parentItem.id, { inStock: parentItem.inStock - 1 }, `Casse pour vente de ${item.productName}`);
+                updateInventoryItem(item.id, { inStock: item.inStock + item.unitsPerParent }, `Casse de ${parentItem.productName}`);
+                // Refresh item state after breaking the pack
+                item = { ...item, inStock: item.inStock + item.unitsPerParent };
+                logAction('BREAK_PACK', `Casse automatique de 1 pack de "${parentItem.productName}" pour vendre ${quantityToSell} unités de "${item.productName}".`);
+            }
+        }
+    }
+    
+    // Final stock check after potential pack breaking
+    if (quantityToSell > item.inStock) {
+        const message = `Stock insuffisant pour ${item.productName}. Stock disponible : ${item.inStock}, demandé : ${quantityToSell}.`;
+        return { success: false, message };
+    }
+
+    const costPrice = item.costPrice || 0;
+    const margin = sale.amount - (costPrice * quantityToSell);
 
     const newSale: Sale = {
       ...sale,
@@ -116,16 +142,15 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     logAction('CREATE_SALE', `Vente de "${sale.product}" pour ${sale.amount}F.`);
 
     if (newSale.inventoryId && newSale.quantity) {
-        if (item) {
-            updateInventoryItem(
-                item.id, 
-                { inStock: item.inStock - newSale.quantity }, 
-                `Vente (Client: ${newSale.client})`,
-                newSale.id
-            );
-        }
+        updateInventoryItem(
+            item.id, 
+            { inStock: item.inStock - newSale.quantity }, 
+            `Vente (Client: ${newSale.client})`,
+            newSale.id
+        );
     }
-  }, [setTransactions, inventory, updateInventoryItem, logAction]);
+    return { success: true, message: "Vente enregistrée avec succès." };
+  }, [inventory, updateInventoryItem, logAction, setTransactions]);
 
   const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
     const newSales: Sale[] = sales.map((sale, index) => {
@@ -315,7 +340,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     logAction('CREATE_INVOICE', `Création de la facture ${newId} pour ${invoiceData.clientName} d'un montant de ${invoiceData.total}F.`);
 
     // Create a single cash transaction for the whole invoice
-    addSale({
+    const saleResult = addSale({
         invoiceId: newId,
         client: invoiceData.clientName,
         product: `Facture ${newId}`,
@@ -326,22 +351,26 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     });
     
     // Update inventory for each item
+    // This part is now handled by addSale, but we need to check the result
     invoiceData.items.forEach(item => {
         if (item.inventoryId && item.quantity) {
-            const inventoryItem = inventory.find(i => i.id === item.inventoryId);
-            if (inventoryItem) {
-                updateInventoryItem(
-                    inventoryItem.id,
-                    { inStock: inventoryItem.inStock - item.quantity },
-                    `Vente sur Facture ${newId}`,
-                    newId
-                );
-            }
+             const salePayload = {
+                inventoryId: item.inventoryId,
+                quantity: item.quantity,
+                amount: item.total,
+                price: item.price,
+                product: item.productName,
+                client: invoiceData.clientName,
+                itemType: 'Facture Item', // A different item type for granular tracking if needed
+             };
+             // The inventory update is done via this call.
+             // We can check the result if needed.
+             addSale(salePayload);
         }
     });
 
     return newId;
-  }, [setInvoices, addSale, inventory, updateInventoryItem, logAction]);
+  }, [setInvoices, addSale, inventory, logAction]);
   
   const getInvoice = useCallback((id: string) => {
     return invoices.find(invoice => invoice.id === id);
