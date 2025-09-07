@@ -59,7 +59,7 @@ export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionD
         amount: amount,
         commission: data.commission ? parseFloat(data.commission as string) : 0,
         phoneNumber: data.phoneNumber as string,
-        transactionId: data.transactionId as string
+        transactionId: (data.transactionId as string) || ''
     });
 
     toast({
@@ -112,10 +112,12 @@ export function AddAirtimeTransactionDialog({ provider }: AddAirtimeTransactionD
               <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
               <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" />
             </div>
+            {/* 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
               <Input id="transactionId" name="transactionId" onChange={handleNumericInput} className="col-span-3" placeholder="Référence de la transaction" />
             </div>
+             */}
           </div>
           <DialogFooter>
             <Button type="submit">Enregistrer</Button>
