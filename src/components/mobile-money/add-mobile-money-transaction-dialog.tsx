@@ -56,8 +56,23 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     let calculatedCommission = 0;
     let manual = false;
 
-    // Commission logic for withdrawal
-    if (type === 'withdrawal') {
+    if (provider === 'Mixx' && type === 'deposit') {
+        if (amount <= 499) calculatedCommission = 0;
+        else if (amount <= 5000) calculatedCommission = 14;
+        else if (amount <= 15000) calculatedCommission = 36;
+        else if (amount <= 20000) calculatedCommission = 73;
+        else if (amount <= 50000) calculatedCommission = 73;
+        else if (amount <= 100000) calculatedCommission = 146;
+        else if (amount <= 200000) calculatedCommission = 219;
+        else {
+          manual = true;
+          toast({
+                title: "Commission manuelle requise",
+                description: "Le montant dépasse le barème automatique. Veuillez renseigner la commission.",
+                variant: "default"
+          });
+        }
+    } else if (type === 'withdrawal') {
         if (amount <= 20000) calculatedCommission = 0; // Example, adjust as needed
         else { 
             manual = true;
