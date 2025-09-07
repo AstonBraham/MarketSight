@@ -258,7 +258,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       id: `ADJ${Date.now()}`,
       type: 'adjustment',
       date: adjustment.date || new Date().toISOString(),
-      category: adjustment.category || 'Encaissement'
+      category: adjustment.category || 'Ajustement'
     };
     logAction('CREATE_ADJUSTMENT', `Ajout d'un ajustement de caisse: "${adjustment.description}" pour ${adjustment.amount}F.`);
     setTransactions(prev => [newAdjustment, ...prev]);
