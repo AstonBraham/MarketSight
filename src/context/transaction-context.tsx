@@ -58,6 +58,16 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
   const { inventory, updateItem: updateInventoryItem, stockMovements } = useInventory();
 
+  useEffect(() => {
+    setTransactions(prev => {
+        const transactionToUpdate = prev.find(t => t.id === 'ADJ-BULK-1757154365827-107');
+        if (transactionToUpdate && transactionToUpdate.category !== 'Encaissement') {
+            return prev.map(t => t.id === 'ADJ-BULK-1757154365827-107' ? { ...t, category: 'Encaissement' } : t);
+        }
+        return prev;
+    });
+  }, [setTransactions]);
+
   const expenseCategories = useMemo(() => {
     const categories = transactions
       .filter(t => t.type === 'expense' && t.category)
