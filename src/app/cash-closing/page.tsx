@@ -11,11 +11,14 @@ import { columns } from '@/components/cash-closing/columns';
 import { DataTable } from '@/components/data-table/data-table';
 import { useMemo, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
+import { useUser } from '@/context/user-context';
 
 
 export default function CashClosingPage() {
     const { getAllTransactions, cashClosings } = useTransactions();
     const [isClient, setIsClient] = useState(false);
+    const { user } = useUser();
+    const isAdmin = user?.role === 'admin';
 
     useEffect(() => {
         setIsClient(true);
@@ -49,7 +52,7 @@ export default function CashClosingPage() {
         <div className="flex flex-col gap-8 p-4 md:p-8">
             <PageHeader 
                 title="Arrêtés de Caisse" 
-                action={<NewCashClosingDialog currentTheoreticalBalance={currentBalance} />} 
+                action={isAdmin ? <NewCashClosingDialog currentTheoreticalBalance={currentBalance} /> : undefined} 
             />
 
             <Card>

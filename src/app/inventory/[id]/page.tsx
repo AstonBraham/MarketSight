@@ -13,6 +13,8 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useUser } from '@/context/user-context';
+import { EditInventoryItemDialog } from '@/components/inventory/edit-inventory-item-dialog';
 
 const columns: ColumnDef<StockMovement>[] = [
     {
@@ -66,6 +68,8 @@ export default function InventoryItemDetailsPage() {
     const params = useParams();
     const router = useRouter();
     const { getInventoryItem, getInventoryMovements } = useInventory();
+    const { user } = useUser();
+    const isAdmin = user?.role === 'admin';
     const id = params.id as string;
     
     const item = getInventoryItem(id);
@@ -96,6 +100,7 @@ export default function InventoryItemDetailsPage() {
                         <Button variant="outline" onClick={() => router.push('/inventory')}>
                             <ArrowLeft className="mr-2 h-4 w-4" /> Retour à l'inventaire
                         </Button>
+                        {isAdmin && <EditInventoryItemDialog item={item} isIcon={false} />}
                     </div>
                 } 
             />

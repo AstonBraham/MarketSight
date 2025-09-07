@@ -88,7 +88,7 @@ export default function InventoryPage() {
         <div className="flex items-center">
             <TabsList>
                 <TabsTrigger value="inventory">État des Stocks</TabsTrigger>
-                <TabsTrigger value="movements">Mouvements de Stock</TabsTrigger>
+                {isAdmin && <TabsTrigger value="movements">Mouvements de Stock</TabsTrigger>}
             </TabsList>
             {isAdmin && (
               <div className="ml-auto flex items-center gap-2">

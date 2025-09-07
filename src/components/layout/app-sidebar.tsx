@@ -60,7 +60,7 @@ const allMenuItems = [
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
-  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin'] },
+  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] }, // User can see, but actions are restricted inside
   { 
     label: 'Trésorerie', icon: Wallet, roles: ['admin'], subItems: [
       { href: '/cash', label: 'Mouvements de caisse' },

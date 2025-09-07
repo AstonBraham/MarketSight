@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { InventoryItem } from '@/lib/types';
 import { useInventory } from '@/context/inventory-context';
 
-export function EditInventoryItemDialog({ item }: { item: InventoryItem }) {
+export function EditInventoryItemDialog({ item, isIcon = true }: { item: InventoryItem, isIcon?: boolean }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { updateItem } = useInventory();
@@ -49,10 +49,17 @@ export function EditInventoryItemDialog({ item }: { item: InventoryItem }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-            <Edit className="h-4 w-4" />
-            <span className="sr-only">Modifier</span>
-        </Button>
+        {isIcon ? (
+             <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Edit className="h-4 w-4" />
+                <span className="sr-only">Modifier</span>
+            </Button>
+        ) : (
+            <Button variant="outline">
+                <Edit className="mr-2 h-4 w-4" />
+                Modifier l'Article
+            </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>

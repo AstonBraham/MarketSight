@@ -55,6 +55,12 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: 'Produit',
     cell: ({ row }) => {
         const item = row.original;
+        const { user } = useUser();
+        
+        if(user?.role !== 'admin') {
+            return <span className="font-medium">{item.productName}</span>
+        }
+
         return (
             <Link href={`/inventory/${item.id}`} className="hover:underline font-medium">
                 {item.productName}
