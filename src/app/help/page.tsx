@@ -23,7 +23,7 @@ export default function HelpPage() {
                                 <p>L'application propose deux rôles avec des permissions différentes :</p>
                                 <ul className="list-disc space-y-2 pl-6">
                                     <li><strong>Admin :</strong> A accès à toutes les fonctionnalités, y compris la configuration, la suppression et la modification de toutes les données.</li>
-                                    <li><strong>User :</strong> A un accès limité aux opérations quotidiennes (ventes, dépenses) sans pouvoir modifier les données critiques.</li>
+                                    <li><strong>User :</strong> Peut effectuer les opérations quotidiennes (ventes, dépenses). La modification ou la suppression d'une opération n'est possible que si celle-ci a été effectuée avant le dernier arrêté de caisse. Une fois la journée clôturée, les transactions sont verrouillées.</li>
                                 </ul>
                                 <p>Pour basculer entre les rôles, cliquez sur votre nom en bas de la barre latérale et sélectionnez le profil souhaité. C'est un outil de simulation pour tester les permissions.</p>
                             </AccordionContent>
@@ -34,7 +34,7 @@ export default function HelpPage() {
                             <AccordionContent className="space-y-6 pl-4">
                                 <div>
                                     <h4 className="font-semibold mb-2">Ajouter un Nouvel Article</h4>
-                                    <p>Allez dans <strong>Inventaire</strong> et cliquez sur <strong>"Ajouter un article"</strong>. Un SKU (code article) unique est suggéré, mais vous pouvez le modifier. La référence et le SKU doivent être uniques.</p>
+                                    <p>Allez dans <strong>Inventaire</strong> et cliquez sur <strong>"Ajouter un article"</strong>. Un SKU (code article) unique est suggéré, mais vous pouvez le modifier. Le système vérifiera que la référence et le SKU sont uniques avant d'enregistrer.</p>
                                 </div>
                                 <div>
                                     <h4 className="font-semibold mb-2">Gestion des Packs (Lier Unités et Articles Parents)</h4>
@@ -97,12 +97,38 @@ export default function HelpPage() {
                                  <div>
                                     <h4 className="font-semibold mb-2">Arrêté de Caisse</h4>
                                     <p>Accessible via <strong>Trésorerie {'>'} Arrêtés de caisse</strong> (Admin seulement). Comparez le solde théorique calculé par le système avec le montant physique en caisse. En cas d'écart, une transaction d'ajustement est automatiquement créée.</p>
+                                    <p className="font-bold text-primary mt-2">Cette opération est obligatoire pour pouvoir générer le Rapport Journalier.</p>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                        
+                         <AccordionItem value="item-6">
+                            <AccordionTrigger>5. Rapports et Analyse</AccordionTrigger>
+                            <AccordionContent className="space-y-6 pl-4">
+                                <div>
+                                    <h4 className="font-semibold mb-2">Rapport Journalier</h4>
+                                    <p>Accessible depuis le menu latéral, cette page fournit une synthèse complète de l'activité de la journée. Elle est conçue pour être imprimée ou partagée.</p>
+                                    <p className="font-bold my-2">Attention : Le rapport n'est visible et ne peut être généré qu'une fois l'arrêté de caisse du jour effectué.</p>
+                                    <p>Le rapport inclut :</p>
+                                    <ul className="list-disc space-y-2 pl-6 mt-2">
+                                        <li>Les indicateurs financiers clés (Chiffre d'Affaires, Marge, Dépenses, Résultat).</li>
+                                        <li>La répartition du chiffre d'affaires par catégorie.</li>
+                                        <li>Un résumé des mouvements de trésorerie avec le solde réel et l'écart de caisse.</li>
+                                        <li>Les soldes finaux de tous vos portefeuilles virtuels (Airtime et Mobile Money).</li>
+                                        <li>Une section "Liste de Réapprovisionnement" avec les articles à commander, la quantité suggérée et le coût estimé total.</li>
+                                    </ul>
+                                    <p className="mt-2">Utilisez le bouton <strong>"Imprimer le Rapport"</strong> pour générer une version papier ou PDF.</p>
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold mb-2">Exports CSV</h4>
+                                    <p>La page <strong>Rapports</strong> vous permet d'exporter des données brutes (ventes, inventaire, etc.) au format CSV, compatible avec Excel pour des analyses plus poussées.</p>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
 
+
                         <AccordionItem value="item-5">
-                            <AccordionTrigger>5. Import / Export et Sauvegarde</AccordionTrigger>
+                            <AccordionTrigger>6. Import / Export et Sauvegarde</AccordionTrigger>
                             <AccordionContent className="space-y-4 pl-4">
                                 <p>La page <strong>Paramètres</strong> (Admin seulement) vous permet de gérer vos données :</p>
                                 <ul className="list-disc space-y-2 pl-6">
