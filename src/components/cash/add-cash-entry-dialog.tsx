@@ -57,7 +57,7 @@ export function AddCashEntryDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary"><PlusCircle className="mr-2 h-4 w-4" /> Ajouter un encaissement</Button>
+        <Button variant="secondary"><PlusCircle className="mr-2 h-4 w-4" /> Nouvel Encaissement</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>

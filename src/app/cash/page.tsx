@@ -6,14 +6,19 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns } from '@/components/cash/columns';
 import { CashflowChart } from '@/components/dashboard/cashflow-chart';
 import { useTransactions } from '@/context/transaction-context';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { Transaction } from '@/lib/types';
 import { AdjustCashBalanceDialog } from '@/components/cash/adjust-cash-balance-dialog';
 import { AddCashEntryDialog } from '@/components/cash/add-cash-entry-dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+type TransactionFilter = 'all' | 'sales' | 'purchases' | 'expenses' | 'receipts';
 
 export default function CashPage() {
   const { getAllTransactions } = useTransactions();
   const allTransactions = getAllTransactions();
+  const [filter, setFilter] = useState<TransactionFilter>('all');
   
   const processedTransactions = useMemo(() => {
     let balance = 0;
@@ -32,6 +37,25 @@ export default function CashPage() {
 
     return withBalance.reverse();
   }, [allTransactions]);
+
+  const filteredTransactions = useMemo(() => {
+    if (filter === 'all') {
+      return processedTransactions;
+    }
+    if (filter === 'sales') {
+      return processedTransactions.filter(t => t.type === 'sale');
+    }
+    if (filter === 'purchases') {
+      return processedTransactions.filter(t => t.type === 'purchase');
+    }
+    if (filter === 'expenses') {
+      return processedTransactions.filter(t => t.type === 'expense');
+    }
+    if (filter === 'receipts') {
+      return processedTransactions.filter(t => t.type === 'adjustment' && t.category === 'Encaissement' && t.amount > 0);
+    }
+    return processedTransactions;
+  }, [processedTransactions, filter]);
 
   const currentBalance = processedTransactions.length > 0 ? processedTransactions[0].balance : 0;
   
@@ -100,11 +124,30 @@ export default function CashPage() {
         </div>
         <Card>
             <CardHeader>
-                <CardTitle>Détail des Mouvements</CardTitle>
-                <CardDescription>Liste de toutes les transactions de caisse.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>Détail des Mouvements</CardTitle>
+                        <CardDescription>Liste de toutes les transactions de caisse.</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="filter" className="whitespace-nowrap">Filtrer par</Label>
+                        <Select value={filter} onValueChange={(value) => setFilter(value as TransactionFilter)}>
+                            <SelectTrigger id="filter" className="w-[180px]">
+                                <SelectValue placeholder="Type d'opération" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Toutes</SelectItem>
+                                <SelectItem value="sales">Ventes</SelectItem>
+                                <SelectItem value="purchases">Achats</SelectItem>
+                                <SelectItem value="expenses">Dépenses</SelectItem>
+                                <SelectItem value="receipts">Encaissements</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
-                <DataTable data={processedTransactions} columns={columns} />
+                <DataTable data={filteredTransactions} columns={columns} />
             </CardContent>
        </Card>
       </div>
