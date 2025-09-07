@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTransactions } from '@/context/transaction-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
+import { useInventory } from '@/context/inventory-context';
 import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,7 @@ export default function DailyReportPage() {
     }, []);
 
     const { sales, purchases, expenses, receipts, getAllTransactions } = useTransactions();
+    const { inventory } = useInventory();
     const { transactions: airtimeTransactions, getStock: getAirtimeStock } = useAirtime();
     const { transactions: mobileMoneyTransactions, getBalance: getMobileMoneyBalance } = useMobileMoney();
     
@@ -78,12 +80,27 @@ export default function DailyReportPage() {
         const cashIn = dailySales.reduce((acc, s) => acc + s.amount, 0) + dailyReceipts.reduce((acc, r) => acc + r.amount, 0);
         const cashOut = totalExpenses + dailyPurchases.reduce((acc, p) => acc + p.amount, 0);
         const cashBalanceEndOfDay = cashBalanceStartOfDay + cashIn - cashOut;
+        
+        const reorderList = inventory
+            .filter(item => item.inStock <= item.reorderLevel)
+            .map(item => ({
+                ...item,
+                cost: item.costPrice || 0,
+            }))
+            .filter(item => item.inStock < item.reorderLevel);
+
+        const reorderValue = reorderList.reduce((acc, item) => {
+            const qtyToOrder = item.reorderLevel - item.inStock > 0 ? item.reorderLevel - item.inStock : 0;
+            return acc + (qtyToOrder * item.cost);
+        }, 0);
 
         return {
             totalRevenue,
             totalMargin,
             totalExpenses,
             netResult: totalMargin - totalExpenses,
+            reorderList,
+            reorderValue,
             breakdown: {
                 'Ventes de Marchandises': merchandiseSales,
                 'Ventes Wifi': wifiSales,
@@ -110,7 +127,7 @@ export default function DailyReportPage() {
                 mmCoris: getMobileMoneyBalance('Coris'),
             }
         };
-    }, [isClient, sales, purchases, expenses, receipts, airtimeTransactions, mobileMoneyTransactions, getAllTransactions]);
+    }, [isClient, sales, purchases, expenses, receipts, airtimeTransactions, mobileMoneyTransactions, getAllTransactions, inventory]);
 
     if (!isClient) {
         return null; // or a loading skeleton
@@ -154,7 +171,7 @@ export default function DailyReportPage() {
                             <p className="text-xl font-bold text-destructive">{formatCurrency(dailyStats.totalExpenses)}</p>
                         </div>
                          <div className="p-4 bg-muted rounded-lg">
-                            <p className="text-sm text-muted-foreground">Résultat Net</p>
+                            <p className={cn("text-sm font-medium")}>Résultat Net</p>
                             <p className={cn("text-xl font-bold", dailyStats.netResult >= 0 ? "text-primary" : "text-destructive")}>{formatCurrency(dailyStats.netResult)}</p>
                         </div>
                     </div>
@@ -198,6 +215,42 @@ export default function DailyReportPage() {
                              </Section>
                         </div>
                     </div>
+                    
+                    {dailyStats.reorderList.length > 0 && (
+                        <Section title="Liste de Réapprovisionnement">
+                           <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Article</TableHead>
+                                        <TableHead className="text-center">Stock Actuel</TableHead>
+                                        <TableHead className="text-center">Qté à Commander</TableHead>
+                                        <TableHead className="text-right">Coût Estimé</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {dailyStats.reorderList.map(item => {
+                                        const qtyToOrder = item.reorderLevel - item.inStock > 0 ? item.reorderLevel - item.inStock : 0;
+                                        const estimatedCost = qtyToOrder * item.cost;
+                                        return (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="font-medium">{item.productName}</TableCell>
+                                                <TableCell className="text-center text-destructive font-bold">{item.inStock}</TableCell>
+                                                <TableCell className="text-center font-bold text-blue-600">{qtyToOrder}</TableCell>
+                                                <TableCell className="text-right font-mono">{formatCurrency(estimatedCost)}</TableCell>
+                                            </TableRow>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                            <Separator />
+                            <div className="flex justify-end pt-2">
+                                <div className="font-bold text-lg">
+                                    Valeur Totale de la Commande : <span className="font-mono text-primary">{formatCurrency(dailyStats.reorderValue)}</span>
+                                </div>
+                            </div>
+                        </Section>
+                    )}
+
                 </CardContent>
                  <style jsx global>{`
                     @media print {
