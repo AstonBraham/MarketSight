@@ -64,6 +64,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount <= 50000) calculatedCommission = 73;
         else if (amount <= 100000) calculatedCommission = 146;
         else if (amount <= 200000) calculatedCommission = 219;
+        else if (amount >= 500000) calculatedCommission = 256;
         else {
           manual = true;
           toast({
