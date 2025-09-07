@@ -16,11 +16,16 @@ import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
 import { AddPurchaseDialog } from '@/components/purchases/add-purchase-dialog';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
 import type { InventoryItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+type StockStatusFilter = 'all' | 'inStock' | 'lowStock' | 'outOfStock';
 
 
 export default function InventoryPage() {
@@ -29,6 +34,8 @@ export default function InventoryPage() {
   const { purchases, sales } = useTransactions();
   const isAdmin = user?.role === 'admin';
   const { toast } = useToast();
+  const [productFilter, setProductFilter] = useState('');
+  const [stockStatusFilter, setStockStatusFilter] = useState<StockStatusFilter>('all');
   
   const stockValue = useMemo(() => {
     return inventory.reduce((acc, item) => acc + (item.inStock * (item.costPrice || 0)), 0);
@@ -78,6 +85,18 @@ export default function InventoryPage() {
         description: 'Les niveaux de réapprovisionnement ont été mis à jour pour tous les articles en fonction de l\'historique des ventes.'
     })
   }
+
+  const filteredInventory = useMemo(() => {
+    return inventory
+      .filter(item => {
+        if (stockStatusFilter === 'all') return true;
+        if (stockStatusFilter === 'inStock') return item.inStock > 0;
+        if (stockStatusFilter === 'lowStock') return item.inStock > 0 && item.inStock <= item.reorderLevel;
+        if (stockStatusFilter === 'outOfStock') return item.inStock <= 0;
+        return true;
+      })
+      .filter(item => item.productName.toLowerCase().includes(productFilter.toLowerCase()));
+  }, [inventory, stockStatusFilter, productFilter]);
 
 
   return (
@@ -153,11 +172,41 @@ export default function InventoryPage() {
         <TabsContent value="inventory">
             <Card>
                 <CardHeader>
-                <CardTitle>État Actuel des Stocks</CardTitle>
-                <CardDescription>Consultez les quantités disponibles pour chaque produit.</CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>État Actuel des Stocks</CardTitle>
+                      <CardDescription>Consultez les quantités disponibles pour chaque produit.</CardDescription>
+                    </div>
+                     <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="stockStatusFilter" className="whitespace-nowrap">Situation</Label>
+                            <Select value={stockStatusFilter} onValueChange={(value) => setStockStatusFilter(value as StockStatusFilter)}>
+                                <SelectTrigger id="stockStatusFilter" className="w-[180px]">
+                                    <SelectValue placeholder="Filtrer par situation" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Tous les articles</SelectItem>
+                                    <SelectItem value="inStock">En stock</SelectItem>
+                                    <SelectItem value="lowStock">Stock bas</SelectItem>
+                                    <SelectItem value="outOfStock">En rupture</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="productFilter" className="whitespace-nowrap">Produit</Label>
+                             <Input 
+                                id="productFilter"
+                                placeholder="Filtrer par produit..."
+                                value={productFilter}
+                                onChange={(e) => setProductFilter(e.target.value)}
+                                className="w-[250px]"
+                            />
+                        </div>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                    <DataTable data={inventory} columns={inventoryColumns} filterColumn="productName" filterPlaceholder="Filtrer par produit..."/>
+                    <DataTable data={filteredInventory} columns={inventoryColumns} />
                 </CardContent>
             </Card>
         </TabsContent>

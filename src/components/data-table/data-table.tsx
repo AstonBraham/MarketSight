@@ -31,13 +31,15 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   filterColumn?: string;
   filterPlaceholder?: string;
+  hideToolbar?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   filterColumn,
-  filterPlaceholder
+  filterPlaceholder,
+  hideToolbar = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -66,8 +68,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <DataTablePagination table={table} />
-      <DataTableToolbar table={table} filterColumn={filterColumn} filterPlaceholder={filterPlaceholder} />
+      {!hideToolbar && <DataTableToolbar table={table} filterColumn={filterColumn} filterPlaceholder={filterPlaceholder} />}
       <div className="rounded-md border">
         <Table>
           <TableHeader>
