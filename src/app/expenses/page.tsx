@@ -13,6 +13,10 @@ import { Banknote } from 'lucide-react';
 export default function ExpensesPage() {
   const { expenses } = useTransactions();
   
+  const sortedExpenses = useMemo(() => {
+    return [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [expenses]);
+
   const totalExpenses = useMemo(() => {
     return expenses.reduce((acc, expense) => acc + expense.amount, 0);
   }, [expenses]);
@@ -44,7 +48,7 @@ export default function ExpensesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable data={expenses} columns={columns} filterColumn="description" filterPlaceholder="Filtrer par description..." />
+          <DataTable data={sortedExpenses} columns={columns} filterColumn="description" filterPlaceholder="Filtrer par description..." />
         </CardContent>
       </Card>
     </div>
