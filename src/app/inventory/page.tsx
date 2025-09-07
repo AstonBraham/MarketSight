@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DataTable } from '@/components/data-table/data-table';
 import { columns as inventoryColumns } from '@/components/inventory/columns-inventory';
 import { columns as movementsColumns } from '@/components/inventory/columns-movements';
+import { columns as reorderColumns } from '@/components/inventory/columns-reorder';
 import { mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, FileCheck2, Truck } from 'lucide-react';
@@ -18,11 +19,13 @@ import { AddPurchaseDialog } from '@/components/purchases/add-purchase-dialog';
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
+import type { InventoryItem } from '@/lib/types';
+
 
 export default function InventoryPage() {
   const { user } = useUser();
   const { inventory } = useInventory();
-  const { purchases } = useTransactions();
+  const { purchases, sales } = useTransactions();
   const isAdmin = user?.role === 'admin';
   
   const stockValue = useMemo(() => {
@@ -36,6 +39,35 @@ export default function InventoryPage() {
   const totalPurchases = useMemo(() => {
     return purchases.reduce((acc, purchase) => acc + purchase.amount, 0);
   }, [purchases]);
+  
+  const reorderList = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    return inventory
+        .filter(item => item.inStock <= item.reorderLevel)
+        .map(item => {
+            const recentSales = sales.filter(
+                s => s.inventoryId === item.id && new Date(s.date) >= thirtyDaysAgo
+            ).reduce((acc, s) => acc + (s.quantity || 0), 0);
+            
+            const averageDailySales = recentSales / 30;
+            // Target 15 days of stock
+            const targetStock = Math.ceil(averageDailySales * 15); 
+            let quantityToOrder = targetStock - item.inStock;
+
+            // If no sales, suggest ordering up to the reorder level
+            if (quantityToOrder <= 0) {
+              quantityToOrder = item.reorderLevel - item.inStock;
+            }
+
+            return {
+                ...item,
+                quantityToOrder: quantityToOrder > 0 ? Math.ceil(quantityToOrder) : 0,
+            };
+        })
+        .filter(item => item.quantityToOrder > 0);
+  }, [inventory, sales]);
 
 
   return (
@@ -66,20 +98,20 @@ export default function InventoryPage() {
         </Card>
         <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Produits en rupture</CardTitle>
+                <CardTitle className="text-sm font-medium">Produits à commander</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">{outOfStockItems}</div>
-                <p className="text-xs text-muted-foreground">Articles à commander</p>
+                <div className="text-2xl font-bold">{reorderList.length}</div>
+                <p className="text-xs text-muted-foreground">Articles en dessous du stock d'alerte</p>
             </CardContent>
         </Card>
          <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Précision Inventaire</CardTitle>
+                <CardTitle className="text-sm font-medium">Produits en rupture</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold">98.5%</div>
-                <p className="text-xs text-muted-foreground">Après le dernier comptage</p>
+                <div className="text-2xl font-bold">{outOfStockItems}</div>
+                <p className="text-xs text-muted-foreground">Articles avec un stock de 0</p>
             </CardContent>
         </Card>
       </div>
@@ -88,6 +120,7 @@ export default function InventoryPage() {
         <div className="flex items-center">
             <TabsList>
                 <TabsTrigger value="inventory">État des Stocks</TabsTrigger>
+                <TabsTrigger value="reorder">À Commander ({reorderList.length})</TabsTrigger>
                 {isAdmin && <TabsTrigger value="movements">Mouvements de Stock</TabsTrigger>}
             </TabsList>
             {isAdmin && (
@@ -111,6 +144,17 @@ export default function InventoryPage() {
                 </CardHeader>
                 <CardContent>
                     <DataTable data={inventory} columns={inventoryColumns} filterColumn="productName" filterPlaceholder="Filtrer par produit..."/>
+                </CardContent>
+            </Card>
+        </TabsContent>
+         <TabsContent value="reorder">
+            <Card>
+                <CardHeader>
+                <CardTitle>Liste de Réapprovisionnement</CardTitle>
+                <CardDescription>Articles à commander en fonction du niveau d'alerte et des ventes moyennes.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <DataTable data={reorderList} columns={reorderColumns} filterColumn="productName" filterPlaceholder="Filtrer par produit..."/>
                 </CardContent>
             </Card>
         </TabsContent>
