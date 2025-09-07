@@ -7,31 +7,47 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarInset } from '@/components/ui/sidebar';
-import { UserProvider } from '@/context/user-context';
+import { UserProvider, useUser } from '@/context/user-context';
 import { InventoryProvider } from '@/context/inventory-context';
 import { TransactionProvider } from '@/context/transaction-context';
 import { AirtimeProvider } from '@/context/airtime-context';
 import { MobileMoneyProvider } from '@/context/mobile-money-context';
 import { useEffect, useState } from 'react';
 import { AuditLogProvider } from '@/context/audit-log-context';
+import LoginPage from './login/page';
 
-// We can't use Metadata here because we are using 'use client'
-// export const metadata: Metadata = {
-//   title: 'JokerMarket',
-//   description: 'Application web de gestion de supermarché',
-// };
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const { user } = useUser();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  if (!isClient) {
+    return null; // or a loading skeleton
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        {children}
+        <Toaster />
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
@@ -51,13 +67,9 @@ export default function RootLayout({
             <AirtimeProvider>
               <MobileMoneyProvider>
                 <TransactionProvider>
-                  <SidebarProvider>
-                    {isClient && <AppSidebar />}
-                    <SidebarInset>
-                      {children}
-                      <Toaster />
-                    </SidebarInset>
-                  </SidebarProvider>
+                  <AppLayout>
+                    {children}
+                  </AppLayout>
                 </TransactionProvider>
               </MobileMoneyProvider>
             </AirtimeProvider>

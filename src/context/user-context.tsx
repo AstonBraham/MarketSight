@@ -1,19 +1,39 @@
+
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
 import type { User } from '@/lib/types';
 
 interface UserContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
+  login: (password: string) => boolean;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>({ id: '1', name: 'Admin User', role: 'admin' });
+const USER_PROFILES = {
+    '0000': { id: '2', name: 'Utilisateur Standard', role: 'user' },
+    'admin': { id: '1', name: 'Administrateur', role: 'admin' },
+} as const;
 
-  const value = useMemo(() => ({ user, setUser }), [user]);
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+
+  const login = useCallback((password: string): boolean => {
+    const profile = USER_PROFILES[password as keyof typeof USER_PROFILES];
+    if (profile) {
+        setUser(profile);
+        return true;
+    }
+    return false;
+  }, []);
+
+  const logout = useCallback(() => {
+    setUser(null);
+  }, []);
+
+  const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
 
   return (
     <UserContext.Provider value={value}>

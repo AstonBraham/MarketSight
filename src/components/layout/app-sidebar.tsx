@@ -40,7 +40,8 @@ import {
   Download,
   ClipboardList,
   LifeBuoy,
-  FileText
+  FileText,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -63,7 +64,7 @@ const allMenuItems = [
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
-  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] }, // User can see, but actions are restricted inside
+  { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
   { 
     label: 'Trésorerie', icon: Wallet, roles: ['admin'], subItems: [
       { href: '/cash', label: 'Mouvements de caisse' },
@@ -86,7 +87,7 @@ const allMenuItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, setUser } = useUser();
+  const { user, logout } = useUser();
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -175,13 +176,9 @@ export function AppSidebar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setUser({id: '1', name: 'Admin User', role: 'admin'})}>
-              <Shield className="mr-2 h-4 w-4" />
-              <span>Changer vers Admin</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setUser({id: '2', name: 'Standard User', role: 'user'})}>
-              <User className="mr-2 h-4 w-4" />
-              <span>Changer vers Utilisateur</span>
+            <DropdownMenuItem onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Se déconnecter</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
