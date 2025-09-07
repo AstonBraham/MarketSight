@@ -11,7 +11,7 @@ import { columns as movementsColumns } from '@/components/inventory/columns-move
 import { columns as reorderColumns } from '@/components/inventory/columns-reorder';
 import { mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileCheck2, Truck } from 'lucide-react';
+import { PlusCircle, FileCheck2, Truck, BrainCircuit } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
@@ -20,13 +20,15 @@ import { useMemo } from 'react';
 import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
 import type { InventoryItem } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 
 export default function InventoryPage() {
   const { user } = useUser();
-  const { inventory } = useInventory();
+  const { inventory, calculateAndSetReorderLevels } = useInventory();
   const { purchases, sales } = useTransactions();
   const isAdmin = user?.role === 'admin';
+  const { toast } = useToast();
   
   const stockValue = useMemo(() => {
     return inventory.reduce((acc, item) => acc + (item.inStock * (item.costPrice || 0)), 0);
@@ -68,6 +70,14 @@ export default function InventoryPage() {
         })
         .filter(item => item.quantityToOrder > 0);
   }, [inventory, sales]);
+
+  const handleReorderLevelCalculation = () => {
+    calculateAndSetReorderLevels(sales, 3); // Calculate for a 3-day buffer
+    toast({
+        title: 'Calcul Terminé',
+        description: 'Les niveaux de réapprovisionnement ont été mis à jour pour tous les articles en fonction de l\'historique des ventes.'
+    })
+  }
 
 
   return (
@@ -127,6 +137,10 @@ export default function InventoryPage() {
               <div className="ml-auto flex items-center gap-2">
                   <AddPurchaseDialog />
                   <AddInventoryItemDialog />
+                  <Button size="sm" variant="outline" onClick={handleReorderLevelCalculation}>
+                    <BrainCircuit className="mr-2 h-4 w-4" />
+                    Calculer les Niveaux d'Alerte
+                  </Button>
                    <Link href="/inventory/physical-count">
                     <Button size="sm" variant="outline">
                         <FileCheck2 className="mr-2 h-4 w-4" />

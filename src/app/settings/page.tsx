@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { PageHeader } from '@/components/page-header';
@@ -279,7 +280,7 @@ function MaintenanceActions() {
 
 
 export default function SettingsPage() {
-  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, calculateAndSetReorderLevels, inventory, applyPhysicalCount } = useInventory();
+  const { addItems, itemCategories, addCategory: addInventoryCategory, setInventory, applyPhysicalCount, inventory } = useInventory();
   const { addBulkSales, addBulkExpenses, clearWifiSales, addExpenseCategory, expenseCategories, setTransactions, setInvoices, setCashClosings, addBulkAdjustments, sales } = useTransactions();
   const { addBulkTransactions: addBulkAirtime, setTransactions: setAirtimeTransactions } = useAirtime();
   const { addBulkTransactions: addBulkMobileMoney, setTransactions: setMobileMoneyTransactions } = useMobileMoney();
@@ -513,14 +514,6 @@ export default function SettingsPage() {
          toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
     }
   }
-  
-  const handleReorderLevelCalculation = () => {
-    calculateAndSetReorderLevels(sales, 3); // Calculate for a 3-day buffer
-    toast({
-        title: 'Calcul Terminé',
-        description: 'Les niveaux de réapprovisionnement ont été mis à jour pour tous les articles en fonction de l\'historique des ventes.'
-    })
-  }
 
   const handlePhysicalCountImport = (data: any[]) => {
     try {
@@ -581,22 +574,14 @@ export default function SettingsPage() {
 
        <Card>
         <CardHeader>
-            <CardTitle>Importation et Actions intelligentes</CardTitle>
-            <CardDescription>Importez l'historique depuis un fichier Excel (.csv, .xlsx) et utilisez les outils pour automatiser la configuration.</CardDescription>
+            <CardTitle>Importation de Données</CardTitle>
+            <CardDescription>Importez l'historique depuis un fichier Excel (.csv, .xlsx).</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <ExcelImport title="Importer des Produits" onImport={handleProductImport} />
           <ExcelImport title="Importer des Ventes" onImport={handleSalesImport} />
           <ExcelImport title="Importer des Dépenses" onImport={handleExpensesImport} />
           <ExcelImport title="Importer un Comptage Physique" onImport={handlePhysicalCountImport} icon={<FileCheck2 />} />
-          <div className="p-4 border rounded-lg space-y-4 bg-background/50 flex flex-col justify-center items-start">
-             <h3 className="font-medium">Niveaux de Réapprovisionnement</h3>
-             <p className="text-sm text-muted-foreground">Après avoir importé vos produits et vos ventes, cliquez ici pour calculer automatiquement les stocks d'alerte.</p>
-            <Button onClick={handleReorderLevelCalculation} variant="secondary">
-                <BrainCircuit className="mr-2 h-4 w-4" />
-                Calculer les niveaux
-            </Button>
-          </div>
           <ExcelImport title="Importer des Encaissements" onImport={handleReceiptsImport} />
           <ExcelImport title="Importer Ventes Wifi" onImport={handleWifiSalesImport} />
           <ExcelImport title="Importer Airtime Moov" onImport={handleAirtimeImport('Moov')} />
