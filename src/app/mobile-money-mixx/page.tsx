@@ -67,7 +67,7 @@ export default function MobileMoneyMixxPage() {
     }, [processedTransactions, filter]);
 
   if (!isClient) {
-    return null; // ou un skeleton/loader
+    return null;
   }
 
   return (

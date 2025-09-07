@@ -38,7 +38,7 @@ export default function MobileMoneyCorisPage() {
     }, [getProcessedTransactions, corisTransactions]);
 
   if (!isClient) {
-    return null; // ou un skeleton/loader
+    return null;
   }
 
   return (

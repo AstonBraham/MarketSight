@@ -9,12 +9,18 @@ import { useTransactions } from '@/context/transaction-context';
 import { NewCashClosingDialog } from '@/components/cash-closing/new-cash-closing-dialog';
 import { columns } from '@/components/cash-closing/columns';
 import { DataTable } from '@/components/data-table/data-table';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
 
 
 export default function CashClosingPage() {
     const { getAllTransactions, cashClosings } = useTransactions();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const allTransactions = getAllTransactions();
 
     const currentBalance = useMemo(() => {
@@ -34,6 +40,10 @@ export default function CashClosingPage() {
 
         return withBalance.reverse()[0]?.balance || 0;
     }, [allTransactions]);
+
+    if (!isClient) {
+        return null;
+    }
 
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">

@@ -63,7 +63,7 @@ export default function AirtimeMoovPage() {
 
 
   if (!isClient) {
-    return null; // ou un skeleton/loader
+    return null; 
   }
 
   return (

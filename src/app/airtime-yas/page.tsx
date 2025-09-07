@@ -62,7 +62,7 @@ export default function AirtimeYasPage() {
     const isStockLow = remainingDays <= 3;
     
   if (!isClient) {
-    return null; // ou un skeleton/loader
+    return null;
   }
 
   return (

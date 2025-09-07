@@ -38,7 +38,7 @@ export default function MobileMoneyFloozPage() {
     }, [getProcessedTransactions, floozTransactions]);
 
   if (!isClient) {
-    return null; // ou un skeleton/loader
+    return null; 
   }
 
   return (

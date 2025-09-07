@@ -10,7 +10,7 @@ import { useTransactions } from '@/context/transaction-context';
 import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { UnpaidPurchases } from '@/components/dashboard/unpaid-purchases';
 import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-chart';
 import { CashflowChartLast6Months } from '@/components/dashboard/cashflow-chart-last-6-months';
@@ -21,6 +21,11 @@ export default function DashboardPage() {
     const { inventory } = useInventory();
     const { getStock: getAirtimeStock } = useAirtime();
     const { getBalance: getMobileMoneyBalance } = useMobileMoney();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
 
     const allTransactions = getAllTransactions();
 
@@ -66,6 +71,10 @@ export default function DashboardPage() {
         .reduce((acc, t) => acc + t.amount, 0);
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
+
+  if (!isClient) {
+    return null;
+  }
 
 
   return (
