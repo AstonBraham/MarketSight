@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,18 @@ export function AddInventoryItemDialog() {
 
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [category, setCategory] = useState('');
+  const [suggestedSku, setSuggestedSku] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      // Suggest a new SKU when the dialog opens
+      setSuggestedSku(`SKU-${Date.now()}`);
+    } else {
+        // Reset form on close
+        setCategory('');
+        setSuggestedSku('');
+    }
+  }, [open]);
 
   const existingCategories = useMemo(() => {
     const categories = inventory.map(item => item.category);
@@ -40,6 +52,9 @@ export function AddInventoryItemDialog() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const newItem = Object.fromEntries(formData.entries());
+
+    const sku = (newItem.sku as string).trim();
+    const reference = (newItem.reference as string).trim();
     
     if (!category) {
         toast({
@@ -50,13 +65,32 @@ export function AddInventoryItemDialog() {
         return;
     }
 
+    // Check for unique SKU and Reference
+    if (sku && inventory.some(item => item.sku === sku)) {
+      toast({
+        title: 'SKU dupliqué',
+        description: `Le SKU "${sku}" est déjà utilisé par un autre article.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+    if (reference && inventory.some(item => item.reference === reference)) {
+      toast({
+        title: 'Référence dupliquée',
+        description: `La référence "${reference}" est déjà utilisée par un autre article.`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+
     addItem({
       id: `manual-${Date.now()}`,
       productName: newItem.productName as string,
-      sku: newItem.sku as string,
+      sku: sku,
       category: category,
       brand: newItem.brand as string,
-      reference: newItem.reference as string,
+      reference: reference,
       inStock: parseInt(newItem.inStock as string, 10) || 0,
       defaultPrice: parseFloat(newItem.defaultPrice as string) || 0,
       inTransit: 0,
@@ -69,7 +103,6 @@ export function AddInventoryItemDialog() {
       description: 'Le nouvel article a été ajouté à l\'inventaire.',
     });
     
-    setCategory('');
     setOpen(false);
   };
 
@@ -96,11 +129,11 @@ export function AddInventoryItemDialog() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="sku" className="text-right">SKU</Label>
-              <Input id="sku" name="sku" className="col-span-3" placeholder="Code SKU" />
+              <Input id="sku" name="sku" defaultValue={suggestedSku} className="col-span-3" placeholder="Code SKU unique" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="reference" className="text-right">Référence</Label>
-              <Input id="reference" name="reference" className="col-span-3" placeholder="Référence fournisseur" />
+              <Input id="reference" name="reference" className="col-span-3" placeholder="Référence fournisseur unique" />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="category" className="text-right">Famille</Label>
