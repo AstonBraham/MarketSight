@@ -79,7 +79,7 @@ const allMenuItems = [
   { href: '/history', label: 'Historique du jour', icon: History, roles: ['admin', 'user'] },
   { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin'] },
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
-  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin', 'user'] },
+  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
   { href: '/help', label: 'Aide / Manuel', icon: LifeBuoy, roles: ['admin', 'user'] },
 ];
