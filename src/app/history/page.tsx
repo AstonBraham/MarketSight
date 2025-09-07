@@ -15,20 +15,33 @@ import { Button } from '@/components/ui/button';
 import { CalendarIcon, TrendingDown, TrendingUp, DollarSign } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export default function HistoryPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const { getDailyHistory } = useTransactions();
+  const { getDailyHistory, getAllHistory } = useTransactions();
   const [isClient, setIsClient] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const dailyHistory = useMemo(() => {
-    const history = date ? getDailyHistory(date) : [];
-    return history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [date, getDailyHistory]);
+  const { dailyHistory, uniqueSources } = useMemo(() => {
+    const allHistoryForDay = date ? getDailyHistory(date) : [];
+    
+    const sources = [...new Set(allHistoryForDay.map(t => t.source || 'Caisse'))].sort();
+    
+    const filtered = allHistoryForDay.filter(t => {
+        if (sourceFilter === 'all') return true;
+        return (t.source || 'Caisse') === sourceFilter;
+    });
+
+    const sorted = filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    return { dailyHistory: sorted, uniqueSources: sources };
+  }, [date, getDailyHistory, sourceFilter]);
 
   const stats = useMemo(() => {
     const income = dailyHistory.filter(t => t.amount > 0).reduce((acc, t) => acc + t.amount, 0);
@@ -49,29 +62,44 @@ export default function HistoryPage() {
         <div className="md:col-span-1 space-y-4">
            <Card>
                 <CardHeader>
-                    <CardTitle>Sélectionner une date</CardTitle>
+                    <CardTitle>Filtres</CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className="w-full justify-start text-left font-normal"
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                        <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            initialFocus
-                            locale={fr}
-                        />
-                        </PopoverContent>
-                    </Popover>
+                <CardContent className="space-y-4">
+                    <div>
+                        <Label>Date</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                className="w-full justify-start text-left font-normal"
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {date ? format(date, "PPP", { locale: fr }) : <span>Choisir une date</span>}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                            <Calendar
+                                mode="single"
+                                selected={date}
+                                onSelect={setDate}
+                                initialFocus
+                                locale={fr}
+                            />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                     <div>
+                        <Label>Source de la transaction</Label>
+                        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filtrer par source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Toutes les sources</SelectItem>
+                                {uniqueSources.map(source => <SelectItem key={source} value={source}>{source}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                     </div>
                 </CardContent>
             </Card>
              <Card>
