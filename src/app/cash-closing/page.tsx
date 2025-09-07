@@ -12,6 +12,7 @@ import { DataTable } from '@/components/data-table/data-table';
 import { useMemo, useState, useEffect } from 'react';
 import type { Transaction } from '@/lib/types';
 import { useUser } from '@/context/user-context';
+import { isToday } from 'date-fns';
 
 
 export default function CashClosingPage() {
@@ -25,6 +26,13 @@ export default function CashClosingPage() {
     }, []);
 
     const allTransactions = getAllTransactions();
+
+    const hasClosingForToday = useMemo(() => {
+        const lastClosing = cashClosings[0]; // Already sorted desc
+        if (!lastClosing) return false;
+        return isToday(new Date(lastClosing.date));
+    }, [cashClosings]);
+
 
     const currentBalance = useMemo(() => {
         let balance = 0;
@@ -48,11 +56,21 @@ export default function CashClosingPage() {
         return null;
     }
 
+    const renderActionButton = () => {
+        if (!isAdmin) return undefined;
+
+        if (hasClosingForToday) {
+            return <Button disabled>Arrêté du jour déjà effectué</Button>;
+        }
+
+        return <NewCashClosingDialog currentTheoreticalBalance={currentBalance} />;
+    }
+
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">
             <PageHeader 
                 title="Arrêtés de Caisse" 
-                action={isAdmin ? <NewCashClosingDialog currentTheoreticalBalance={currentBalance} /> : undefined} 
+                action={renderActionButton()} 
             />
 
             <Card>

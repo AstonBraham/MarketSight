@@ -11,7 +11,7 @@ import { useTransactions } from '@/context/transaction-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useInventory } from '@/context/inventory-context';
-import { startOfDay, endOfDay, isWithinInterval } from 'date-fns';
+import { startOfDay, endOfDay, isWithinInterval, isToday } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -50,8 +50,10 @@ export default function DailyReportPage() {
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
     
     const todaysClosing = useMemo(() => {
-        return cashClosings.find(c => isWithinInterval(new Date(c.date), todayInterval));
-    }, [cashClosings, todayInterval]);
+        const lastClosing = cashClosings[0];
+        if (!lastClosing) return undefined;
+        return isToday(new Date(lastClosing.date)) ? lastClosing : undefined;
+    }, [cashClosings]);
 
     const dailyStats = useMemo(() => {
         const dailySales = sales.filter(s => isWithinInterval(new Date(s.date), todayInterval));
@@ -177,7 +179,7 @@ export default function DailyReportPage() {
                 <CardHeader className="text-center">
                     <CardTitle className="text-2xl font-bold">Rapport Quotidien d'Activité</CardTitle>
                     <CardDescription>
-                        Synthèse de la journée du {new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                        Synthèse de la journée du {new Date().toLocaleString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
