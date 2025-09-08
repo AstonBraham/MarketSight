@@ -70,9 +70,9 @@ const allMenuItems = [
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
   { 
-    label: 'Trésorerie', icon: Wallet, roles: ['admin'], subItems: [
-      { href: '/cash', label: 'Mouvements de caisse', roles: ['admin'] },
-      { href: '/receipts', label: 'Encaissements', roles: ['admin'] },
+    label: 'Trésorerie', icon: Wallet, roles: ['admin', 'user'], subItems: [
+      { href: '/cash', label: 'Mouvements de caisse', roles: ['admin', 'user'] },
+      { href: '/receipts', label: 'Encaissements', roles: ['admin', 'user'] },
       { href: '/cash-closing', label: 'Arrêtés de caisse', roles: ['admin'] },
     ]
   },

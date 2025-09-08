@@ -102,34 +102,40 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
   const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>): { success: boolean; message: string } => {
     let item = inventory.find(i => i.id === sale.inventoryId);
-    if (!item) {
-        return { success: false, message: "Article non trouvé dans l'inventaire." };
-    }
-    let quantityToSell = sale.quantity || 0;
+    
+    // For sales without inventory item (like Wifi), we don't do stock checks
+    if(sale.inventoryId) {
+        if (!item) {
+            return { success: false, message: "Article non trouvé dans l'inventaire." };
+        }
+        let quantityToSell = sale.quantity || 0;
 
-    // Check stock and try to break a pack if needed
-    if (quantityToSell > item.inStock) {
-        if (item.parentItemId && item.unitsPerParent) {
-            const parentItem = inventory.find(p => p.id === item.parentItemId);
-            if (parentItem && parentItem.inStock > 0) {
-                // Break a pack
-                updateInventoryItem(parentItem.id, { inStock: parentItem.inStock - 1 }, `Casse pour vente de ${item.productName}`);
-                updateInventoryItem(item.id, { inStock: item.inStock + item.unitsPerParent }, `Casse de ${parentItem.productName}`);
-                // Refresh item state after breaking the pack
-                item = { ...item, inStock: item.inStock + item.unitsPerParent };
-                logAction('BREAK_PACK', `Casse automatique de 1 pack de "${parentItem.productName}" pour vendre ${quantityToSell} unités de "${item.productName}".`);
+        // Check stock and try to break a pack if needed
+        if (quantityToSell > item.inStock) {
+            if (item.parentItemId && item.unitsPerParent) {
+                const parentItem = inventory.find(p => p.id === item.parentItemId);
+                if (parentItem && parentItem.inStock > 0) {
+                    // Break a pack
+                    updateInventoryItem(parentItem.id, { inStock: parentItem.inStock - 1 }, `Casse pour vente de ${item.productName}`);
+                    updateInventoryItem(item.id, { inStock: item.inStock + item.unitsPerParent }, `Casse de ${parentItem.productName}`);
+                    // Refresh item state after breaking the pack
+                    item = { ...item, inStock: item.inStock + item.unitsPerParent };
+                    logAction('BREAK_PACK', `Casse automatique de 1 pack de "${parentItem.productName}" pour vendre ${quantityToSell} unités de "${item.productName}".`);
+                }
             }
         }
-    }
-    
-    // Final stock check after potential pack breaking
-    if (quantityToSell > item.inStock) {
-        const message = `Stock insuffisant pour ${item.productName}. Stock disponible : ${item.inStock}, demandé : ${quantityToSell}.`;
-        return { success: false, message };
+        
+        // Final stock check after potential pack breaking
+        if (quantityToSell > item.inStock) {
+            const message = `Stock insuffisant pour ${item.productName}. Stock disponible : ${item.inStock}, demandé : ${quantityToSell}.`;
+            return { success: false, message };
+        }
     }
 
-    const costPrice = item.costPrice || 0;
-    const margin = sale.amount - (costPrice * quantityToSell);
+
+    const costPrice = item?.costPrice || 0;
+    const quantitySold = sale.quantity || 0;
+    const margin = sale.amount - (costPrice * quantitySold);
 
     const newSale: Sale = {
       ...sale,
@@ -143,7 +149,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => [newSale, ...prev]);
     logAction('CREATE_SALE', `Vente de "${sale.product}" pour ${sale.amount}F.`);
 
-    if (newSale.inventoryId && newSale.quantity) {
+    if (newSale.inventoryId && newSale.quantity && item) {
         updateInventoryItem(
             item.id, 
             { inStock: item.inStock - newSale.quantity }, 
