@@ -11,7 +11,7 @@ import { columns as movementsColumns } from '@/components/inventory/columns-move
 import { columns as reorderColumns } from '@/components/inventory/columns-reorder';
 import { mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileCheck2, Truck, BrainCircuit } from 'lucide-react';
+import { PlusCircle, FileCheck2, Truck, BrainCircuit, Link2 } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
@@ -156,6 +156,12 @@ export default function InventoryPage() {
               <div className="ml-auto flex items-center gap-2">
                   <AddPurchaseDialog />
                   <AddInventoryItemDialog />
+                   <Link href="/inventory/item-relations">
+                      <Button size="sm" variant="outline">
+                          <Link2 className="mr-2 h-4 w-4" />
+                          Gérer les relations
+                      </Button>
+                  </Link>
                   <Button size="sm" variant="outline" onClick={handleReorderLevelCalculation}>
                     <BrainCircuit className="mr-2 h-4 w-4" />
                     Calculer les Niveaux d'Alerte
