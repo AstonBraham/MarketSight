@@ -24,6 +24,7 @@ interface TransactionContextType {
   setCashClosings: (cashClosings: CashClosing[]) => void;
   expenseCategories: string[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => { success: boolean; message: string };
+  updateSale: (saleId: string, updatedValues: { quantity: number; price: number }) => { success: boolean, message: string };
   returnSale: (saleId: string) => void;
   addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
@@ -160,6 +161,49 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
     return { success: true, message: "Vente enregistrée avec succès." };
   }, [inventory, updateInventoryItem, logAction, setTransactions]);
+
+  const updateSale = useCallback((saleId: string, updatedValues: { quantity: number; price: number }): { success: boolean, message: string } => {
+    const originalSale = transactions.find(t => t.id === saleId && t.type === 'sale') as Sale | undefined;
+    if (!originalSale || !originalSale.inventoryId) {
+        return { success: false, message: 'Vente originale non trouvée ou non liée à un stock.' };
+    }
+
+    const item = inventory.find(i => i.id === originalSale.inventoryId);
+    if (!item) {
+        return { success: false, message: `Article ${originalSale.product} non trouvé.` };
+    }
+    
+    const stockChange = originalSale.quantity! - updatedValues.quantity;
+    const newStock = item.inStock + stockChange;
+    if (newStock < 0) {
+        return { success: false, message: `Stock insuffisant pour effectuer cette modification. Stock disponible: ${item.inStock + originalSale.quantity!}` };
+    }
+
+    // Update inventory first
+    updateInventoryItem(item.id, { inStock: newStock }, `Modification vente ${saleId}`);
+    
+    // Update the sale transaction itself
+    const newAmount = updatedValues.price * updatedValues.quantity;
+    const newMargin = newAmount - ((originalSale.costPrice || 0) * updatedValues.quantity);
+
+    setTransactions(prev => prev.map(t => {
+        if (t.id === saleId) {
+            logAction('UPDATE_SALE', `Modification vente ${saleId}. Qté: ${originalSale.quantity} -> ${updatedValues.quantity}, Montant: ${originalSale.amount} -> ${newAmount}`);
+            return {
+                ...t,
+                quantity: updatedValues.quantity,
+                price: updatedValues.price,
+                amount: newAmount,
+                margin: newMargin,
+                date: new Date().toISOString() // Update date to reflect change time
+            };
+        }
+        return t;
+    }));
+
+    return { success: true, message: 'Vente modifiée avec succès.' };
+
+  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
 
   const returnSale = useCallback((saleId: string) => {
     const saleToReturn = transactions.find(t => t.id === saleId && t.type === 'sale') as Sale | undefined;
@@ -657,6 +701,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setCashClosings,
     expenseCategories,
     addSale,
+    updateSale,
     returnSale,
     addBulkSales,
     addPurchase,
@@ -682,7 +727,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     clearCashClosings,
   }), [
       transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, cashClosings, setCashClosings, 
-      expenseCategories, addSale, returnSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
+      expenseCategories, addSale, updateSale, returnSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
       addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, removeInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, getLastClosingDate, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
       airtimeTransactions, mobileMoneyTransactions

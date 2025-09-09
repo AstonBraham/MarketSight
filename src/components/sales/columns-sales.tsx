@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import type { Sale } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, CheckCircle, Trash2, RotateCcw } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Trash2, RotateCcw, Edit, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { useTransactions } from '@/context/transaction-context';
+import { useUser } from '@/context/user-context';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,13 +29,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { EditSaleDialog } from './edit-sale-dialog';
 
 
 function ActionsCell({ row }: { row: { original: Sale }}) {
-    const { returnSale } = useTransactions();
+    const { returnSale, getLastClosingDate } = useTransactions();
+    const { user } = useUser();
     const sale = row.original;
+    const lastClosingDate = getLastClosingDate();
 
-    if (!sale.inventoryId) return null; // Can't return a sale without inventory tracking
+    if (!sale.inventoryId) return null; // Can't modify a sale without inventory tracking
+
+    const isLocked = lastClosingDate && new Date(sale.date) <= lastClosingDate;
+    const canEdit = user?.role === 'admin' || !isLocked;
 
     return (
         <AlertDialog>
@@ -46,21 +54,26 @@ function ActionsCell({ row }: { row: { original: Sale }}) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                    onClick={() => navigator.clipboard.writeText(sale.id)}
-                >
-                Copier l'ID
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <AlertDialogTrigger asChild>
-                    <DropdownMenuItem
-                        className="text-destructive focus:bg-destructive/10"
-                        onSelect={(e) => e.preventDefault()}
-                    >
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Retour / Annuler la vente
-                    </DropdownMenuItem>
-                </AlertDialogTrigger>
+                {canEdit ? (
+                  <>
+                    <EditSaleDialog sale={sale} />
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem
+                            className="text-destructive focus:bg-destructive/10"
+                            onSelect={(e) => e.preventDefault()}
+                        >
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            Retour / Annuler la vente
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                  </>
+                ) : (
+                  <DropdownMenuItem disabled>
+                      <Lock className="mr-2 h-4 w-4" />
+                      Verrouillé
+                  </DropdownMenuItem>
+                )}
             </DropdownMenuContent>
             </DropdownMenu>
             <AlertDialogContent>

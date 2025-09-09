@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { Expense } from '@/lib/types';
@@ -28,10 +29,7 @@ function ActionsCell({ row }: { row: { original: Expense }}) {
     const lastClosingDate = getLastClosingDate();
     
     const isLocked = lastClosingDate && new Date(expense.date) <= lastClosingDate;
-    const isUser = user?.role === 'user';
-    const isAdmin = user?.role === 'admin';
-
-    const canEdit = isAdmin || (isUser && !isLocked);
+    const canEdit = user?.role === 'admin' || (user?.role === 'user' && !isLocked);
 
     return (
         <DropdownMenu>

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { AirtimeTransaction } from '@/lib/types';
@@ -31,9 +32,7 @@ function ActionsCell({ row }: { row: { original: AirtimeTransaction }}) {
     const lastClosingDate = getLastClosingDate();
     
     const isLocked = lastClosingDate && new Date(transaction.date) <= lastClosingDate;
-    const isUser = user?.role === 'user';
-
-    const canEdit = !isUser || (isUser && !isLocked);
+    const canEdit = user?.role === 'admin' || (user?.role === 'user' && !isLocked);
 
     return (
       <DropdownMenu>
