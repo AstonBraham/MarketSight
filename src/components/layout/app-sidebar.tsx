@@ -41,7 +41,8 @@ import {
   ClipboardList,
   LifeBuoy,
   FileText,
-  LogOut
+  LogOut,
+  DatabaseBackup
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -94,6 +95,7 @@ const allMenuItems = [
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
   { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
+  { href: '/backup', label: 'Sauvegarde', icon: DatabaseBackup, roles: ['admin', 'user'] },
   { href: '/help', label: 'Aide / Manuel', icon: LifeBuoy, roles: ['admin', 'user'] },
 ];
 
