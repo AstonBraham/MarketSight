@@ -201,29 +201,74 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [stockMovements]);
 
-  const breakPack = useCallback((parentItemId: string, quantityToBreak: number): { success: boolean; message: string } => {
-    const parentItem = inventory.find(i => i.id === parentItemId);
-    if (!parentItem) return { success: false, message: "Article parent non trouvé." };
+   const breakPack = useCallback((parentItemId: string, quantityToBreak: number): { success: boolean; message: string } => {
+    setInventory(prevInventory => {
+        const parentItem = prevInventory.find(i => i.id === parentItemId);
+        if (!parentItem) {
+            throw new Error("Article parent non trouvé.");
+        }
 
-    const childItem = inventory.find(i => i.parentItemId === parentItemId);
-    if (!childItem) return { success: false, message: "Article unitaire correspondant non trouvé." };
-    if (!childItem.unitsPerParent) return { success: false, message: "Le nombre d'unités par parent n'est pas défini pour l'article unitaire." };
+        const childItem = prevInventory.find(i => i.parentItemId === parentItemId);
+        if (!childItem) {
+            throw new Error("Article unitaire correspondant non trouvé.");
+        }
 
-    if (parentItem.inStock < quantityToBreak) {
-        return { success: false, message: `Stock insuffisant pour ${parentItem.productName}. En stock: ${parentItem.inStock}, requis: ${quantityToBreak}.` };
-    }
+        if (!childItem.unitsPerParent || childItem.unitsPerParent <= 0) {
+            throw new Error("Le nombre d'unités par parent n'est pas défini ou invalide pour l'article unitaire.");
+        }
 
-    const unitsToAdd = quantityToBreak * childItem.unitsPerParent;
-    
-    // Decrement parent stock
-    updateItem(parentItem.id, { inStock: parentItem.inStock - quantityToBreak }, `Casse de ${quantityToBreak} pack(s)`);
-    // Increment child stock
-    updateItem(childItem.id, { inStock: childItem.inStock + unitsToAdd }, `Casse de ${parentItem.productName}`);
+        if (parentItem.inStock < quantityToBreak) {
+            throw new Error(`Stock insuffisant pour ${parentItem.productName}. En stock: ${parentItem.inStock}, requis: ${quantityToBreak}.`);
+        }
 
-    logAction('BREAK_PACK', `Casse manuelle de ${quantityToBreak} pack(s) de "${parentItem.productName}" pour créer ${unitsToAdd} unités de "${childItem.productName}".`);
+        const unitsToAdd = quantityToBreak * childItem.unitsPerParent;
+        const valueOfBrokenPacks = quantityToBreak * (parentItem.costPrice || 0);
 
-    return { success: true, message: "Le pack a été cassé avec succès." };
-}, [inventory, updateItem, logAction]);
+        const newParentStock = parentItem.inStock - quantityToBreak;
+        const newChildStock = childItem.inStock + unitsToAdd;
+
+        const oldChildStockValue = childItem.inStock * (childItem.costPrice || 0);
+        const newChildCump = (oldChildStockValue + valueOfBrokenPacks) / newChildStock;
+        
+        const updatedInventory = prevInventory.map(item => {
+            if (item.id === parentItem.id) {
+                return { ...item, inStock: newParentStock };
+            }
+            if (item.id === childItem.id) {
+                return { ...item, inStock: newChildStock, costPrice: newChildCump };
+            }
+            return item;
+        });
+
+        // Add stock movements after calculating the new state
+        addStockMovement({
+            inventoryId: parentItem.id,
+            productName: parentItem.productName,
+            type: 'out',
+            quantity: -quantityToBreak,
+            reason: `Casse de ${quantityToBreak} pack(s) pour ${childItem.productName}`,
+            balanceBefore: parentItem.inStock,
+            balanceAfter: newParentStock,
+        });
+
+        addStockMovement({
+            inventoryId: childItem.id,
+            productName: childItem.productName,
+            type: 'in',
+            quantity: unitsToAdd,
+            reason: `Casse de ${parentItem.productName}`,
+            balanceBefore: childItem.inStock,
+            balanceAfter: newChildStock,
+        });
+        
+        logAction('BREAK_PACK', `Casse de ${quantityToBreak} pack(s) de "${parentItem.productName}". CUMP unitaire mis à jour.`);
+
+        return updatedInventory;
+    });
+
+    return { success: true, message: "Le pack a été cassé avec succès et le CUMP mis à jour." };
+
+  }, [setInventory, addStockMovement, logAction]);
 
   const value = useMemo(() => ({
     inventory,
