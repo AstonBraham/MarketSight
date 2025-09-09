@@ -4,7 +4,7 @@
 import type { Sale } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import type { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, CheckCircle, Trash2, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,7 +15,71 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { useTransactions } from '@/context/transaction-context';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
+
+function ActionsCell({ row }: { row: { original: Sale }}) {
+    const { returnSale } = useTransactions();
+    const sale = row.original;
+
+    if (!sale.inventoryId) return null; // Can't return a sale without inventory tracking
+
+    return (
+        <AlertDialog>
+            <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Ouvrir le menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                    onClick={() => navigator.clipboard.writeText(sale.id)}
+                >
+                Copier l'ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                 <AlertDialogTrigger asChild>
+                    <DropdownMenuItem
+                        className="text-destructive focus:bg-destructive/10"
+                        onSelect={(e) => e.preventDefault()}
+                    >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Retour / Annuler la vente
+                    </DropdownMenuItem>
+                </AlertDialogTrigger>
+            </DropdownMenuContent>
+            </DropdownMenu>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmer le retour ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Cette action va annuler la vente. Le produit <strong>{sale.product} (x{sale.quantity})</strong> sera retourné en stock et le montant de <strong>{new Intl.NumberFormat('fr-FR').format(sale.amount)} F</strong> sera déduit de la caisse. Êtes-vous sûr ?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => returnSale(sale.id)} className="bg-destructive hover:bg-destructive/90">
+                        Confirmer le Retour
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      );
+}
 
 export const columns: ColumnDef<Sale>[] = [
     {
@@ -78,5 +142,9 @@ export const columns: ColumnDef<Sale>[] = [
             </div>
         );
         }
+    },
+    {
+        id: 'actions',
+        cell: ActionsCell,
     },
 ];

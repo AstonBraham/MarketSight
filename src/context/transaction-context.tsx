@@ -24,6 +24,7 @@ interface TransactionContextType {
   setCashClosings: (cashClosings: CashClosing[]) => void;
   expenseCategories: string[];
   addSale: (sale: Omit<Sale, 'id' | 'type' | 'category'>) => { success: boolean; message: string };
+  returnSale: (saleId: string) => void;
   addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   payPurchase: (purchaseId: string) => void;
@@ -159,6 +160,46 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
     return { success: true, message: "Vente enregistrée avec succès." };
   }, [inventory, updateInventoryItem, logAction, setTransactions]);
+
+  const returnSale = useCallback((saleId: string) => {
+    const saleToReturn = transactions.find(t => t.id === saleId && t.type === 'sale') as Sale | undefined;
+
+    if (!saleToReturn) {
+      console.error("Sale to return not found");
+      return;
+    }
+
+    // 1. Create a negative transaction for the return
+    const returnTransaction: Transaction = {
+      id: `RET-${saleToReturn.id}`,
+      type: 'expense', // Treat it as an expense for cash flow purposes
+      date: new Date().toISOString(),
+      description: `Retour/Annulation: ${saleToReturn.product} (Vente: ${saleToReturn.id})`,
+      amount: saleToReturn.amount, // Stored as a positive number for expenses
+      category: 'Retour Client',
+    };
+    logAction('RETURN_SALE', `Retour de "${saleToReturn.product}" pour ${saleToReturn.amount}F.`);
+    
+    // 2. Add the item back to stock
+    if (saleToReturn.inventoryId && saleToReturn.quantity) {
+      const item = inventory.find(i => i.id === saleToReturn.inventoryId);
+      if (item) {
+        updateInventoryItem(
+          item.id, 
+          { inStock: item.inStock + saleToReturn.quantity },
+          `Retour de la vente ${saleToReturn.id}`,
+          returnTransaction.id
+        );
+      }
+    }
+
+    // 3. Remove the original sale and add the return transaction
+    setTransactions(prev => {
+        const otherTransactions = prev.filter(t => t.id !== saleId);
+        return [returnTransaction, ...otherTransactions];
+    });
+
+  }, [transactions, inventory, updateInventoryItem, setTransactions, logAction]);
 
   const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
     const newSales: Sale[] = sales.map((sale, index) => {
@@ -616,6 +657,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setCashClosings,
     expenseCategories,
     addSale,
+    returnSale,
     addBulkSales,
     addPurchase,
     payPurchase,
@@ -640,7 +682,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     clearCashClosings,
   }), [
       transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, cashClosings, setCashClosings, 
-      expenseCategories, addSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
+      expenseCategories, addSale, returnSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
       addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, removeInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, getLastClosingDate, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
       airtimeTransactions, mobileMoneyTransactions
