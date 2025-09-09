@@ -21,7 +21,7 @@ import { useInventory } from '@/context/inventory-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
-export function EditInventoryItemDialog({ item, isIcon = true }: { item: InventoryItem, isIcon?: boolean }) {
+export function EditInventoryItemDialog({ item, isIcon = true, trigger }: { item: InventoryItem, isIcon?: boolean, trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { inventory, updateItem } = useInventory();
@@ -55,20 +55,24 @@ export function EditInventoryItemDialog({ item, isIcon = true }: { item: Invento
   // Filter out the current item from the list of potential parents
   const potentialParents = inventory.filter(p => p.id !== item.id && !p.parentItemId);
 
+  const dialogTrigger = trigger ? (
+      <div onClick={() => setOpen(true)}>{trigger}</div>
+  ) : isIcon ? (
+      <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Edit className="h-4 w-4" />
+          <span className="sr-only">Modifier</span>
+      </Button>
+  ) : (
+      <Button variant="outline">
+          <Edit className="mr-2 h-4 w-4" />
+          Modifier l'Article
+      </Button>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {isIcon ? (
-             <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Edit className="h-4 w-4" />
-                <span className="sr-only">Modifier</span>
-            </Button>
-        ) : (
-            <Button variant="outline">
-                <Edit className="mr-2 h-4 w-4" />
-                Modifier l'Article
-            </Button>
-        )}
+        {dialogTrigger}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>

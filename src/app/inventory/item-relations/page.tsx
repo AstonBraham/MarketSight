@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,11 +10,94 @@ import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Edit, MoreHorizontal, PackageOpen } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { EditInventoryItemDialog } from '@/components/inventory/edit-inventory-item-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface ItemRelation extends InventoryItem {
     parentItem?: InventoryItem;
 }
+
+const ActionsCell = ({ row }: { row: { original: ItemRelation } }) => {
+    const { breakPack } = useInventory();
+    const { toast } = useToast();
+    const item = row.original;
+    const parentItem = item.parentItem;
+
+    const handleBreakPack = () => {
+        if (!parentItem) return;
+        const result = breakPack(parentItem.id, 1);
+        if (result.success) {
+            toast({ title: 'Pack cassé', description: `1 pack de ${parentItem.productName} a été converti en ${item.unitsPerParent} unités de ${item.productName}.` });
+        } else {
+            toast({ title: 'Erreur', description: result.message, variant: 'destructive' });
+        }
+    };
+
+    return (
+        <AlertDialog>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Ouvrir le menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                        <EditInventoryItemDialog item={item} isIcon={false} trigger={
+                            <button className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 w-full">
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Modifier la relation</span>
+                            </button>
+                        } />
+                    </DropdownMenuItem>
+                    {parentItem && (
+                         <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <PackageOpen className="mr-2 h-4 w-4" />
+                                Casser 1 Pack
+                            </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
+            {parentItem && (
+                 <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Casser un pack de "{parentItem.productName}" ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Cette action décrémentera le stock du pack de 1 et incrémentera le stock de l'unité ({item.productName}) de {item.unitsPerParent}. Êtes-vous sûr ?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBreakPack}>Confirmer</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            )}
+        </AlertDialog>
+    );
+};
 
 const columns: ColumnDef<ItemRelation>[] = [
     {
@@ -46,7 +129,7 @@ const columns: ColumnDef<ItemRelation>[] = [
     },
      {
         accessorKey: 'unitsPerParent',
-        header: 'Unités / Pack',
+        header: () => <div className='text-center'>Unités / Pack</div>,
         cell: ({ row }) => <div className="text-center font-mono font-bold">{row.original.unitsPerParent || 'N/A'}</div>
     },
     {
@@ -61,6 +144,11 @@ const columns: ColumnDef<ItemRelation>[] = [
             const stock = row.original.parentItem?.inStock;
             return <div className="text-right font-mono">{stock !== undefined ? stock : 'N/A'}</div>
         }
+    },
+    {
+        id: 'actions',
+        header: () => <div className="text-right">Actions</div>,
+        cell: ActionsCell,
     },
 ];
 

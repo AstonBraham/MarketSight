@@ -28,6 +28,7 @@ interface InventoryContextType {
   applyPhysicalCount: (countData: PhysicalCountData[]) => { updatedCount: number; notFoundCount: number };
   getInventoryItem: (id: string) => InventoryItem | undefined;
   getInventoryMovements: (inventoryId: string) => StockMovement[];
+  breakPack: (parentItemId: string, quantityToBreak: number) => { success: boolean; message: string };
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -200,6 +201,30 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [stockMovements]);
 
+  const breakPack = useCallback((parentItemId: string, quantityToBreak: number): { success: boolean; message: string } => {
+    const parentItem = inventory.find(i => i.id === parentItemId);
+    if (!parentItem) return { success: false, message: "Article parent non trouvé." };
+
+    const childItem = inventory.find(i => i.parentItemId === parentItemId);
+    if (!childItem) return { success: false, message: "Article unitaire correspondant non trouvé." };
+    if (!childItem.unitsPerParent) return { success: false, message: "Le nombre d'unités par parent n'est pas défini pour l'article unitaire." };
+
+    if (parentItem.inStock < quantityToBreak) {
+        return { success: false, message: `Stock insuffisant pour ${parentItem.productName}. En stock: ${parentItem.inStock}, requis: ${quantityToBreak}.` };
+    }
+
+    const unitsToAdd = quantityToBreak * childItem.unitsPerParent;
+    
+    // Decrement parent stock
+    updateItem(parentItem.id, { inStock: parentItem.inStock - quantityToBreak }, `Casse de ${quantityToBreak} pack(s)`);
+    // Increment child stock
+    updateItem(childItem.id, { inStock: childItem.inStock + unitsToAdd }, `Casse de ${parentItem.productName}`);
+
+    logAction('BREAK_PACK', `Casse manuelle de ${quantityToBreak} pack(s) de "${parentItem.productName}" pour créer ${unitsToAdd} unités de "${childItem.productName}".`);
+
+    return { success: true, message: "Le pack a été cassé avec succès." };
+}, [inventory, updateItem, logAction]);
+
   const value = useMemo(() => ({
     inventory,
     setInventory,
@@ -216,7 +241,8 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     applyPhysicalCount,
     getInventoryItem,
     getInventoryMovements,
-  }), [inventory, setInventory, stockMovements, setStockMovements, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory, calculateAndSetReorderLevels, applyPhysicalCount, getInventoryItem, getInventoryMovements]);
+    breakPack,
+  }), [inventory, setInventory, stockMovements, setStockMovements, addItem, addItems, updateItem, removeItem, clearInventory, itemCategories, addCategory, calculateAndSetReorderLevels, applyPhysicalCount, getInventoryItem, getInventoryMovements, breakPack]);
 
   return (
     <InventoryContext.Provider value={value}>
