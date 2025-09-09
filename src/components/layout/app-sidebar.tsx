@@ -42,7 +42,8 @@ import {
   LifeBuoy,
   FileText,
   LogOut,
-  DatabaseBackup
+  DatabaseBackup,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -59,7 +60,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 const allMenuItems = [
   { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: ['admin', 'user'] },
-  { href: '/daily-report', label: 'Rapport Journalier', icon: FileText, roles: ['admin', 'user'] },
+  { 
+    label: 'Rapports', icon: FileText, roles: ['admin', 'user'], subItems: [
+      { href: '/daily-report', label: 'Rapport Journalier', roles: ['admin', 'user'] },
+      { href: '/monthly-report', label: 'Rapport Mensuel', roles: ['admin', 'user'] },
+    ]
+  },
   { 
     label: 'Analyse', icon: LineChart, roles: ['admin', 'user'], subItems: [
       { href: '/sales-analysis', label: 'Analyse des Ventes', roles: ['admin', 'user']},
@@ -74,7 +80,7 @@ const allMenuItems = [
     label: 'Trésorerie', icon: Wallet, roles: ['admin', 'user'], subItems: [
       { href: '/cash', label: 'Mouvements de caisse', roles: ['admin', 'user'] },
       { href: '/receipts', label: 'Encaissements', roles: ['admin', 'user'] },
-      { href: '/cash-closing', label: 'Arrêtés de caisse', roles: ['admin'] },
+      { href: '/cash-closing', label: 'Arrêtés de caisse', roles: ['admin', 'user'] },
     ]
   },
   { 
@@ -93,7 +99,7 @@ const allMenuItems = [
   { href: '/history', label: 'Historique du jour', icon: History, roles: ['admin', 'user'] },
   { href: '/transactions-audit', label: 'Audit Transactions', icon: ListChecks, roles: ['admin'] },
   { href: '/audit-log', label: "Journal d'Audit", icon: ClipboardList, roles: ['admin'] },
-  { href: '/reports', label: 'Rapports', icon: FileDown, roles: ['admin'] },
+  { href: '/reports', label: 'Exports CSV', icon: FileDown, roles: ['admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['admin'] },
   { href: '/backup', label: 'Sauvegarde', icon: DatabaseBackup, roles: ['admin', 'user'] },
   { href: '/help', label: 'Aide / Manuel', icon: LifeBuoy, roles: ['admin', 'user'] },

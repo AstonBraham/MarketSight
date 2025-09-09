@@ -120,7 +120,7 @@ export default function ReportsPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Rapports et Exports" />
+      <PageHeader title="Exports CSV et Modèles" />
        <Card>
         <CardHeader>
             <CardTitle>Exportation des Données</CardTitle>
