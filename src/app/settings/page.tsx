@@ -417,7 +417,7 @@ export default function SettingsPage() {
 
         toast({
             title: 'Importation du comptage terminée',
-            description: `${updatedCount} articles mis à jour. ${notFoundCount} articles non trouvés.`,
+            description: `${updatedCount} articles mis à jour. ${notFoundCount} non trouvés.`,
         });
     } catch (error: any) {
         toast({ title: 'Erreur d\'importation', description: error.message, variant: 'destructive' });
