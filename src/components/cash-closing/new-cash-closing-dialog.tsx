@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, AlertTriangle, CheckCircle, MinusCircle } from 'lucide-react';
+import { PlusCircle, AlertTriangle, CheckCircle, MinusCircle, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { useUser } from '@/context/user-context';
@@ -31,6 +31,8 @@ export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosi
   const { addCashClosing } = useTransactions();
   const [realBalance, setRealBalance] = useState('');
   const [notes, setNotes] = useState('');
+  const [calculation, setCalculation] = useState('');
+
 
   const variance = useMemo(() => {
     const real = parseFloat(realBalance);
@@ -38,6 +40,16 @@ export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosi
     return real - currentTheoreticalBalance;
   }, [realBalance, currentTheoreticalBalance]);
   
+  useEffect(() => {
+    if (calculation) {
+      try {
+        const sum = calculation.split('+').reduce((acc, val) => acc + (parseFloat(val.trim()) || 0), 0);
+        setRealBalance(String(sum));
+      } catch (e) {
+        // Silently fail as user might be typing
+      }
+    }
+  }, [calculation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +79,7 @@ export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosi
 
     setRealBalance('');
     setNotes('');
+    setCalculation('');
     setOpen(false);
   }
 
@@ -90,6 +103,15 @@ export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosi
             <div className="space-y-2">
                 <Label htmlFor="theoretical-balance">Solde Théorique (calculé)</Label>
                 <Input id="theoretical-balance" value={`${new Intl.NumberFormat('fr-FR').format(currentTheoreticalBalance)} F`} readOnly />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="calculation" className="flex items-center gap-2"><Calculator className="h-4 w-4 text-muted-foreground"/> Détail du comptage (optionnel)</Label>
+                <Input
+                    id="calculation"
+                    placeholder="Ex: 50000 + 10000 + 5000 + ..."
+                    value={calculation}
+                    onChange={(e) => setCalculation(e.target.value)}
+                 />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="real-balance">Solde Réel (physique)</Label>

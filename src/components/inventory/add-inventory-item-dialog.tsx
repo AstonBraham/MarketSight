@@ -20,12 +20,13 @@ import { useInventory } from '@/context/inventory-context';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 
 export function AddInventoryItemDialog() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { inventory, addItem } = useInventory();
+  const { inventory, addItem, itemCategories } = useInventory();
 
   const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
   const [category, setCategory] = useState('');
@@ -41,12 +42,6 @@ export function AddInventoryItemDialog() {
         setSuggestedSku('');
     }
   }, [open]);
-
-  const existingCategories = useMemo(() => {
-    const categories = inventory.map(item => item.category);
-    return [...new Set(categories)].sort(); // Unique, sorted list of categories
-  }, [inventory]);
-
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -166,7 +161,7 @@ export function AddInventoryItemDialog() {
                                 </div>
                             </CommandEmpty>
                             <CommandGroup>
-                            {existingCategories.map((cat) => (
+                            {itemCategories.map((cat) => (
                                 <CommandItem
                                     key={cat}
                                     value={cat}

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SlidersHorizontal, CalendarIcon } from 'lucide-react';
+import { SlidersHorizontal, CalendarIcon, Calculator } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAirtime } from '@/context/airtime-context';
 import { Calendar } from '@/components/ui/calendar';
@@ -32,9 +32,22 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [calculation, setCalculation] = useState('');
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   const { addTransaction } = useAirtime();
+
+  useEffect(() => {
+    if (calculation) {
+      try {
+        // Evaluate the string as a mathematical expression
+        const sum = calculation.split('+').reduce((acc, val) => acc + (parseFloat(val.trim()) || 0), 0);
+        setAmount(String(sum));
+      } catch (e) {
+        // Silently fail, user might be typing
+      }
+    }
+  }, [calculation]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +82,7 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
     setOpen(false);
     setAmount('');
     setDescription('');
+    setCalculation('');
     setDate(new Date());
   };
   
@@ -108,6 +122,16 @@ export function AdjustBalanceDialog({ provider, currentBalance }: AdjustBalanceD
                     />
                     </PopoverContent>
                 </Popover>
+             </div>
+              <div className="space-y-2">
+                <Label htmlFor="calculation" className="flex items-center gap-2"><Calculator className="h-4 w-4 text-muted-foreground" /> Détail du calcul (optionnel)</Label>
+                <Input 
+                    id="calculation" 
+                    name="calculation"
+                    placeholder="Ex: 5000 + 2500 + 1000"
+                    value={calculation}
+                    onChange={(e) => setCalculation(e.target.value)}
+                />
              </div>
              <div className="space-y-2">
                 <Label htmlFor="amount">Montant de l'Ajustement</Label>

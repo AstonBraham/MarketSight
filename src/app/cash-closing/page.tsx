@@ -19,7 +19,6 @@ export default function CashClosingPage() {
     const { getAllTransactions, cashClosings } = useTransactions();
     const [isClient, setIsClient] = useState(false);
     const { user } = useUser();
-    const isAdmin = user?.role === 'admin';
 
     useEffect(() => {
         setIsClient(true);
@@ -57,8 +56,6 @@ export default function CashClosingPage() {
     }
 
     const renderActionButton = () => {
-        if (!isAdmin) return undefined;
-
         if (hasClosingForToday) {
             return <Button disabled>Arrêté du jour déjà effectué</Button>;
         }
