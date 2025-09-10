@@ -23,6 +23,7 @@ import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
 import { format, subMonths, startOfMonth, getMonth, getYear } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import type { Sale } from '@/lib/types';
 
 export function CashflowChart() {
   const { getAllTransactions, sales } = useTransactions();
@@ -31,32 +32,44 @@ export function CashflowChart() {
   const monthlyData = useMemo(() => {
     const data: { [key: string]: { name: string, Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
     
-    const allRelevantTransactions = [...allTransactions, ...sales];
+    // Process cash flow (Entrées/Sorties)
+    allTransactions.forEach(t => {
+      const transactionDate = new Date(t.date);
+      const monthYear = format(transactionDate, 'yyyy-MM');
+      const monthName = format(transactionDate, 'MMM yy', { locale: fr });
 
-    allRelevantTransactions.forEach(t => {
-        const transactionDate = new Date(t.date);
-        const monthYear = format(transactionDate, 'yyyy-MM', { locale: fr });
-        const monthName = format(transactionDate, 'MMM yy', { locale: fr });
+      if (!data[monthYear]) {
+          data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
+      }
 
-        if (!data[monthYear]) {
-            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
-        }
-
-        if (t.type === 'sale') {
-            const sale = t as any;
-            data[monthYear].Entrées += sale.amount;
-            if (sale.itemType && (sale.itemType.includes('Ticket Wifi') || sale.inventoryId)) {
-              data[monthYear]["Ventes Produits"] += sale.amount;
-            }
-            if (sale.margin !== undefined) {
-                 data[monthYear].Marge += sale.margin;
-            }
-        } else if (t.type === 'adjustment' && t.amount > 0) {
-            data[monthYear].Entrées += t.amount;
-        } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
-            data[monthYear].Sorties += Math.abs(t.amount);
-        }
+      if (t.amount > 0) { // All positive amounts are entries
+          data[monthYear].Entrées += t.amount;
+      } else { // All negative amounts are exits
+          data[monthYear].Sorties += Math.abs(t.amount);
+      }
     });
+
+    // Process sales for "Ventes Produits" and "Marge"
+    sales.forEach(sale => {
+      const transactionDate = new Date(sale.date);
+      const monthYear = format(transactionDate, 'yyyy-MM');
+      const monthName = format(transactionDate, 'MMM yy', { locale: fr });
+
+      if (!data[monthYear]) {
+          data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
+      }
+      
+      // Calculate product sales (inventory items or wifi tickets)
+      if (sale.inventoryId || sale.itemType === 'Ticket Wifi') {
+          data[monthYear]["Ventes Produits"] += sale.amount;
+      }
+
+      // Calculate margin
+      if (sale.margin !== undefined) {
+           data[monthYear].Marge += sale.margin;
+      }
+    });
+
 
     return Object.keys(data).sort().map(key => ({
       name: data[key].name,

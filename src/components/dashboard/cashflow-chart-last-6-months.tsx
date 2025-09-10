@@ -23,6 +23,7 @@ import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
 import { format, subMonths, startOfMonth, getMonth, getYear } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import type { Sale } from '@/lib/types';
 
 export function CashflowChartLast6Months() {
   const { getAllTransactions, sales } = useTransactions();
@@ -30,57 +31,50 @@ export function CashflowChartLast6Months() {
 
   const monthlyData = useMemo(() => {
     const data: { [key: string]: { name: string, Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
-    const sixMonthsAgo = subMonths(new Date(), 5);
-    const startDate = startOfMonth(sixMonthsAgo);
+    const sixMonthsAgo = startOfMonth(subMonths(new Date(), 5));
 
-    const allRelevantTransactions = [...allTransactions, ...sales];
-
-    allRelevantTransactions.forEach(t => {
-        const transactionDate = new Date(t.date);
-        
-        if (transactionDate < startDate) return;
-
-        const monthYear = format(transactionDate, 'yyyy-MM', { locale: fr });
-        const monthName = format(transactionDate, 'MMM yy', { locale: fr });
-
-        if (!data[monthYear]) {
-            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
-        }
-
-        if (t.type === 'sale') {
-            const sale = t as any;
-            data[monthYear].Entrées += sale.amount;
-            if (sale.itemType && (sale.itemType.includes('Ticket Wifi') || sale.inventoryId)) {
-                data[monthYear]["Ventes Produits"] += sale.amount;
-            }
-            if (sale.margin !== undefined) {
-                 data[monthYear].Marge += sale.margin;
-            }
-        } else if (t.type === 'adjustment' && t.amount > 0) {
-            data[monthYear].Entrées += t.amount;
-        } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
-            data[monthYear].Sorties += Math.abs(t.amount);
-        }
-    });
-
-    // Ensure we have data for the last 6 months, even if it's zero
+    // Initialize last 6 months
     for (let i = 0; i < 6; i++) {
         const date = subMonths(new Date(), i);
-        const monthYear = format(date, 'yyyy-MM', { locale: fr });
+        const monthYear = format(date, 'yyyy-MM');
         const monthName = format(date, 'MMM yy', { locale: fr });
         if (!data[monthYear]) {
             data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
         }
     }
 
+    // Process cash flow (Entrées/Sorties)
+    allTransactions.forEach(t => {
+      const transactionDate = new Date(t.date);
+      if (transactionDate < sixMonthsAgo) return;
 
-    return Object.keys(data).sort().map(key => ({
-      name: data[key].name,
-      Entrées: data[key].Entrées,
-      Sorties: data[key].Sorties,
-      Marge: data[key].Marge,
-      "Ventes Produits": data[key]["Ventes Produits"],
-    }));
+      const monthYear = format(transactionDate, 'yyyy-MM');
+      if (data[monthYear]) {
+        if (t.amount > 0) {
+            data[monthYear].Entrées += t.amount;
+        } else {
+            data[monthYear].Sorties += Math.abs(t.amount);
+        }
+      }
+    });
+
+    // Process sales for "Ventes Produits" and "Marge"
+    sales.forEach(sale => {
+      const transactionDate = new Date(sale.date);
+      if (transactionDate < sixMonthsAgo) return;
+
+      const monthYear = format(transactionDate, 'yyyy-MM');
+      if (data[monthYear]) {
+        if (sale.inventoryId || sale.itemType === 'Ticket Wifi') {
+            data[monthYear]["Ventes Produits"] += sale.amount;
+        }
+        if (sale.margin !== undefined) {
+             data[monthYear].Marge += sale.margin;
+        }
+      }
+    });
+
+    return Object.keys(data).sort().map(key => data[key]);
 
   }, [allTransactions, sales]);
 
@@ -108,16 +102,16 @@ export function CashflowChartLast6Months() {
                 />
                 <Legend />
                 <Bar
+                  yAxisId="left"
                   dataKey="Entrées"
                   fill="hsl(var(--chart-1))"
                   radius={[4, 4, 0, 0]}
-                  yAxisId="left"
                 />
                 <Bar
+                  yAxisId="left"
                   dataKey="Sorties"
                   fill="hsl(var(--chart-2))"
                   radius={[4, 4, 0, 0]}
-                  yAxisId="left"
                 />
                  <Line 
                   yAxisId="left" 
