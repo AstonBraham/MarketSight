@@ -11,7 +11,7 @@ import { columns as movementsColumns } from '@/components/inventory/columns-move
 import { columns as reorderColumns } from '@/components/inventory/columns-reorder';
 import { mockStockMovements } from '@/lib/mock-data';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, FileCheck2, Truck, BrainCircuit, Link2 } from 'lucide-react';
+import { PlusCircle, FileCheck2, Truck, BrainCircuit, Link2, FileText } from 'lucide-react';
 import { useUser } from '@/context/user-context';
 import { AddInventoryItemDialog } from '@/components/inventory/add-inventory-item-dialog';
 import { useInventory } from '@/context/inventory-context';
@@ -160,6 +160,12 @@ export default function InventoryPage() {
                       <Button size="sm" variant="outline">
                           <Link2 className="mr-2 h-4 w-4" />
                           Gérer les relations
+                      </Button>
+                  </Link>
+                  <Link href="/inventory/stock-card">
+                      <Button size="sm" variant="outline">
+                          <FileText className="mr-2 h-4 w-4" />
+                          Fiche de Stock
                       </Button>
                   </Link>
                   <Button size="sm" variant="outline" onClick={handleReorderLevelCalculation}>
