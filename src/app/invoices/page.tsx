@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useMemo } from 'react';
@@ -126,7 +125,21 @@ export default function InvoicesPage() {
             </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ventes au comptant récentes</CardTitle>
+                    <CardDescription>Liste des dernières ventes au comptant.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                <DataTable
+                        columns={salesColumns}
+                        data={cashSales}
+                        filterColumn="product"
+                        filterPlaceholder="Filtrer par produit..."
+                    />
+                </CardContent>
+             </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Factures Récentes</CardTitle>
@@ -138,20 +151,6 @@ export default function InvoicesPage() {
                         data={invoices}
                         filterColumn="clientName"
                         filterPlaceholder="Filtrer par client..."
-                    />
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Ventes au comptant récentes</CardTitle>
-                    <CardDescription>Liste des dernières ventes au comptant.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <DataTable
-                        columns={salesColumns}
-                        data={cashSales}
-                        filterColumn="product"
-                        filterPlaceholder="Filtrer par produit..."
                     />
                 </CardContent>
             </Card>
