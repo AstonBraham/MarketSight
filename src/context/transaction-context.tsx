@@ -491,11 +491,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
   }, [addAdjustment, setCashClosings, logAction]);
   
-  const getLastClosingDate = useCallback(() => {
-    if (cashClosings.length === 0) return null;
-    const sorted = [...cashClosings].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return new Date(sorted[0].date);
+  const sortedCashClosings = useMemo(() => {
+    return [...cashClosings].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [cashClosings]);
+
+  const getLastClosingDate = useCallback(() => {
+    if (sortedCashClosings.length === 0) return null;
+    return new Date(sortedCashClosings[0].date);
+  }, [sortedCashClosings]);
 
   const getAllTransactions = useCallback((): Transaction[] => {
     let allCashTransactions: Transaction[] = [];
@@ -697,7 +700,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     receipts,
     invoices,
     setInvoices,
-    cashClosings,
+    cashClosings: sortedCashClosings,
     setCashClosings,
     expenseCategories,
     addSale,
@@ -726,7 +729,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     clearInvoices,
     clearCashClosings,
   }), [
-      transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, cashClosings, setCashClosings, 
+      transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, sortedCashClosings, setCashClosings, 
       expenseCategories, addSale, updateSale, returnSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
       addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, removeInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, getLastClosingDate, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
