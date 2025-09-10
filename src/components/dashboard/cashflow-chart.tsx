@@ -29,7 +29,7 @@ export function CashflowChart() {
   const allTransactions = getAllTransactions();
 
   const monthlyData = useMemo(() => {
-    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
+    const data: { [key: string]: { name: string, Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
     
     const allRelevantTransactions = [...allTransactions, ...sales];
 
@@ -45,7 +45,9 @@ export function CashflowChart() {
         if (t.type === 'sale') {
             const sale = t as any;
             data[monthYear].Entrées += sale.amount;
-            data[monthYear]["Ventes Produits"] += sale.amount;
+            if (sale.itemType && (sale.itemType.includes('Ticket Wifi') || sale.inventoryId)) {
+              data[monthYear]["Ventes Produits"] += sale.amount;
+            }
             if (sale.margin !== undefined) {
                  data[monthYear].Marge += sale.margin;
             }

@@ -29,7 +29,7 @@ export function CashflowChartLast6Months() {
   const allTransactions = getAllTransactions();
 
   const monthlyData = useMemo(() => {
-    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
+    const data: { [key: string]: { name: string, Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
     const sixMonthsAgo = subMonths(new Date(), 5);
     const startDate = startOfMonth(sixMonthsAgo);
 
@@ -50,7 +50,9 @@ export function CashflowChartLast6Months() {
         if (t.type === 'sale') {
             const sale = t as any;
             data[monthYear].Entrées += sale.amount;
-            data[monthYear]["Ventes Produits"] += sale.amount;
+            if (sale.itemType && (sale.itemType.includes('Ticket Wifi') || sale.inventoryId)) {
+                data[monthYear]["Ventes Produits"] += sale.amount;
+            }
             if (sale.margin !== undefined) {
                  data[monthYear].Marge += sale.margin;
             }
@@ -94,7 +96,7 @@ export function CashflowChartLast6Months() {
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value as number)} />
+                <YAxis yAxisId="left" tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value as number)} />
                 <Tooltip
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{
