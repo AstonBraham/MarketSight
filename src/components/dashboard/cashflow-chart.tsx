@@ -20,17 +20,23 @@ import {
 } from '@/components/ui/card';
 import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
-import { format, subMonths, startOfMonth, getMonth, getYear } from 'date-fns';
+import { format, isSameMonth, isSameYear } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function CashflowChart() {
-  const { getAllTransactions } = useTransactions();
-  const allTransactions = getAllTransactions();
+  const { sales, purchases, expenses, receipts } = useTransactions();
 
   const monthlyData = useMemo(() => {
     const data: { [key: string]: { name: string, Entrées: number, Sorties: number } } = {};
     
-    allTransactions.forEach(t => {
+    const allRelevantTransactions = [
+        ...sales.map(s => ({ ...s, type: 'in' })),
+        ...receipts.map(r => ({ ...r, type: 'in' })),
+        ...purchases.filter(p => p.status === 'paid').map(p => ({ ...p, type: 'out' })),
+        ...expenses.map(e => ({ ...e, type: 'out' }))
+    ];
+
+    allRelevantTransactions.forEach(t => {
       const transactionDate = new Date(t.date);
       const monthYear = format(transactionDate, 'yyyy-MM');
       const monthName = format(transactionDate, 'MMM yy', { locale: fr });
@@ -39,20 +45,16 @@ export function CashflowChart() {
           data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0 };
       }
 
-      if (t.amount > 0) { // All positive amounts are entries
+      if (t.type === 'in') {
           data[monthYear].Entrées += t.amount;
-      } else { // All negative amounts are exits
-          data[monthYear].Sorties += Math.abs(t.amount);
+      } else {
+          data[monthYear].Sorties += t.amount;
       }
     });
 
-    return Object.keys(data).sort().map(key => ({
-      name: data[key].name,
-      Entrées: data[key].Entrées,
-      Sorties: data[key].Sorties,
-    }));
+    return Object.keys(data).sort().map(key => data[key]);
 
-  }, [allTransactions]);
+  }, [sales, purchases, expenses, receipts]);
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">

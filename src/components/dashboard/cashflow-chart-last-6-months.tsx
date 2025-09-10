@@ -20,12 +20,11 @@ import {
 } from '@/components/ui/card';
 import { useTransactions } from '@/context/transaction-context';
 import { useMemo } from 'react';
-import { format, subMonths, startOfMonth, getMonth, getYear } from 'date-fns';
+import { format, subMonths, startOfMonth, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function CashflowChartLast6Months() {
-  const { getAllTransactions } = useTransactions();
-  const allTransactions = getAllTransactions();
+  const { sales, purchases, expenses, receipts } = useTransactions();
 
   const monthlyData = useMemo(() => {
     const data: { [key: string]: { name: string, Entrées: number, Sorties: number } } = {};
@@ -33,7 +32,7 @@ export function CashflowChartLast6Months() {
 
     // Initialize last 6 months
     for (let i = 0; i < 6; i++) {
-        const date = subMonths(new Date(), i);
+        const date = subMonths(new Date(), 5 - i); // Iterate from 5 months ago to now
         const monthYear = format(date, 'yyyy-MM');
         const monthName = format(date, 'MMM yy', { locale: fr });
         if (!data[monthYear]) {
@@ -41,24 +40,30 @@ export function CashflowChartLast6Months() {
         }
     }
 
-    // Process cash flow
-    allTransactions.forEach(t => {
-      const transactionDate = new Date(t.date);
-      if (transactionDate < sixMonthsAgo) return;
+    const allRelevantTransactions = [
+        ...sales.map(s => ({ ...s, type: 'in' })),
+        ...receipts.map(r => ({ ...r, type: 'in' })),
+        ...purchases.filter(p => p.status === 'paid').map(p => ({ ...p, type: 'out' })),
+        ...expenses.map(e => ({ ...e, type: 'out' }))
+    ].filter(t => new Date(t.date) >= sixMonthsAgo);
 
+
+    // Process cash flow
+    allRelevantTransactions.forEach(t => {
+      const transactionDate = new Date(t.date);
       const monthYear = format(transactionDate, 'yyyy-MM');
       if (data[monthYear]) {
-        if (t.amount > 0) {
+        if (t.type === 'in') {
             data[monthYear].Entrées += t.amount;
         } else {
-            data[monthYear].Sorties += Math.abs(t.amount);
+            data[monthYear].Sorties += t.amount;
         }
       }
     });
 
     return Object.keys(data).sort().map(key => data[key]);
 
-  }, [allTransactions]);
+  }, [sales, purchases, expenses, receipts]);
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow duration-300">
