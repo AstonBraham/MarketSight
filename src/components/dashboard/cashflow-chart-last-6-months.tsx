@@ -10,6 +10,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Line,
 } from 'recharts';
 import {
   Card,
@@ -28,7 +29,7 @@ export function CashflowChartLast6Months() {
   const allTransactions = getAllTransactions();
 
   const monthlyData = useMemo(() => {
-    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number } } = {};
+    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
     const sixMonthsAgo = subMonths(new Date(), 5);
     const startDate = startOfMonth(sixMonthsAgo);
 
@@ -43,12 +44,13 @@ export function CashflowChartLast6Months() {
         const monthName = format(transactionDate, 'MMM yy', { locale: fr });
 
         if (!data[monthYear]) {
-            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0 };
+            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
         }
 
         if (t.type === 'sale') {
             const sale = t as any;
             data[monthYear].Entrées += sale.amount;
+            data[monthYear]["Ventes Produits"] += sale.amount;
             if (sale.margin !== undefined) {
                  data[monthYear].Marge += sale.margin;
             }
@@ -65,7 +67,7 @@ export function CashflowChartLast6Months() {
         const monthYear = format(date, 'yyyy-MM', { locale: fr });
         const monthName = format(date, 'MMM yy', { locale: fr });
         if (!data[monthYear]) {
-            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0 };
+            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
         }
     }
 
@@ -75,6 +77,7 @@ export function CashflowChartLast6Months() {
       Entrées: data[key].Entrées,
       Sorties: data[key].Sorties,
       Marge: data[key].Marge,
+      "Ventes Produits": data[key]["Ventes Produits"],
     }));
 
   }, [allTransactions, sales]);
@@ -106,16 +109,21 @@ export function CashflowChartLast6Months() {
                   dataKey="Entrées"
                   fill="hsl(var(--chart-1))"
                   radius={[4, 4, 0, 0]}
+                  yAxisId="left"
                 />
                 <Bar
                   dataKey="Sorties"
                   fill="hsl(var(--chart-2))"
                   radius={[4, 4, 0, 0]}
+                  yAxisId="left"
                 />
-                 <Bar
-                  dataKey="Marge"
-                  fill="hsl(var(--chart-3))"
-                  radius={[4, 4, 0, 0]}
+                 <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="Ventes Produits" 
+                  stroke="hsl(var(--chart-4))" 
+                  strokeWidth={2}
+                  dot={false}
                 />
               </BarChart>
             </ResponsiveContainer>

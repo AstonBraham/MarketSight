@@ -10,6 +10,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Line,
 } from 'recharts';
 import {
   Card,
@@ -28,7 +29,7 @@ export function CashflowChart() {
   const allTransactions = getAllTransactions();
 
   const monthlyData = useMemo(() => {
-    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number } } = {};
+    const data: { [key: string]: { Entrées: number, Sorties: number, Marge: number, "Ventes Produits": number } } = {};
     
     const allRelevantTransactions = [...allTransactions, ...sales];
 
@@ -38,12 +39,13 @@ export function CashflowChart() {
         const monthName = format(transactionDate, 'MMM yy', { locale: fr });
 
         if (!data[monthYear]) {
-            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0 };
+            data[monthYear] = { name: monthName, Entrées: 0, Sorties: 0, Marge: 0, "Ventes Produits": 0 };
         }
 
         if (t.type === 'sale') {
             const sale = t as any;
             data[monthYear].Entrées += sale.amount;
+            data[monthYear]["Ventes Produits"] += sale.amount;
             if (sale.margin !== undefined) {
                  data[monthYear].Marge += sale.margin;
             }
@@ -59,6 +61,7 @@ export function CashflowChart() {
       Entrées: data[key].Entrées,
       Sorties: data[key].Sorties,
       Marge: data[key].Marge,
+      "Ventes Produits": data[key]["Ventes Produits"],
     }));
 
   }, [allTransactions, sales]);
@@ -75,7 +78,7 @@ export function CashflowChart() {
               <BarChart data={monthlyData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
-                <YAxis tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value as number)} />
+                <YAxis yAxisId="left" tickLine={false} axisLine={false} unit="F" tickFormatter={(value) => new Intl.NumberFormat('fr-FR', { notation: 'compact' }).format(value as number)} />
                 <Tooltip
                   cursor={{ fill: 'hsl(var(--muted))' }}
                   contentStyle={{
@@ -87,19 +90,24 @@ export function CashflowChart() {
                 />
                 <Legend />
                 <Bar
+                  yAxisId="left"
                   dataKey="Entrées"
                   fill="hsl(var(--chart-1))"
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
+                  yAxisId="left"
                   dataKey="Sorties"
                   fill="hsl(var(--chart-2))"
                   radius={[4, 4, 0, 0]}
                 />
-                 <Bar
-                  dataKey="Marge"
-                  fill="hsl(var(--chart-3))"
-                  radius={[4, 4, 0, 0]}
+                <Line 
+                  yAxisId="left" 
+                  type="monotone" 
+                  dataKey="Ventes Produits" 
+                  stroke="hsl(var(--chart-4))" 
+                  strokeWidth={2}
+                  dot={false}
                 />
               </BarChart>
             </ResponsiveContainer>
