@@ -43,7 +43,8 @@ import {
   FileText,
   LogOut,
   DatabaseBackup,
-  CalendarDays
+  CalendarDays,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
