@@ -14,7 +14,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const USER_PROFILES = {
     '0000': { id: '2', name: 'Utilisateur Standard', role: 'user' },
-    'admin': { id: '1', name: 'Administrateur', role: 'admin' },
+    'madmin': { id: '1', name: 'Administrateur', role: 'admin' },
 } as const;
 
 export function UserProvider({ children }: { children: ReactNode }) {
