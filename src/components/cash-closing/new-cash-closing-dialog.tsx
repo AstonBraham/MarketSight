@@ -24,6 +24,25 @@ type NewCashClosingDialogProps = {
     currentTheoreticalBalance: number;
 }
 
+const safeEvaluate = (expression: string): number | null => {
+    if (!expression || !/^[\d\s\+\-\.]+$/.test(expression)) {
+        return null;
+    }
+    try {
+        // Sanitize by removing multiple spaces
+        const sanitized = expression.replace(/\s+/g, ' ');
+        // This is a safer way to evaluate simple +/- expressions
+        const result = new Function(`return ${sanitized}`)();
+        if (typeof result === 'number' && isFinite(result)) {
+            return result;
+        }
+        return null;
+    } catch (error) {
+        console.error("Safe evaluation failed:", error);
+        return null;
+    }
+};
+
 export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosingDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
@@ -42,11 +61,9 @@ export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosi
   
   useEffect(() => {
     if (calculation) {
-      try {
-        const sum = calculation.split('+').reduce((acc, val) => acc + (parseFloat(val.trim()) || 0), 0);
-        setRealBalance(String(sum));
-      } catch (e) {
-        // Silently fail as user might be typing
+      const result = safeEvaluate(calculation);
+      if (result !== null) {
+          setRealBalance(String(result));
       }
     }
   }, [calculation]);
@@ -108,7 +125,7 @@ export function NewCashClosingDialog({ currentTheoreticalBalance }: NewCashClosi
                 <Label htmlFor="calculation" className="flex items-center gap-2"><Calculator className="h-4 w-4 text-muted-foreground"/> Détail du comptage (optionnel)</Label>
                 <Input
                     id="calculation"
-                    placeholder="Ex: 50000 + 10000 + 5000 + ..."
+                    placeholder="Ex: 50000 + 10000 - 500"
                     value={calculation}
                     onChange={(e) => setCalculation(e.target.value)}
                  />

@@ -29,6 +29,23 @@ type AdjustMobileMoneyBalanceDialogProps = {
     currentBalance: number;
 }
 
+const safeEvaluate = (expression: string): number | null => {
+    if (!expression || !/^[\d\s\+\-\.]+$/.test(expression)) {
+        return null;
+    }
+    try {
+        const sanitized = expression.replace(/\s+/g, ' ');
+        const result = new Function(`return ${sanitized}`)();
+        if (typeof result === 'number' && isFinite(result)) {
+            return result;
+        }
+        return null;
+    } catch (error) {
+        console.error("Safe evaluation failed:", error);
+        return null;
+    }
+};
+
 export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: AdjustMobileMoneyBalanceDialogProps) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -40,11 +57,9 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
 
   useEffect(() => {
     if (calculation) {
-      try {
-        const sum = calculation.split('+').reduce((acc, val) => acc + (parseFloat(val.trim()) || 0), 0);
-        setAmount(String(sum));
-      } catch (e) {
-        // Silently fail, user might be typing
+      const result = safeEvaluate(calculation);
+      if (result !== null) {
+          setAmount(String(result));
       }
     }
   }, [calculation]);
@@ -130,7 +145,7 @@ export function AdjustMobileMoneyBalanceDialog({ provider, currentBalance }: Adj
                  <Input 
                     id="calculation" 
                     name="calculation"
-                    placeholder="Ex: 100000 + 50000 + 10000"
+                    placeholder="Ex: 100000 + 50000 - 10000"
                     value={calculation}
                     onChange={(e) => setCalculation(e.target.value)}
                 />
