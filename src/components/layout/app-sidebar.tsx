@@ -156,9 +156,9 @@ export function AppSidebar() {
                     <SidebarMenuSub>
                       {visibleSubItems.map(subItem => (
                          <SidebarMenuSubItem key={subItem.href}>
-                          <Link href={subItem.href} passHref>
-                             <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                               <a>{subItem.label}</a>
+                          <Link href={subItem.href} legacyBehavior passHref>
+                             <SidebarMenuSubButton as="a" isActive={pathname === subItem.href}>
+                               {subItem.label}
                             </SidebarMenuSubButton>
                           </Link>
                          </SidebarMenuSubItem>
