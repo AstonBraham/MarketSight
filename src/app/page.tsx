@@ -16,6 +16,7 @@ import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-char
 import { CashflowChartLast6Months } from '@/components/dashboard/cashflow-chart-last-6-months';
 import { DashboardAlerts } from '@/components/dashboard/dashboard-alerts';
 import type { Transaction } from '@/lib/types';
+import { SalesCurveChart } from '@/components/dashboard/sales-curve-chart';
 
 export default function DashboardPage() {
     const { getAllTransactions, sales, getLastClosingDate } = useTransactions();
@@ -137,6 +138,7 @@ export default function DashboardPage() {
           <UnpaidPurchases />
           <CashflowChart />
           <CashflowChartLast6Months />
+          <SalesCurveChart />
         </div>
         <div className="grid gap-8">
           <RecentTransactions />
