@@ -18,12 +18,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { useTransactions } from '@/context/transaction-context';
 
 type TransactionFilter = "all" | "deposit" | "withdrawal" | "transfer" | "purchase" | "other";
 
 
 export default function MobileMoneyMixxPage() {
     const { transactions, getBalance, getProcessedTransactions } = useMobileMoney();
+    const { getLastClosingDate } = useTransactions();
     const [isClient, setIsClient] = useState(false);
     const [filter, setFilter] = useState<TransactionFilter>("all");
 
@@ -35,16 +37,18 @@ export default function MobileMoneyMixxPage() {
     const mixxTransactions = transactions.filter(t => t.provider === 'Mixx');
     const mixxBalance = getBalance('Mixx');
 
+    const lastClosingDate = getLastClosingDate();
+
      const dailyDeposits = mixxTransactions
-        .filter(t => t.type === 'deposit' && new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
         .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyWithdrawals = mixxTransactions
-        .filter(t => t.type === 'withdrawal' && new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
         .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyCommissions = mixxTransactions
-        .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
         .reduce((acc, t) => acc + t.commission, 0);
     
     const processedTransactions = useMemo(() => {

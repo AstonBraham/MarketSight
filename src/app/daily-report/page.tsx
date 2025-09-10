@@ -40,12 +40,12 @@ export default function DailyReportPage() {
         setIsClient(true);
     }, []);
 
-    const { sales, purchases, expenses, receipts, getAllTransactions, cashClosings } = useTransactions();
+    const { sales, purchases, expenses, receipts, getAllTransactions, cashClosings, getLastClosingDate } = useTransactions();
     const { inventory } = useInventory();
     const { transactions: airtimeTransactions, getStock: getAirtimeStock } = useAirtime();
     const { transactions: mobileMoneyTransactions, getBalance: getMobileMoneyBalance } = useMobileMoney();
     
-    const todayInterval = { start: startOfDay(new Date()), end: endOfDay(new Date()) };
+    const lastClosingDate = getLastClosingDate();
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
     
@@ -56,33 +56,33 @@ export default function DailyReportPage() {
     }, [cashClosings]);
 
     const dailyStats = useMemo(() => {
-        const dailySales = sales.filter(s => isWithinInterval(new Date(s.date), todayInterval));
+        const dailySales = sales.filter(s => !lastClosingDate || new Date(s.date) > lastClosingDate);
         
         const dailyAirtimeCommissions = airtimeTransactions
-            .filter(t => isWithinInterval(new Date(t.date), todayInterval))
+            .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
             .reduce((acc, t) => acc + t.commission, 0);
 
         const dailyMMCommissions = mobileMoneyTransactions
-            .filter(t => isWithinInterval(new Date(t.date), todayInterval))
+            .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
             .reduce((acc, t) => acc + t.commission, 0);
 
         const merchandiseSales = dailySales.filter(s => s.itemType !== 'Ticket Wifi').reduce((acc, s) => acc + s.amount, 0);
         const wifiSales = dailySales.filter(s => s.itemType === 'Ticket Wifi').reduce((acc, s) => acc + s.amount, 0);
         
         const airtimeSalesGross = airtimeTransactions
-            .filter(t => t.type === 'sale' && isWithinInterval(new Date(t.date), todayInterval))
+            .filter(t => t.type === 'sale' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
             .reduce((acc, t) => acc + t.amount, 0);
 
         // Total revenue is sum of sales and commissions
         const totalRevenue = merchandiseSales + wifiSales + dailyAirtimeCommissions + dailyMMCommissions;
         const totalMargin = dailySales.reduce((acc, s) => acc + (s.margin || 0), 0) + dailyAirtimeCommissions + dailyMMCommissions;
-        const totalExpenses = expenses.filter(e => isWithinInterval(new Date(e.date), todayInterval)).reduce((acc, e) => acc + e.amount, 0);
+        const totalExpenses = expenses.filter(e => !lastClosingDate || new Date(e.date) > lastClosingDate).reduce((acc, e) => acc + e.amount, 0);
 
-        const dailyPurchases = purchases.filter(p => p.status === 'paid' && isWithinInterval(new Date(p.date), todayInterval));
-        const dailyReceipts = receipts.filter(r => isWithinInterval(new Date(r.date), todayInterval));
+        const dailyPurchases = purchases.filter(p => p.status === 'paid' && (!lastClosingDate || new Date(p.date) > lastClosingDate));
+        const dailyReceipts = receipts.filter(r => !lastClosingDate || new Date(r.date) > lastClosingDate);
 
         const allCashTransactions = getAllTransactions();
-        const cashBalanceStartOfDay = allCashTransactions.filter(t => new Date(t.date) < todayInterval.start).reduce((acc, t) => {
+        const cashBalanceStartOfDay = allCashTransactions.filter(t => lastClosingDate && new Date(t.date) < lastClosingDate).reduce((acc, t) => {
             if (t.type === 'sale') return acc + t.amount;
             if (t.type === 'purchase' || t.type === 'expense') return acc - t.amount;
             if (t.type === 'adjustment') return acc + t.amount;
@@ -127,7 +127,7 @@ export default function DailyReportPage() {
             },
             operations: {
                 purchases: dailyPurchases,
-                expenses: expenses.filter(e => isWithinInterval(new Date(e.date), todayInterval)),
+                expenses: expenses.filter(e => !lastClosingDate || new Date(e.date) > lastClosingDate),
                 receipts: dailyReceipts,
             },
             virtualBalances: {
@@ -138,7 +138,7 @@ export default function DailyReportPage() {
                 mmCoris: getMobileMoneyBalance('Coris'),
             }
         };
-    }, [isClient, sales, purchases, expenses, receipts, airtimeTransactions, mobileMoneyTransactions, getAllTransactions, inventory]);
+    }, [isClient, sales, purchases, expenses, receipts, airtimeTransactions, mobileMoneyTransactions, getAllTransactions, inventory, lastClosingDate]);
 
     if (!isClient) {
         return null; // or a loading skeleton

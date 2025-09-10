@@ -18,7 +18,7 @@ import { DashboardAlerts } from '@/components/dashboard/dashboard-alerts';
 import type { Transaction } from '@/lib/types';
 
 export default function DashboardPage() {
-    const { getAllTransactions, sales } = useTransactions();
+    const { getAllTransactions, sales, getLastClosingDate } = useTransactions();
     const { inventory } = useInventory();
     const { getStock: getAirtimeStock } = useAirtime();
     const { getBalance: getMobileMoneyBalance } = useMobileMoney();
@@ -29,6 +29,8 @@ export default function DashboardPage() {
     }, []);
 
     const allTransactions = getAllTransactions();
+    const lastClosingDate = getLastClosingDate();
+
 
     const currentBalance = useMemo(() => {
         let balance = 0;
@@ -60,20 +62,9 @@ export default function DashboardPage() {
     const totalMobileMoneyBalance = mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCoris;
 
     const workingCapital = currentBalance + inventoryValue + totalAirtimeStock + totalMobileMoneyBalance;
-
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
     
     const todaySales = sales
-        .filter(t => new Date(t.date).toDateString() === today.toDateString())
-        .reduce((acc, t) => acc + t.amount, 0);
-
-    const monthSales = sales
-        .filter(t => {
-            const transactionDate = new Date(t.date);
-            return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
-        })
+        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
         .reduce((acc, t) => acc + t.amount, 0);
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';

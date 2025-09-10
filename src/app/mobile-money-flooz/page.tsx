@@ -9,9 +9,11 @@ import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
 import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo, useState, useEffect } from 'react';
+import { useTransactions } from '@/context/transaction-context';
 
 export default function MobileMoneyFloozPage() {
     const { transactions, getBalance, getProcessedTransactions } = useMobileMoney();
+    const { getLastClosingDate } = useTransactions();
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -21,16 +23,18 @@ export default function MobileMoneyFloozPage() {
     const floozTransactions = transactions.filter(t => t.provider === 'Flooz');
     const floozBalance = getBalance('Flooz');
 
+    const lastClosingDate = getLastClosingDate();
+
     const dailyDeposits = floozTransactions
-        .filter(t => t.type === 'deposit' && new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
         .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyWithdrawals = floozTransactions
-        .filter(t => t.type === 'withdrawal' && new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
         .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyCommissions = floozTransactions
-        .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
         .reduce((acc, t) => acc + t.commission, 0);
 
     const processedTransactions = useMemo(() => {

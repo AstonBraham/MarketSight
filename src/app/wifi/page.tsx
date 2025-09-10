@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -86,7 +85,7 @@ export const columns: ColumnDef<Sale>[] = [
 ];
 
 export default function WifiPage() {
-  const { addSale, sales } = useTransactions();
+  const { addSale, sales, getLastClosingDate } = useTransactions();
   const { toast } = useToast();
   const [selectedTicketPrice, setSelectedTicketPrice] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
@@ -103,9 +102,9 @@ export default function WifiPage() {
     return sales.filter(s => s.itemType === 'Ticket Wifi');
   }, [sales]);
   
-  const today = new Date().toDateString();
+  const lastClosingDate = getLastClosingDate();
   const dailySales = wifiSales
-    .filter(t => new Date(t.date).toDateString() === today)
+    .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
     .reduce((acc, t) => acc + t.amount, 0);
 
   const totalSales = wifiSales.reduce((acc, t) => acc + t.amount, 0);

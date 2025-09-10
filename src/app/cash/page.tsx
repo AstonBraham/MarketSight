@@ -16,9 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 type TransactionFilter = 'all' | 'sales' | 'purchases' | 'expenses' | 'receipts';
 
 export default function CashPage() {
-  const { getAllTransactions } = useTransactions();
+  const { getAllTransactions, getLastClosingDate } = useTransactions();
   const allTransactions = getAllTransactions();
   const [filter, setFilter] = useState<TransactionFilter>('all');
+  const lastClosingDate = getLastClosingDate();
   
   const processedTransactions = useMemo(() => {
     let balance = 0;
@@ -59,13 +60,12 @@ export default function CashPage() {
 
   const currentBalance = processedTransactions.length > 0 ? processedTransactions[0].balance : 0;
   
-  const today = new Date().toDateString();
   const dailyIncome = allTransactions
-    .filter(t => (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) && new Date(t.date).toDateString() === today)
+    .filter(t => (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) && (!lastClosingDate || new Date(t.date) > lastClosingDate))
     .reduce((acc, t) => acc + t.amount, 0);
 
   const dailyOutcome = allTransactions
-    .filter(t => (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) && new Date(t.date).toDateString() === today)
+    .filter(t => (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) && (!lastClosingDate || new Date(t.date) > lastClosingDate))
     .reduce((acc, t) => acc + t.amount, 0);
   
   const netFlow = dailyIncome - dailyOutcome;

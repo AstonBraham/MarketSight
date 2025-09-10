@@ -18,11 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { useTransactions } from '@/context/transaction-context';
 
 type TransactionFilter = "all" | "deposit" | "withdrawal" | "transfer" | "purchase" | "other";
 
 export default function MobileMoneyCorisPage() {
     const { transactions, getBalance, getProcessedTransactions } = useMobileMoney();
+    const { getLastClosingDate } = useTransactions();
     const [isClient, setIsClient] = useState(false);
     const [filter, setFilter] = useState<TransactionFilter>("all");
 
@@ -33,16 +35,18 @@ export default function MobileMoneyCorisPage() {
     const corisTransactions = transactions.filter(t => t.provider === 'Coris');
     const corisBalance = getBalance('Coris');
 
+    const lastClosingDate = getLastClosingDate();
+
      const dailyDeposits = corisTransactions
-        .filter(t => t.type === 'deposit' && new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
         .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyWithdrawals = corisTransactions
-        .filter(t => t.type === 'withdrawal' && new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
         .reduce((acc, t) => acc + t.amount, 0);
 
     const dailyCommissions = corisTransactions
-        .filter(t => new Date(t.date).toDateString() === new Date().toDateString())
+        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
         .reduce((acc, t) => acc + t.commission, 0);
     
     const processedTransactions = useMemo(() => {
