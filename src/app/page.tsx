@@ -52,9 +52,14 @@ export default function DashboardPage() {
 
     const airtimeStockMoov = getAirtimeStock('Moov');
     const airtimeStockYas = getAirtimeStock('Yas');
+    const totalAirtimeStock = airtimeStockMoov + airtimeStockYas;
+
     const mobileMoneyBalanceFlooz = getMobileMoneyBalance('Flooz');
     const mobileMoneyBalanceMixx = getMobileMoneyBalance('Mixx');
     const mobileMoneyBalanceCoris = getMobileMoneyBalance('Coris');
+    const totalMobileMoneyBalance = mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCoris;
+
+    const workingCapital = currentBalance + inventoryValue + totalAirtimeStock + totalMobileMoneyBalance;
 
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -86,6 +91,12 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard
+          title="Fonds de roulement"
+          value={formatCurrency(workingCapital)}
+          icon={<Landmark className="h-6 w-6 text-primary" />}
+          className="xl:col-span-2"
+        />
+        <StatCard
           title="Solde de Trésorerie"
           value={formatCurrency(currentBalance)}
           icon={<DollarSign className="h-6 w-6 text-primary" />}
@@ -99,11 +110,6 @@ export default function DashboardPage() {
           title="Ventes du Jour"
           value={formatCurrency(todaySales)}
           icon={<ShoppingCart className="h-6 w-6 text-primary" />}
-        />
-        <StatCard
-          title="Ventes du Mois"
-          value={formatCurrency(monthSales)}
-          icon={<Landmark className="h-6 w-6 text-primary" />}
         />
       </div>
       

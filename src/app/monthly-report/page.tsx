@@ -50,9 +50,11 @@ export default function MonthlyReportPage() {
     
     const monthlyStats = useMemo(() => {
         const monthlySales = sales.filter(s => isWithinInterval(new Date(s.date), monthInterval));
+        
         const monthlyAirtimeCommissions = airtimeTransactions
-            .filter(t => t.type === 'commission' && isWithinInterval(new Date(t.date), monthInterval))
+            .filter(t => isWithinInterval(new Date(t.date), monthInterval))
             .reduce((acc, t) => acc + t.commission, 0);
+
         const monthlyMMCommissions = mobileMoneyTransactions
             .filter(t => isWithinInterval(new Date(t.date), monthInterval))
             .reduce((acc, t) => acc + t.commission, 0);
@@ -60,11 +62,7 @@ export default function MonthlyReportPage() {
         const merchandiseSales = monthlySales.filter(s => s.itemType !== 'Ticket Wifi').reduce((acc, s) => acc + s.amount, 0);
         const wifiSales = monthlySales.filter(s => s.itemType === 'Ticket Wifi').reduce((acc, s) => acc + s.amount, 0);
         
-        const airtimeSales = airtimeTransactions
-            .filter(t => t.type === 'sale' && isWithinInterval(new Date(t.date), monthInterval))
-            .reduce((acc, t) => acc + t.amount, 0);
-
-        const totalRevenue = merchandiseSales + wifiSales + airtimeSales + monthlyAirtimeCommissions + monthlyMMCommissions;
+        const totalRevenue = merchandiseSales + wifiSales + monthlyAirtimeCommissions + monthlyMMCommissions;
         const totalMargin = monthlySales.reduce((acc, s) => acc + (s.margin || 0), 0) + monthlyAirtimeCommissions + monthlyMMCommissions;
         const totalExpenses = expenses.filter(e => isWithinInterval(new Date(e.date), monthInterval)).reduce((acc, e) => acc + e.amount, 0);
 
@@ -98,7 +96,6 @@ export default function MonthlyReportPage() {
             breakdown: {
                 'Ventes de Marchandises': merchandiseSales,
                 'Ventes Wifi': wifiSales,
-                'Ventes Airtime': airtimeSales,
                 'Commissions Airtime': monthlyAirtimeCommissions,
                 'Commissions Mobile Money': monthlyMMCommissions,
             },

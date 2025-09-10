@@ -57,9 +57,11 @@ export default function DailyReportPage() {
 
     const dailyStats = useMemo(() => {
         const dailySales = sales.filter(s => isWithinInterval(new Date(s.date), todayInterval));
+        
         const dailyAirtimeCommissions = airtimeTransactions
-            .filter(t => t.type === 'commission' && isWithinInterval(new Date(t.date), todayInterval))
+            .filter(t => isWithinInterval(new Date(t.date), todayInterval))
             .reduce((acc, t) => acc + t.commission, 0);
+
         const dailyMMCommissions = mobileMoneyTransactions
             .filter(t => isWithinInterval(new Date(t.date), todayInterval))
             .reduce((acc, t) => acc + t.commission, 0);
@@ -67,11 +69,12 @@ export default function DailyReportPage() {
         const merchandiseSales = dailySales.filter(s => s.itemType !== 'Ticket Wifi').reduce((acc, s) => acc + s.amount, 0);
         const wifiSales = dailySales.filter(s => s.itemType === 'Ticket Wifi').reduce((acc, s) => acc + s.amount, 0);
         
-        const airtimeSales = airtimeTransactions
+        const airtimeSalesGross = airtimeTransactions
             .filter(t => t.type === 'sale' && isWithinInterval(new Date(t.date), todayInterval))
             .reduce((acc, t) => acc + t.amount, 0);
 
-        const totalRevenue = merchandiseSales + wifiSales + airtimeSales + dailyAirtimeCommissions + dailyMMCommissions;
+        // Total revenue is sum of sales and commissions
+        const totalRevenue = merchandiseSales + wifiSales + dailyAirtimeCommissions + dailyMMCommissions;
         const totalMargin = dailySales.reduce((acc, s) => acc + (s.margin || 0), 0) + dailyAirtimeCommissions + dailyMMCommissions;
         const totalExpenses = expenses.filter(e => isWithinInterval(new Date(e.date), todayInterval)).reduce((acc, e) => acc + e.amount, 0);
 
@@ -113,7 +116,6 @@ export default function DailyReportPage() {
             breakdown: {
                 'Ventes de Marchandises': merchandiseSales,
                 'Ventes Wifi': wifiSales,
-                'Ventes Airtime': airtimeSales,
                 'Commissions Airtime': dailyAirtimeCommissions,
                 'Commissions Mobile Money': dailyMMCommissions,
             },
