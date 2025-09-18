@@ -74,6 +74,7 @@ const allMenuItems = [
     ]
   },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
+  { href: '/purchases', label: 'Achats', icon: Truck, roles: ['admin', 'user'] },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
