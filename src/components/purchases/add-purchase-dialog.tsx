@@ -144,7 +144,7 @@ export function AddPurchaseDialog() {
                             {inventory.map((item) => (
                                 <CommandItem
                                 key={item.id}
-                                value={item.id}
+                                value={item.productName}
                                 onSelect={() => handleItemSelect(item.id)}
                                 >
                                 <Check
