@@ -92,28 +92,33 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
   }, [setInventory, addStockMovement, logAction]);
 
   const updateItem = useCallback((id: string, updatedFields: Partial<InventoryItem>, reason: string = 'Ajustement manuel', relatedTransactionId?: string) => {
-    const itemToUpdate = inventory.find(item => item.id === id);
-    if (!itemToUpdate) return;
-    
-    const oldStock = itemToUpdate.inStock;
-    const newStock = updatedFields.inStock;
+     setInventory(prev => {
+        const itemToUpdate = prev.find(item => item.id === id);
+        if (!itemToUpdate) return prev;
 
-    setInventory(prev => prev.map(item => item.id === id ? { ...item, ...updatedFields } : item));
-    logAction('UPDATE_ITEM', `Modification de l'article "${itemToUpdate.productName}" (ID: ${id}).`);
-    
-    if (newStock !== undefined && newStock !== oldStock) {
-        addStockMovement({
-            inventoryId: id,
-            productName: updatedFields.productName || itemToUpdate.productName,
-            type: 'adjustment',
-            quantity: newStock - oldStock,
-            reason: reason,
-            balanceBefore: oldStock,
-            balanceAfter: newStock,
-            relatedTransactionId,
-        });
-    }
-  }, [inventory, setInventory, addStockMovement, logAction]);
+        const updatedItem = { ...itemToUpdate, ...updatedFields };
+        const oldStock = itemToUpdate.inStock;
+        const newStock = updatedItem.inStock;
+
+        if (newStock !== oldStock) {
+            addStockMovement({
+                inventoryId: id,
+                productName: updatedItem.productName,
+                type: newStock > oldStock ? 'in' : 'out',
+                quantity: newStock - oldStock,
+                reason: reason,
+                balanceBefore: oldStock,
+                balanceAfter: newStock,
+                relatedTransactionId,
+            });
+             logAction('UPDATE_ITEM_STOCK', `Stock de "${updatedItem.productName}" ajusté de ${oldStock} à ${newStock}. Raison: ${reason}.`);
+        } else {
+            logAction('UPDATE_ITEM', `Modification des détails de l'article "${itemToUpdate.productName}" (ID: ${id}).`);
+        }
+
+        return prev.map(item => (item.id === id ? updatedItem : item));
+    });
+  }, [setInventory, addStockMovement, logAction]);
 
   const removeItem = useCallback((id: string) => {
     const itemToRemove = inventory.find(item => item.id === id);
@@ -163,33 +168,28 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
     let updatedCount = 0;
     let notFoundCount = 0;
     
-    const updatedInventory = inventory.map(item => {
-      const countItem = countData.find(c => c.identifier === item.sku || c.identifier === item.reference);
-      if (countItem) {
-        const oldStock = item.inStock;
-        const newStock = countItem.realStock;
-        if (oldStock !== newStock) {
-            addStockMovement({
-                inventoryId: item.id,
-                productName: item.productName,
-                type: 'adjustment',
-                quantity: newStock - oldStock,
-                reason: 'Comptage Physique',
-                balanceBefore: oldStock,
-                balanceAfter: newStock
-            });
-            updatedCount++;
-            return { ...item, inStock: newStock };
+    countData.forEach(countItem => {
+        const itemToUpdate = inventory.find(i => i.sku === countItem.identifier || i.reference === countItem.identifier);
+        if (itemToUpdate) {
+            const oldStock = itemToUpdate.inStock;
+            const newStock = countItem.realStock;
+            if (oldStock !== newStock) {
+                updateItem(
+                    itemToUpdate.id,
+                    { inStock: newStock },
+                    'Comptage Physique',
+                    `COUNT-${Date.now()}`
+                );
+                updatedCount++;
+            }
+        } else {
+            notFoundCount++;
         }
-      }
-      return item;
     });
 
-    notFoundCount = countData.length - updatedCount;
-    setInventory(updatedInventory);
     logAction('PHYSICAL_COUNT', `Application d'un comptage physique. ${updatedCount} articles mis à jour, ${notFoundCount} non trouvés.`);
     return { updatedCount, notFoundCount };
-  }, [inventory, setInventory, addStockMovement, logAction]);
+}, [inventory, updateItem, logAction]);
   
   const getInventoryItem = useCallback((id: string) => {
     return inventory.find(item => item.id === id);

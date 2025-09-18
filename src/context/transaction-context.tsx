@@ -104,41 +104,34 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [logAction]);
 
   const addSale = useCallback((sale: Omit<Sale, 'id' | 'type' | 'category'>): { success: boolean; message: string } => {
-    let item = inventory.find(i => i.id === sale.inventoryId);
+    const item = inventory.find(i => i.id === sale.inventoryId);
+    let quantityToSell = sale.quantity || 0;
     
     // For sales without inventory item (like Wifi), we don't do stock checks
-    if(sale.inventoryId) {
-        if (!item) {
-            return { success: false, message: "Article non trouvé dans l'inventaire." };
-        }
-        let quantityToSell = sale.quantity || 0;
-
+    if(sale.inventoryId && item) {
         // Check stock and try to break a pack if needed
         if (quantityToSell > item.inStock) {
             if (item.parentItemId && item.unitsPerParent) {
                 const parentItem = inventory.find(p => p.id === item.parentItemId);
                 if (parentItem && parentItem.inStock > 0) {
-                    // Break a pack
                     updateInventoryItem(parentItem.id, { inStock: parentItem.inStock - 1 }, `Casse pour vente de ${item.productName}`);
                     updateInventoryItem(item.id, { inStock: item.inStock + item.unitsPerParent }, `Casse de ${parentItem.productName}`);
-                    // Refresh item state after breaking the pack
-                    item = { ...item, inStock: item.inStock + item.unitsPerParent };
-                    logAction('BREAK_PACK', `Casse automatique de 1 pack de "${parentItem.productName}" pour vendre ${quantityToSell} unités de "${item.productName}".`);
+                    logAction('BREAK_PACK', `Casse auto de 1 pack de "${parentItem.productName}" pour vente.`);
                 }
             }
         }
-        
-        // Final stock check after potential pack breaking
-        if (quantityToSell > item.inStock) {
-            const message = `Stock insuffisant pour ${item.productName}. Stock disponible : ${item.inStock}, demandé : ${quantityToSell}.`;
+
+        const refreshedItem = inventory.find(i => i.id === sale.inventoryId);
+        if(!refreshedItem || quantityToSell > refreshedItem.inStock) {
+            const stockAvailable = refreshedItem ? refreshedItem.inStock : 0;
+            const message = `Stock insuffisant pour ${sale.product}. Stock disponible : ${stockAvailable}, demandé : ${quantityToSell}.`;
             return { success: false, message };
         }
     }
 
 
     const costPrice = item?.costPrice || 0;
-    const quantitySold = sale.quantity || 0;
-    const margin = sale.amount - (costPrice * quantitySold);
+    const margin = sale.amount - (costPrice * quantityToSell);
 
     const newSale: Sale = {
       ...sale,
@@ -152,13 +145,16 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => [newSale, ...prev]);
     logAction('CREATE_SALE', `Vente de "${sale.product}" pour ${sale.amount}F.`);
 
-    if (newSale.inventoryId && newSale.quantity && item) {
-        updateInventoryItem(
-            item.id, 
-            { inStock: item.inStock - newSale.quantity }, 
-            `Vente (Client: ${newSale.client})`,
-            newSale.id
-        );
+    if (newSale.inventoryId && newSale.quantity) {
+        const currentItemState = inventory.find(i => i.id === newSale.inventoryId);
+        if (currentItemState) {
+            updateInventoryItem(
+                currentItemState.id, 
+                { inStock: currentItemState.inStock - newSale.quantity }, 
+                `Vente (Client: ${newSale.client})`,
+                newSale.id
+            );
+        }
     }
     return { success: true, message: "Vente enregistrée avec succès." };
   }, [inventory, updateInventoryItem, logAction, setTransactions]);
@@ -316,7 +312,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
             const purchaseValue = newPurchase.amount;
             const newStock = oldStock + newPurchase.quantity;
-            const newCostPrice = (oldStockValue + purchaseValue) / newStock;
+            const newCostPrice = newStock > 0 ? (oldStockValue + purchaseValue) / newStock : purchaseValue / newPurchase.quantity;
 
             updateInventoryItem(
                 item.id,
@@ -329,7 +325,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
   }, [transactions, setTransactions, inventory, updateInventoryItem, logAction]);
 
-    const updatePurchase = useCallback((purchaseId: string, updatedValues: { quantity: number; amount: number }): { success: boolean, message: string } => {
+  const updatePurchase = useCallback((purchaseId: string, updatedValues: { quantity: number; amount: number }): { success: boolean, message: string } => {
     const originalPurchase = transactions.find(t => t.id === purchaseId && t.type === 'purchase') as Purchase | undefined;
     if (!originalPurchase || !originalPurchase.inventoryId) {
         return { success: false, message: 'Achat original non trouvé ou non lié à un stock.' };
@@ -339,28 +335,25 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (!item) {
         return { success: false, message: `Article ${originalPurchase.product} non trouvé.` };
     }
-
+    
     // Revert the old purchase from inventory
     const originalQuantity = originalPurchase.quantity || 0;
     const originalAmount = originalPurchase.amount;
     
-    // Safely calculate the state of the item *before* the original purchase
-    const oldStockValue = (item.inStock * (item.costPrice || 0)) - originalAmount;
-    const oldStock = item.inStock - originalQuantity;
-    if (oldStock < 0) {
+    const stockWithoutThisPurchase = item.inStock - originalQuantity;
+    if (stockWithoutThisPurchase < 0) {
         return { success: false, message: `Impossible d'annuler l'achat: le stock deviendrait négatif.` };
     }
-    const oldCump = oldStock > 0 ? oldStockValue / oldStock : 0;
 
-    // Now, apply the new purchase to this reverted state
-    const newStock = oldStock + updatedValues.quantity;
-    const newStockValue = oldStockValue + updatedValues.amount;
-    const newCump = newStock > 0 ? newStockValue / newStock : 0;
+    const valueWithoutThisPurchase = (item.inStock * (item.costPrice || 0)) - originalAmount;
 
-    // Update inventory item with new stock and CUMP
+    // Apply the new purchase
+    const newStock = stockWithoutThisPurchase + updatedValues.quantity;
+    const newValue = valueWithoutThisPurchase + updatedValues.amount;
+    const newCump = newStock > 0 ? newValue / newStock : 0;
+    
     updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump }, `Modification achat ${purchaseId}`);
 
-    // Update the purchase transaction itself
     setTransactions(prev => prev.map(t => {
         if (t.id === purchaseId) {
             logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}. Qté: ${originalQuantity} -> ${updatedValues.quantity}, Montant: ${originalAmount} -> ${updatedValues.amount}`);
@@ -376,7 +369,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }));
 
     return { success: true, message: 'Achat et stock mis à jour.' };
-}, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
+  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
   
   const payPurchase = useCallback((purchaseId: string) => {
     let purchaseToPay: Purchase | undefined;
@@ -714,7 +707,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         allDailyTransactions.push({
           id: sm.id,
           date: sm.date,
-          amount: 0,
+          amount: sm.quantity, // Represent stock change as 'amount'
           description: `${sm.reason} (${sm.productName})`,
           type: 'Mouvement Stock',
           source: 'Inventaire',
