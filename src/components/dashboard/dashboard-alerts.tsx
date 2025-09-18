@@ -2,13 +2,15 @@
 'use client';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Archive, Save, FileWarning, Landmark, ShoppingCart, Info } from 'lucide-react';
+import { AlertCircle, Archive, Save, FileWarning, Landmark, ShoppingCart, Info, Moon } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useTransactions } from '@/context/transaction-context';
+import { subDays } from 'date-fns';
 
 const LOW_STOCK_THRESHOLDS = {
     airtime: {
@@ -27,10 +29,25 @@ export function DashboardAlerts() {
   const { inventory } = useInventory();
   const { getStock: getAirtimeStock } = useAirtime();
   const { getBalance: getMobileMoneyBalance } = useMobileMoney();
+  const { sales } = useTransactions();
 
   const reorderItems = useMemo(() => {
-    return inventory.filter(item => item.inStock <= item.reorderLevel);
+    return inventory.filter(item => item.inStock > 0 && item.inStock <= item.reorderLevel);
   }, [inventory]);
+  
+  const outOfStockItems = useMemo(() => {
+    return inventory.filter(item => item.inStock <= 0);
+  }, [inventory]);
+
+  const dormantItems = useMemo(() => {
+    const twoWeeksAgo = subDays(new Date(), 14);
+    const recentSalesInventoryIds = new Set(
+        sales
+            .filter(sale => new Date(sale.date) > twoWeeksAgo && sale.inventoryId)
+            .map(sale => sale.inventoryId)
+    );
+    return inventory.filter(item => item.inStock > 0 && !recentSalesInventoryIds.has(item.id));
+  }, [inventory, sales]);
 
   const airtimeMoovStock = getAirtimeStock('Moov');
   const airtimeYasStock = getAirtimeStock('Yas');
@@ -55,7 +72,7 @@ export function DashboardAlerts() {
      lowStockAlerts.push({ type: 'mm', provider: 'Coris', balance: mmCorisBalance });
   }
   
-  const hasAlerts = reorderItems.length > 0 || lowStockAlerts.length > 0;
+  const hasAlerts = reorderItems.length > 0 || lowStockAlerts.length > 0 || outOfStockItems.length > 0 || dormantItems.length > 0;
 
   if (!hasAlerts) {
     return (
@@ -77,10 +94,24 @@ export function DashboardAlerts() {
                 <AlertTitle>Articles à commander d'urgence !</AlertTitle>
                 <AlertDescription className="flex justify-between items-center">
                     <span>
-                        Vous avez {reorderItems.length} article(s) dont le stock est bas ou épuisé.
+                        Vous avez {reorderItems.length} article(s) dont le stock est bas.
                     </span>
                     <Link href="/inventory?tab=reorder">
                         <Button variant="destructive" size="sm">Voir la liste</Button>
+                    </Link>
+                </AlertDescription>
+            </Alert>
+        )}
+        {outOfStockItems.length > 0 && (
+            <Alert variant="destructive">
+                <Archive className="h-4 w-4" />
+                <AlertTitle>Articles en Rupture de Stock !</AlertTitle>
+                <AlertDescription className="flex justify-between items-center">
+                    <span>
+                        {outOfStockItems.length} article(s) sont en rupture de stock.
+                    </span>
+                     <Link href="/inventory?status=outOfStock">
+                        <Button variant="destructive" size="sm">Voir les articles</Button>
                     </Link>
                 </AlertDescription>
             </Alert>
@@ -96,6 +127,15 @@ export function DashboardAlerts() {
                 </AlertDescription>
             </Alert>
         ))}
+         {dormantItems.length > 0 && (
+            <Alert>
+                <Moon className="h-4 w-4" />
+                <AlertTitle>Articles Dormants</AlertTitle>
+                <AlertDescription>
+                    {dormantItems.length} article(s) en stock n'ont pas été vendus depuis plus de 2 semaines.
+                </AlertDescription>
+            </Alert>
+        )}
     </div>
   )
 }
