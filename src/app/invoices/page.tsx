@@ -60,7 +60,9 @@ export default function InvoicesPage() {
     }, [invoices]);
 
     const cashSales = useMemo(() => {
-        return sales.filter(s => !s.invoiceId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return sales
+            .filter(s => !s.invoiceId && s.itemType !== 'Ticket Wifi') // Exclure les ventes Wifi
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }, [sales]);
 
     const totalCashSales = useMemo(() => {
@@ -89,13 +91,13 @@ export default function InvoicesPage() {
             </Card>
              <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ventes au Comptant</CardTitle>
+                <CardTitle className="text-sm font-medium">Ventes au Comptant (produits)</CardTitle>
                 <Banknote className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold">{formatCurrency(totalCashSales)} F</div>
                 <p className="text-xs text-muted-foreground">
-                Total des ventes rapides et au comptant.
+                Total des ventes de produits au comptant (hors Wifi).
                 </p>
             </CardContent>
             </Card>
@@ -129,7 +131,7 @@ export default function InvoicesPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Ventes au comptant récentes</CardTitle>
-                    <CardDescription>Liste des dernières ventes au comptant.</CardDescription>
+                    <CardDescription>Liste des dernières ventes de produits au comptant (hors Wifi).</CardDescription>
                 </CardHeader>
                 <CardContent>
                 <DataTable
