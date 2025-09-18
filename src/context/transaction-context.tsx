@@ -28,6 +28,7 @@ interface TransactionContextType {
   returnSale: (saleId: string) => void;
   addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
+  updatePurchase: (purchaseId: string, updatedValues: { quantity: number; amount: number }) => { success: boolean, message: string };
   payPurchase: (purchaseId: string) => void;
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
   updateExpense: (id: string, updatedExpense: Partial<Omit<Expense, 'id' | 'type' | 'currency'>>) => void;
@@ -327,6 +328,55 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     }
 
   }, [transactions, setTransactions, inventory, updateInventoryItem, logAction]);
+
+    const updatePurchase = useCallback((purchaseId: string, updatedValues: { quantity: number; amount: number }): { success: boolean, message: string } => {
+    const originalPurchase = transactions.find(t => t.id === purchaseId && t.type === 'purchase') as Purchase | undefined;
+    if (!originalPurchase || !originalPurchase.inventoryId) {
+        return { success: false, message: 'Achat original non trouvé ou non lié à un stock.' };
+    }
+
+    const item = inventory.find(i => i.id === originalPurchase.inventoryId);
+    if (!item) {
+        return { success: false, message: `Article ${originalPurchase.product} non trouvé.` };
+    }
+
+    // Revert the old purchase from inventory
+    const originalQuantity = originalPurchase.quantity || 0;
+    const originalAmount = originalPurchase.amount;
+    
+    // Safely calculate the state of the item *before* the original purchase
+    const oldStockValue = (item.inStock * (item.costPrice || 0)) - originalAmount;
+    const oldStock = item.inStock - originalQuantity;
+    if (oldStock < 0) {
+        return { success: false, message: `Impossible d'annuler l'achat: le stock deviendrait négatif.` };
+    }
+    const oldCump = oldStock > 0 ? oldStockValue / oldStock : 0;
+
+    // Now, apply the new purchase to this reverted state
+    const newStock = oldStock + updatedValues.quantity;
+    const newStockValue = oldStockValue + updatedValues.amount;
+    const newCump = newStock > 0 ? newStockValue / newStock : 0;
+
+    // Update inventory item with new stock and CUMP
+    updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump }, `Modification achat ${purchaseId}`);
+
+    // Update the purchase transaction itself
+    setTransactions(prev => prev.map(t => {
+        if (t.id === purchaseId) {
+            logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}. Qté: ${originalQuantity} -> ${updatedValues.quantity}, Montant: ${originalAmount} -> ${updatedValues.amount}`);
+            return {
+                ...t,
+                quantity: updatedValues.quantity,
+                amount: updatedValues.amount,
+                description: `Achat de ${updatedValues.quantity} x ${item.productName}`,
+                date: new Date().toISOString()
+            };
+        }
+        return t;
+    }));
+
+    return { success: true, message: 'Achat et stock mis à jour.' };
+}, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
   
   const payPurchase = useCallback((purchaseId: string) => {
     let purchaseToPay: Purchase | undefined;
@@ -708,6 +758,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     returnSale,
     addBulkSales,
     addPurchase,
+    updatePurchase,
     payPurchase,
     addExpense,
     updateExpense,
@@ -730,7 +781,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     clearCashClosings,
   }), [
       transactions, setTransactions, sales, purchases, expenses, receipts, invoices, setInvoices, sortedCashClosings, setCashClosings, 
-      expenseCategories, addSale, updateSale, returnSale, addBulkSales, addPurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
+      expenseCategories, addSale, updateSale, returnSale, addBulkSales, addPurchase, updatePurchase, payPurchase, addExpense, updateExpense, addBulkExpenses, removeExpense, 
       addExpenseCategory, addAdjustment, addBulkAdjustments, addInvoice, getInvoice, removeInvoice, getAllTransactions, getDailyHistory, getAllHistory,
       addCashClosing, getLastClosingDate, clearWifiSales, clearCashTransactions, clearInvoices, clearCashClosings,
       airtimeTransactions, mobileMoneyTransactions
