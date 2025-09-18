@@ -54,27 +54,39 @@ export default function InventoryPage() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     return inventory
-        .filter(item => item.inStock <= item.reorderLevel)
+        .filter(item => {
+            // Un article est à considérer pour le réapprovisionnement
+            // seulement s'il est sous le niveau d'alerte.
+            return item.inStock <= item.reorderLevel
+        })
         .map(item => {
             const recentSales = sales.filter(
                 s => s.inventoryId === item.id && new Date(s.date) >= thirtyDaysAgo
-            ).reduce((acc, s) => acc + (s.quantity || 0), 0);
+            );
+            const totalRecentSales = recentSales.reduce((acc, s) => acc + (s.quantity || 0), 0);
             
-            const averageDailySales = recentSales / 30;
-            // Target 15 days of stock
+            // Si aucune vente récente, on ne le commande pas, même si le stock est bas.
+            if (totalRecentSales === 0) {
+              return { ...item, quantityToOrder: 0 };
+            }
+
+            const averageDailySales = totalRecentSales / 30;
+            // Cible: avoir 15 jours de stock de sécurité
             const targetStock = Math.ceil(averageDailySales * 15); 
             let quantityToOrder = targetStock - item.inStock;
 
-            // If no sales, suggest ordering up to the reorder level
+            // Si le calcul ci-dessus est négatif (stock actuel > cible),
+            // on suggère de commander juste assez pour atteindre le niveau d'alerte.
             if (quantityToOrder <= 0) {
               quantityToOrder = item.reorderLevel - item.inStock;
             }
-
+            
             return {
                 ...item,
                 quantityToOrder: quantityToOrder > 0 ? Math.ceil(quantityToOrder) : 0,
             };
         })
+        // On ne garde que les articles pour lesquels il faut effectivement passer une commande.
         .filter(item => item.quantityToOrder > 0);
   }, [inventory, sales]);
 
