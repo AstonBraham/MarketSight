@@ -97,23 +97,25 @@ export function InventoryProvider({ children }: { children: ReactNode }) {
         if (!itemToUpdate) return prev;
 
         const updatedItem = { ...itemToUpdate, ...updatedFields };
-        const oldStock = itemToUpdate.inStock;
-        const newStock = updatedItem.inStock;
+        
+        // Only log stock movement if inStock is explicitly provided and different
+        if (updatedFields.inStock !== undefined && updatedFields.inStock !== itemToUpdate.inStock) {
+            const oldStock = itemToUpdate.inStock;
+            const newStock = updatedFields.inStock;
 
-        if (newStock !== oldStock) {
             addStockMovement({
                 inventoryId: id,
                 productName: updatedItem.productName,
-                type: newStock > oldStock ? 'in' : 'out',
+                type: newStock > oldStock ? 'in' : (newStock < oldStock ? 'out' : 'adjustment'),
                 quantity: newStock - oldStock,
                 reason: reason,
                 balanceBefore: oldStock,
                 balanceAfter: newStock,
                 relatedTransactionId,
             });
-             logAction('UPDATE_ITEM_STOCK', `Stock de "${updatedItem.productName}" ajusté de ${oldStock} à ${newStock}. Raison: ${reason}.`);
-        } else {
-            logAction('UPDATE_ITEM', `Modification des détails de l'article "${itemToUpdate.productName}" (ID: ${id}).`);
+            logAction('UPDATE_ITEM_STOCK', `Stock de "${updatedItem.productName}" ajusté de ${oldStock} à ${newStock}. Raison: ${reason}.`);
+        } else if (Object.keys(updatedFields).some(key => updatedFields[key as keyof typeof updatedFields] !== itemToUpdate[key as keyof typeof itemToUpdate])) {
+             logAction('UPDATE_ITEM', `Modification des détails de l'article "${itemToUpdate.productName}" (ID: ${id}).`);
         }
 
         return prev.map(item => (item.id === id ? updatedItem : item));

@@ -82,6 +82,8 @@ export default function StockCardPage() {
             const totalOut = Math.abs(movements.filter(m => m.type === 'out').reduce((acc, m) => acc + m.quantity, 0));
             const totalAdjustments = movements.filter(m => m.type === 'adjustment').reduce((acc, m) => acc + m.quantity, 0);
             
+            // Correct calculation: FinalStock = InitialStock + In - Out + Adjustments
+            // So: InitialStock = FinalStock - In + Out - Adjustments
             const initialStock = item.inStock - totalIn + totalOut - totalAdjustments;
 
             return {
