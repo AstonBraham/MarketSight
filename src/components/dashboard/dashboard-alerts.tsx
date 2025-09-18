@@ -10,8 +10,18 @@ import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
-const AIRTIME_LOW_THRESHOLD = 50000;
-const MM_LOW_THRESHOLD = 100000;
+const LOW_STOCK_THRESHOLDS = {
+    airtime: {
+        Moov: 10000,
+        Yas: 20000,
+    },
+    mobileMoney: {
+        Flooz: 30000,
+        Mixx: 50000,
+        Coris: 100000, // Default value as it was not specified
+    }
+}
+
 
 export function DashboardAlerts() {
   const { inventory } = useInventory();
@@ -29,19 +39,19 @@ export function DashboardAlerts() {
   const mmCorisBalance = getMobileMoneyBalance('Coris');
 
   const lowStockAlerts = [];
-  if (airtimeMoovStock < AIRTIME_LOW_THRESHOLD) {
+  if (airtimeMoovStock < LOW_STOCK_THRESHOLDS.airtime.Moov) {
     lowStockAlerts.push({ type: 'airtime', provider: 'Moov', balance: airtimeMoovStock });
   }
-  if (airtimeYasStock < AIRTIME_LOW_THRESHOLD) {
+  if (airtimeYasStock < LOW_STOCK_THRESHOLDS.airtime.Yas) {
     lowStockAlerts.push({ type: 'airtime', provider: 'Yas', balance: airtimeYasStock });
   }
-  if (mmFloozBalance < MM_LOW_THRESHOLD) {
+  if (mmFloozBalance < LOW_STOCK_THRESHOLDS.mobileMoney.Flooz) {
     lowStockAlerts.push({ type: 'mm', provider: 'Flooz', balance: mmFloozBalance });
   }
-  if (mmMixxBalance < MM_LOW_THRESHOLD) {
+  if (mmMixxBalance < LOW_STOCK_THRESHOLDS.mobileMoney.Mixx) {
     lowStockAlerts.push({ type: 'mm', provider: 'Mixx', balance: mmMixxBalance });
   }
-  if (mmCorisBalance < MM_LOW_THRESHOLD) {
+  if (mmCorisBalance < LOW_STOCK_THRESHOLDS.mobileMoney.Coris) {
      lowStockAlerts.push({ type: 'mm', provider: 'Coris', balance: mmCorisBalance });
   }
   
