@@ -29,7 +29,7 @@ interface TransactionContextType {
   addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
   updatePurchase: (purchaseId: string, updatedValues: { quantity: number; amount: number }) => { success: boolean, message: string };
-  payPurchase: (purchaseId: string) => void;
+  payPurchase: (purchaseId: string) => { success: boolean, message: string };
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
   updateExpense: (id: string, updatedExpense: Partial<Omit<Expense, 'id' | 'type' | 'currency'>>) => void;
   addBulkExpenses: (expenses: Omit<Expense, 'id' | 'type' | 'currency'>[]) => void;
@@ -295,12 +295,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     };
     logAction('CREATE_PURCHASE', `Achat de "${purchase.product}" pour ${purchase.amount}F. Statut: ${newPurchase.status}.`);
 
-    if (newPurchase.status === 'paid') {
-        setTransactions(prev => [newPurchase, ...prev]);
+    if (newPurchase.status !== 'paid') {
+      // For unpaid purchases, just add them to the list without affecting cash.
+      setTransactions(prev => [...prev, newPurchase]);
     } else {
-        const allPurchases = transactions.filter(t => t.type === 'purchase');
-        const otherTransactions = transactions.filter(t => t.type !== 'purchase');
-        setTransactions([...otherTransactions, ...allPurchases, newPurchase]);
+      // For paid purchases, add them and they will be picked up by getAllTransactions for cash flow.
+      setTransactions(prev => [...prev, newPurchase]);
     }
 
     if (newPurchase.inventoryId && newPurchase.quantity) {
@@ -323,7 +323,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         }
     }
 
-  }, [transactions, setTransactions, inventory, updateInventoryItem, logAction]);
+  }, [setTransactions, inventory, updateInventoryItem, logAction]);
 
   const updatePurchase = useCallback((purchaseId: string, updatedValues: { quantity: number; amount: number }): { success: boolean, message: string } => {
     const originalPurchase = transactions.find(t => t.id === purchaseId && t.type === 'purchase') as Purchase | undefined;
@@ -371,30 +371,28 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     return { success: true, message: 'Achat et stock mis à jour.' };
   }, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
   
-  const payPurchase = useCallback((purchaseId: string) => {
+  const payPurchase = useCallback((purchaseId: string): { success: boolean, message: string } => {
     let purchaseToPay: Purchase | undefined;
 
-    const updatedTransactions = transactions.map(t => {
-        if (t.id === purchaseId && t.type === 'purchase') {
-            purchaseToPay = { ...(t as Purchase), status: 'paid' };
-            return purchaseToPay;
-        }
-        return t;
-    });
+    const currentTransactions = transactions;
+    const purchaseIndex = currentTransactions.findIndex(t => t.id === purchaseId && t.type === 'purchase');
 
-    if (purchaseToPay) {
-         const paymentTransaction: Transaction = {
-            id: purchaseToPay.id,
-            type: 'purchase',
-            amount: purchaseToPay.amount,
-            date: new Date().toISOString(),
-            description: `Paiement achat: ${purchaseToPay.description}`,
-            category: 'Paiement Achat',
-        };
-        logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} pour ${purchaseToPay.amount}F.`);
-        const filteredTransactions = transactions.filter(t => t.id !== purchaseId);
-        setTransactions([paymentTransaction, ...filteredTransactions]);
+    if (purchaseIndex === -1) {
+        return { success: false, message: "Achat non trouvé." };
     }
+    
+    purchaseToPay = currentTransactions[purchaseIndex] as Purchase;
+    
+    if (purchaseToPay.status === 'paid') {
+        return { success: false, message: "Cet achat a déjà été réglé." };
+    }
+
+    const updatedPurchase: Purchase = { ...purchaseToPay, status: 'paid', date: new Date().toISOString() };
+
+    setTransactions(prev => prev.map(t => t.id === purchaseId ? updatedPurchase : t));
+    logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} pour ${purchaseToPay.amount}F.`);
+
+    return { success: true, message: "Achat payé avec succès." };
   }, [transactions, setTransactions, logAction]);
 
 

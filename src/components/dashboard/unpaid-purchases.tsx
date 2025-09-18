@@ -33,12 +33,20 @@ export function UnpaidPurchases() {
   const { user } = useUser();
   const unpaidPurchases = purchases.filter(p => p.status === 'unpaid');
 
-  const handlePay = (purchaseId: string, amount: number) => {
-    payPurchase(purchaseId);
-    toast({
-        title: "Achat Réglé",
-        description: `L'achat a été marqué comme payé.`,
-    });
+  const handlePay = (purchaseId: string) => {
+    const result = payPurchase(purchaseId);
+    if(result.success) {
+      toast({
+          title: "Achat Réglé",
+          description: `L'achat a été marqué comme payé et une sortie de caisse a été enregistrée.`,
+      });
+    } else {
+        toast({
+            title: "Erreur",
+            description: result.message,
+            variant: "destructive",
+        });
+    }
   }
 
   if (unpaidPurchases.length === 0) {
@@ -83,7 +91,7 @@ export function UnpaidPurchases() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                             <AlertDialogCancel>Annuler</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handlePay(purchase.id, purchase.amount)}>
+                            <AlertDialogAction onClick={() => handlePay(purchase.id)}>
                                 Confirmer et Payer
                             </AlertDialogAction>
                             </AlertDialogFooter>
