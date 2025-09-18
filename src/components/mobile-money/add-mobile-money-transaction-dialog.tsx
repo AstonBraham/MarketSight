@@ -222,7 +222,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                 <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                   <PopoverTrigger asChild>
                     <div className="col-span-3">
-                       <Command>
+                       <Command shouldFilter={false}>
                           <CommandInput 
                             placeholder="Saisir ou chercher..."
                             value={phoneNumber}
@@ -236,17 +236,21 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                     <Command>
                        <CommandList>
                           <CommandEmpty>Aucun numéro trouvé.</CommandEmpty>
-                          <CommandGroup>
-                            {customerPhoneNumbers.map((num) => (
-                              <CommandItem
-                                key={num}
-                                value={num}
-                                onSelect={() => handleSelectPhoneNumber(num)}
-                              >
-                                {num}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
+                          {phoneNumber.length >= 4 && (
+                            <CommandGroup>
+                                {customerPhoneNumbers
+                                .filter(num => num.startsWith(phoneNumber))
+                                .map((num) => (
+                                    <CommandItem
+                                    key={num}
+                                    value={num}
+                                    onSelect={() => handleSelectPhoneNumber(num)}
+                                    >
+                                    {num}
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                          )}
                         </CommandList>
                     </Command>
                   </PopoverContent>
