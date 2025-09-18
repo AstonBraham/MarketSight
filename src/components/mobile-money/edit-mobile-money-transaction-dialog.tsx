@@ -77,7 +77,7 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
         provider: transaction.provider,
         amount: transactionAmount,
         commission: parseFloat(data.commission as string) || 0,
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber.replace(/\s+/g, ''),
         affectsCash: affectsCash
     });
     
@@ -182,7 +182,6 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
                             placeholder="Saisir ou chercher..."
                             value={phoneNumber}
                             onValueChange={handleNumericInput}
-                            onFocus={() => setPopoverOpen(true)}
                           />
                         </Command>
                     </div>
@@ -194,7 +193,7 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
                           {phoneNumber.length >= 4 && (
                             <CommandGroup>
                                 {customerPhoneNumbers
-                                .filter(num => num.startsWith(phoneNumber))
+                                .filter(num => num.replace(/\s+/g, '').startsWith(phoneNumber.replace(/\s+/g, '')))
                                 .map((num) => (
                                     <CommandItem
                                     key={num}

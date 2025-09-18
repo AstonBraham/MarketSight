@@ -67,7 +67,7 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
         provider: transaction.provider,
         amount: parseFloat(data.amount as string) || 0,
         commission: data.commission ? parseFloat(data.commission as string) : 0,
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber.replace(/\s+/g, ''),
         transactionId: data.transactionId as string
     });
 
@@ -159,7 +159,6 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
                             placeholder="Saisir ou chercher..."
                             value={phoneNumber}
                             onValueChange={handleNumericInput}
-                            onFocus={() => setPopoverOpen(true)}
                           />
                         </Command>
                     </div>
@@ -171,7 +170,7 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
                            {phoneNumber.length >= 4 && (
                                 <CommandGroup>
                                 {customerPhoneNumbers
-                                .filter(num => num.startsWith(phoneNumber))
+                                .filter(num => num.replace(/\s+/g, '').startsWith(phoneNumber.replace(/\s+/g, '')))
                                 .map((num) => (
                                     <CommandItem
                                     key={num}

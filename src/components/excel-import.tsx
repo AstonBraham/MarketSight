@@ -42,7 +42,10 @@ export function ExcelImport({ title, onImport, icon }: ExcelImportProps) {
         const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet);
+        const json = XLSX.utils.sheet_to_json(worksheet, {
+            raw: false, // This ensures that formatted text (like numbers as text) is parsed correctly
+            defval: null // Set blank cells to null instead of undefined
+        });
         
         onImport(json);
 

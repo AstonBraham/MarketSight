@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
-import { Save, Upload, BrainCircuit, Trash2, FileCheck2 } from 'lucide-react';
+import { Save, Upload, BrainCircuit, Trash2, FileCheck2, RemoveFormatting } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 import { useAuditLog } from '@/context/audit-log-context';
 import {
@@ -62,8 +62,8 @@ function MaintenanceActions() {
     const { toast } = useToast();
     const { clearInventory } = useInventory();
     const { clearCashTransactions, clearInvoices, clearCashClosings } = useTransactions();
-    const { clearAirtimeTransactions } = useAirtime();
-    const { clearMobileMoneyTransactions } = useMobileMoney();
+    const { clearAirtimeTransactions, cleanPhoneNumbers: cleanAirtimePhoneNumbers } = useAirtime();
+    const { clearMobileMoneyTransactions, cleanPhoneNumbers: cleanMobileMoneyPhoneNumbers } = useMobileMoney();
     
     const handleClearAllData = () => {
         try {
@@ -97,6 +97,23 @@ function MaintenanceActions() {
             toast({ title: "Opération réussie", description: `${title} ont été effacées.` });
         } catch (error) {
             toast({ title: "Erreur", description: `Impossible de vider les ${title.toLowerCase()}.`, variant: 'destructive' });
+        }
+    }
+    
+    const handleCleanPhoneNumbers = () => {
+        try {
+            cleanAirtimePhoneNumbers();
+            cleanMobileMoneyPhoneNumbers();
+            toast({
+                title: 'Nettoyage terminé',
+                description: 'Tous les espaces ont été retirés des numéros de téléphone enregistrés.',
+            });
+        } catch (error) {
+            toast({
+                title: 'Erreur',
+                description: 'Une erreur est survenue lors du nettoyage des numéros.',
+                variant: 'destructive',
+            });
         }
     }
 
@@ -133,6 +150,28 @@ function MaintenanceActions() {
                     <AlertDialogContent>
                         <AlertDialogHeader><AlertDialogTitle>Vider les données Mobile Money ?</AlertDialogTitle><AlertDialogDescription>Toutes les transactions Mobile Money (Flooz, Mixx, Coris) seront supprimées.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={createClearAction(clearMobileMoneyTransactions, "Données Mobile Money")}>Confirmer</AlertDialogAction></AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                         <Button variant="secondary">
+                            <RemoveFormatting className="mr-2 h-4 w-4" />
+                            Nettoyer les numéros
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Nettoyer tous les numéros de téléphone ?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Cette action va parcourir toutes les transactions Airtime et Mobile Money pour supprimer les espaces dans les numéros de téléphone (ex: "90 12 34 56" deviendra "90123456"). Cela permet d'éviter les doublons. L'opération est sûre.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCleanPhoneNumbers}>
+                            Oui, nettoyer les numéros
+                        </AlertDialogAction>
+                        </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
 
@@ -364,7 +403,7 @@ export default function SettingsPage() {
                 type: row['type'],
                 amount: parseFloat(row['amount']),
                 commission: parseFloat(row['commission'] || '0'),
-                phoneNumber: String(row['phoneNumber'] || row['Numéro Tél.'] || ''),
+                phoneNumber: String(row['phoneNumber'] || row['Numéro Tél.'] || '').replace(/\s+/g, ''),
                 transactionId: row['transactionId'] || '',
             };
         });
@@ -389,7 +428,7 @@ export default function SettingsPage() {
                 type: row['type'],
                 amount: parseFloat(row['amount']),
                 commission: parseFloat(row['commission'] || '0'),
-                phoneNumber: row['phoneNumber'] || '',
+                phoneNumber: String(row['phoneNumber'] || '').replace(/\s+/g, ''),
                 transactionId: row['transactionId'] || '',
             };
         });

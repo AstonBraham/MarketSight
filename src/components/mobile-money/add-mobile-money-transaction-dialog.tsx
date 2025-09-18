@@ -134,7 +134,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         provider: provider,
         amount: transactionAmount,
         commission: parseFloat(data.commission as string) || 0,
-        phoneNumber: phoneNumber,
+        phoneNumber: phoneNumber.replace(/\s+/g, ''),
         affectsCash: affectsCash
     });
 
@@ -227,7 +227,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                             placeholder="Saisir ou chercher..."
                             value={phoneNumber}
                             onValueChange={handleNumericInput}
-                            onFocus={() => setPopoverOpen(true)}
                           />
                         </Command>
                     </div>
@@ -239,7 +238,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
                           {phoneNumber.length >= 4 && (
                             <CommandGroup>
                                 {customerPhoneNumbers
-                                .filter(num => num.startsWith(phoneNumber))
+                                .filter(num => num.replace(/\s+/g, '').startsWith(phoneNumber.replace(/\s+/g, '')))
                                 .map((num) => (
                                     <CommandItem
                                     key={num}

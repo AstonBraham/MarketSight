@@ -15,6 +15,7 @@ interface MobileMoneyContextType {
   addBulkTransactions: (transactions: Omit<MobileMoneyTransaction, 'id' | 'date'>[], providerToClear?: MobileMoneyProvider) => void;
   removeTransaction: (id: string) => void;
   clearMobileMoneyTransactions: (providerToClear?: MobileMoneyProvider) => void;
+  cleanPhoneNumbers: () => void;
   getBalance: (provider: MobileMoneyProvider) => number;
   getProcessedTransactions: (provider: MobileMoneyProvider) => MobileMoneyTransaction[];
 }
@@ -116,6 +117,18 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         setTransactions([initialMixxBalance, ...nonMixxTransactions]);
     }
   }, [setTransactions, transactions, logAction]);
+  
+  const cleanPhoneNumbers = useCallback(() => {
+    setTransactions(prev => 
+      prev.map(t => {
+        if (t.phoneNumber) {
+          return { ...t, phoneNumber: t.phoneNumber.replace(/\s+/g, '') };
+        }
+        return t;
+      })
+    );
+    logAction('CLEAN_PHONE_NUMBERS', 'Nettoyage des numéros de téléphone pour les transactions Mobile Money.');
+  }, [setTransactions, logAction]);
 
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     const providerTransactions = transactions.filter(t => t.provider === provider);
@@ -185,9 +198,10 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     addBulkTransactions,
     removeTransaction,
     clearMobileMoneyTransactions,
+    cleanPhoneNumbers,
     getBalance,
     getProcessedTransactions,
-  }), [transactions, setTransactions, addTransaction, updateTransaction, addBulkTransactions, removeTransaction, clearMobileMoneyTransactions, getBalance, getProcessedTransactions]);
+  }), [transactions, setTransactions, addTransaction, updateTransaction, addBulkTransactions, removeTransaction, clearMobileMoneyTransactions, cleanPhoneNumbers, getBalance, getProcessedTransactions]);
 
   return (
     <MobileMoneyContext.Provider value={value}>
