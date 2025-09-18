@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -18,10 +18,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem } from '@/components/ui/command';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, ChevronsUpDown, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import type { MobileMoneyTransactionType, MobileMoneyProvider } from '@/lib/types';
@@ -35,15 +37,22 @@ type AddMobileMoneyTransactionDialogProps = {
 
 export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTransactionDialogProps) {
   const [open, setOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast();
-  const { addTransaction, getBalance } = useMobileMoney();
+  const { addTransaction, getBalance, transactions } = useMobileMoney();
   const { addAdjustment } = useTransactions();
   
   const [type, setType] = useState<MobileMoneyTransactionType | ''>('');
   const [amount, setAmount] = useState(0);
   const [commission, setCommission] = useState(0);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [isCommissionManual, setIsCommissionManual] = useState(false);
   const [affectsCash, setAffectsCash] = useState(false);
+
+  const customerPhoneNumbers = useMemo(() => {
+    const uniqueNumbers = new Set(transactions.map(t => t.phoneNumber).filter(Boolean));
+    return Array.from(uniqueNumbers);
+  }, [transactions]);
 
 
   useEffect(() => {
@@ -125,7 +134,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         provider: provider,
         amount: transactionAmount,
         commission: parseFloat(data.commission as string) || 0,
-        phoneNumber: data.phoneNumber as string,
+        phoneNumber: phoneNumber,
         affectsCash: affectsCash
     });
 
@@ -145,12 +154,19 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     setAmount(0);
     setCommission(0);
     setType('');
+    setPhoneNumber('');
     setIsCommissionManual(false);
     setAffectsCash(false);
   };
 
-  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  const handleNumericInput = (value: string) => {
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setPhoneNumber(numericValue);
+  };
+  
+  const handleSelectPhoneNumber = (number: string) => {
+    setPhoneNumber(number);
+    setPopoverOpen(false);
   };
 
   const showCommissionField = type === 'deposit' || type === 'withdrawal';
@@ -190,7 +206,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
-              <Input id="transactionId" name="transactionId" onChange={handleNumericInput} className="col-span-3" placeholder="Référence de la transaction" required/>
+              <Input id="transactionId" name="transactionId" className="col-span-3" placeholder="Référence de la transaction" required/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Montant</Label>
@@ -203,7 +219,38 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
              {showPhoneNumber && (
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-                <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required/>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="col-span-3">
+                       <Command>
+                          <CommandInput 
+                            placeholder="Saisir ou chercher..."
+                            value={phoneNumber}
+                            onValueChange={handleNumericInput}
+                            onFocus={() => setPopoverOpen(true)}
+                          />
+                        </Command>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                       <CommandList>
+                          <CommandEmpty>Aucun numéro trouvé.</CommandEmpty>
+                          <CommandGroup>
+                            {customerPhoneNumbers.map((num) => (
+                              <CommandItem
+                                key={num}
+                                value={num}
+                                onSelect={() => handleSelectPhoneNumber(num)}
+                              >
+                                {num}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
              )}
             {showAffectsCashSwitch && (

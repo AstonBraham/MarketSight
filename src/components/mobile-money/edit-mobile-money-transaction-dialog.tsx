@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, CalendarIcon } from 'lucide-react';
+import { Edit, CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import type { MobileMoneyTransaction, MobileMoneyTransactionType } from '@/lib/types';
@@ -29,6 +29,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { DropdownMenuItem } from '../ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem } from '@/components/ui/command';
 import { Calendar } from '../ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -39,20 +40,22 @@ type EditMobileMoneyTransactionDialogProps = {
 
 export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMoneyTransactionDialogProps) {
   const [open, setOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const { toast } = useToast();
-  const { updateTransaction } = useMobileMoney();
+  const { updateTransaction, transactions } = useMobileMoney();
   
   const [type, setType] = useState<MobileMoneyTransactionType | ''>(transaction.type);
   const [amount, setAmount] = useState(transaction.amount);
   const [commission, setCommission] = useState(transaction.commission);
-  const [isCommissionManual, setIsCommissionManual] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState(transaction.phoneNumber || '');
+  const [isCommissionManual, setIsCommissionManual] = useState(true);
   const [affectsCash, setAffectsCash] = useState(transaction.affectsCash ?? false);
   const [date, setDate] = useState<Date | undefined>(new Date(transaction.date));
 
-  useEffect(() => {
-    // We only auto-calculate on the add form. On edit, we assume the values are correct.
-    setIsCommissionManual(true);
-  }, []);
+  const customerPhoneNumbers = useMemo(() => {
+    const uniqueNumbers = new Set(transactions.map(t => t.phoneNumber).filter(Boolean));
+    return Array.from(uniqueNumbers);
+  }, [transactions]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,7 +77,7 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
         provider: transaction.provider,
         amount: transactionAmount,
         commission: parseFloat(data.commission as string) || 0,
-        phoneNumber: data.phoneNumber as string,
+        phoneNumber: phoneNumber,
         affectsCash: affectsCash
     });
     
@@ -85,8 +88,14 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
     setOpen(false);
   };
 
-  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  const handleNumericInput = (value: string) => {
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setPhoneNumber(numericValue);
+  };
+  
+  const handleSelectPhoneNumber = (number: string) => {
+    setPhoneNumber(number);
+    setPopoverOpen(false);
   };
 
   const showCommissionField = type === 'deposit' || type === 'withdrawal';
@@ -152,7 +161,7 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
-              <Input id="transactionId" name="transactionId" onChange={handleNumericInput} className="col-span-3" placeholder="Référence de la transaction" required defaultValue={transaction.transactionId}/>
+              <Input id="transactionId" name="transactionId" className="col-span-3" placeholder="Référence de la transaction" required defaultValue={transaction.transactionId}/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Montant</Label>
@@ -165,7 +174,38 @@ export function EditMobileMoneyTransactionDialog({ transaction }: EditMobileMone
              {showPhoneNumber && (
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-                <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" required defaultValue={transaction.phoneNumber}/>
+                <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="col-span-3">
+                       <Command>
+                          <CommandInput 
+                            placeholder="Saisir ou chercher..."
+                            value={phoneNumber}
+                            onValueChange={handleNumericInput}
+                            onFocus={() => setPopoverOpen(true)}
+                          />
+                        </Command>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                       <CommandList>
+                          <CommandEmpty>Aucun numéro trouvé.</CommandEmpty>
+                          <CommandGroup>
+                            {customerPhoneNumbers.map((num) => (
+                              <CommandItem
+                                key={num}
+                                value={num}
+                                onSelect={() => handleSelectPhoneNumber(num)}
+                              >
+                                {num}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
              )}
             {showAffectsCashSwitch && (

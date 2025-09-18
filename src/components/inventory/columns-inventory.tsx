@@ -62,7 +62,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
         }
 
         return (
-            <Link href={`/inventory/${item.id}`} className="hover:underline font-medium">
+            <Link href={`/inventory/${item.id}`} className="hover:underline font-medium text-primary">
                 {item.productName}
             </Link>
         )

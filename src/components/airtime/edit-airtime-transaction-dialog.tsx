@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,15 +21,17 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Edit, CalendarIcon } from 'lucide-react';
+import { Edit, CalendarIcon, ChevronsUpDown, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAirtime } from '@/context/airtime-context';
 import type { AirtimeTransaction } from '@/lib/types';
 import { DropdownMenuItem } from '../ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandInput, CommandGroup, CommandList, CommandItem } from '@/components/ui/command';
 import { Calendar } from '../ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 type EditAirtimeTransactionDialogProps = {
     transaction: AirtimeTransaction;
@@ -37,9 +39,17 @@ type EditAirtimeTransactionDialogProps = {
 
 export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransactionDialogProps) {
   const [open, setOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(new Date(transaction.date));
   const { toast } = useToast();
-  const { updateTransaction } = useAirtime();
+  const { updateTransaction, transactions } = useAirtime();
+  const [phoneNumber, setPhoneNumber] = useState(transaction.phoneNumber || '');
+
+  const customerPhoneNumbers = useMemo(() => {
+    const uniqueNumbers = new Set(transactions.map(t => t.phoneNumber).filter(Boolean));
+    return Array.from(uniqueNumbers);
+  }, [transactions]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +67,7 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
         provider: transaction.provider,
         amount: parseFloat(data.amount as string) || 0,
         commission: data.commission ? parseFloat(data.commission as string) : 0,
-        phoneNumber: data.phoneNumber as string,
+        phoneNumber: phoneNumber,
         transactionId: data.transactionId as string
     });
 
@@ -68,8 +78,14 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
     setOpen(false);
   };
   
-  const handleNumericInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  const handleNumericInput = (value: string) => {
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setPhoneNumber(numericValue);
+  };
+
+  const handleSelectPhoneNumber = (number: string) => {
+    setPhoneNumber(number);
+    setPopoverOpen(false);
   };
 
   return (
@@ -135,11 +151,42 @@ export function EditAirtimeTransactionDialog({ transaction }: EditAirtimeTransac
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-              <Input id="phoneNumber" name="phoneNumber" type="tel" onChange={handleNumericInput} className="col-span-3" placeholder="Numéro de téléphone" defaultValue={transaction.phoneNumber} />
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <div className="col-span-3">
+                       <Command>
+                          <CommandInput 
+                            placeholder="Saisir ou chercher..."
+                            value={phoneNumber}
+                            onValueChange={handleNumericInput}
+                            onFocus={() => setPopoverOpen(true)}
+                          />
+                        </Command>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command>
+                       <CommandList>
+                          <CommandEmpty>Aucun numéro trouvé.</CommandEmpty>
+                          <CommandGroup>
+                            {customerPhoneNumbers.map((num) => (
+                              <CommandItem
+                                key={num}
+                                value={num}
+                                onSelect={() => handleSelectPhoneNumber(num)}
+                              >
+                                {num}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
-              <Input id="transactionId" name="transactionId" onChange={handleNumericInput} className="col-span-3" placeholder="Référence de la transaction" defaultValue={transaction.transactionId} />
+              <Input id="transactionId" name="transactionId" className="col-span-3" placeholder="Référence de la transaction" defaultValue={transaction.transactionId} />
             </div>
           </div>
           <DialogFooter>
