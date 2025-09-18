@@ -123,9 +123,11 @@ export default function MobileMoneyMixxPage() {
 
        <Card>
         <CardHeader>
-            <CardTitle>Opérations Mixx</CardTitle>
             <div className="flex justify-between items-center">
-                 <CardDescription>Historique des transactions pour Mixx.</CardDescription>
+                 <div>
+                    <CardTitle>Opérations Mixx</CardTitle>
+                    <CardDescription>Historique des transactions pour Mixx.</CardDescription>
+                </div>
                  <div className="flex items-center gap-2">
                     <Label htmlFor="filter">Filtrer par type</Label>
                      <Select value={filter} onValueChange={(value) => setFilter(value as TransactionFilter)}>

@@ -9,14 +9,26 @@ import { PlusCircle } from 'lucide-react';
 import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
 import { mockAirtimeTransactions } from '@/lib/mock-data';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import type { AirtimeTransaction } from '@/lib/types';
+
+type TransactionFilter = 'all' | 'purchase' | 'sale' | 'commission' | 'adjustment';
 
 export default function AirtimePage() {
   const [isClient, setIsClient] = useState(false);
+  const [filter, setFilter] = useState<TransactionFilter>('all');
+  const [providerFilter, setProviderFilter] = useState<'all' | 'Moov' | 'Yas'>('all');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  const filteredTransactions = useMemo(() => {
+    return mockAirtimeTransactions
+      .filter(t => providerFilter === 'all' || t.provider === providerFilter)
+      .filter(t => filter === 'all' || t.type === filter);
+  }, [filter, providerFilter]);
+
 
   if (!isClient) {
     return null; // ou un skeleton/loader
@@ -61,44 +73,28 @@ export default function AirtimePage() {
         </Card>
       </div>
 
-       <Tabs defaultValue="all">
+       <Tabs defaultValue="all" onValueChange={(value) => setProviderFilter(value as any)}>
         <div className="flex items-center">
             <TabsList>
                 <TabsTrigger value="all">Toutes les transactions</TabsTrigger>
-                <TabsTrigger value="moov">Moov</TabsTrigger>
-                <TabsTrigger value="yas">Yas</TabsTrigger>
+                <TabsTrigger value="Moov">Moov</TabsTrigger>
+                <TabsTrigger value="Yas">Yas</TabsTrigger>
+            </TabsList>
+             <TabsList className="ml-auto">
+                <TabsTrigger value="all" onClick={() => setFilter('all')}>Toutes</TabsTrigger>
+                <TabsTrigger value="purchase" onClick={() => setFilter('purchase')}>Achats</TabsTrigger>
+                <TabsTrigger value="sale" onClick={() => setFilter('sale')}>Ventes</TabsTrigger>
+                <TabsTrigger value="commission" onClick={() => setFilter('commission')}>Commissions</TabsTrigger>
             </TabsList>
         </div>
-        <TabsContent value="all">
+        <TabsContent value={providerFilter}>
             <Card>
                 <CardHeader>
                 <CardTitle>Transactions Airtime</CardTitle>
                 <CardDescription>Suivi des achats et ventes de crédit téléphonique.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DataTable data={mockAirtimeTransactions} columns={airtimeColumns} />
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="moov">
-            <Card>
-                <CardHeader>
-                <CardTitle>Transactions Moov</CardTitle>
-                <CardDescription>Historique des transactions pour Moov.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <DataTable data={mockAirtimeTransactions.filter(t => t.provider === 'Moov')} columns={airtimeColumns} />
-                </CardContent>
-            </Card>
-        </TabsContent>
-        <TabsContent value="yas">
-             <Card>
-                <CardHeader>
-                <CardTitle>Transactions Yas</CardTitle>
-                <CardDescription>Historique des transactions pour Yas.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <DataTable data={mockAirtimeTransactions.filter(t => t.provider === 'Yas')} columns={airtimeColumns} />
+                    <DataTable data={filteredTransactions} columns={airtimeColumns} />
                 </CardContent>
             </Card>
         </TabsContent>
