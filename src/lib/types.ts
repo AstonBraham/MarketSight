@@ -40,6 +40,7 @@ export type Purchase = Transaction & {
   status?: 'paid' | 'unpaid';
   inventoryId?: string;
   quantity?: number;
+  additionalCosts?: number;
 };
 
 export type Expense = Transaction & {

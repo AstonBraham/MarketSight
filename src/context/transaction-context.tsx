@@ -310,7 +310,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             const oldCostPrice = item.costPrice || 0;
             const oldStockValue = oldStock * oldCostPrice;
 
-            const purchaseValue = newPurchase.amount;
+            const purchaseValue = newPurchase.amount + (newPurchase.additionalCosts || 0);
             const newStock = oldStock + newPurchase.quantity;
             const newCostPrice = newStock > 0 ? (oldStockValue + purchaseValue) / newStock : purchaseValue / newPurchase.quantity;
 
@@ -338,7 +338,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     
     // Revert the old purchase from inventory
     const originalQuantity = originalPurchase.quantity || 0;
-    const originalAmount = originalPurchase.amount;
+    const originalAmount = originalPurchase.amount + (originalPurchase.additionalCosts || 0);
     
     const stockWithoutThisPurchase = item.inStock - originalQuantity;
     if (stockWithoutThisPurchase < 0) {
@@ -349,14 +349,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
     // Apply the new purchase
     const newStock = stockWithoutThisPurchase + updatedValues.quantity;
-    const newValue = valueWithoutThisPurchase + updatedValues.amount;
+    const newValue = valueWithoutThisPurchase + updatedValues.amount; // Assuming additional costs are re-entered or are 0 in the new amount
     const newCump = newStock > 0 ? newValue / newStock : 0;
     
     updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump }, `Modification achat ${purchaseId}`);
 
     setTransactions(prev => prev.map(t => {
         if (t.id === purchaseId) {
-            logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}. Qté: ${originalQuantity} -> ${updatedValues.quantity}, Montant: ${originalAmount} -> ${updatedValues.amount}`);
+            logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}. Qté: ${originalQuantity} -> ${updatedValues.quantity}, Montant: ${originalPurchase.amount} -> ${updatedValues.amount}`);
             return {
                 ...t,
                 quantity: updatedValues.quantity,

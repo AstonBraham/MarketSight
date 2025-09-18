@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -27,13 +27,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, ChevronsUpDown, Check } from 'lucide-react';
+import { PlusCircle, ChevronsUpDown, Check, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { useInventory } from '@/context/inventory-context';
 import type { InventoryItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 export function AddPurchaseDialog() {
@@ -45,9 +46,13 @@ export function AddPurchaseDialog() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [totalCost, setTotalCost] = useState(0);
+  const [additionalCosts, setAdditionalCosts] = useState(0);
   const [isPaid, setIsPaid] = useState(true);
 
   const selectedItem = inventory.find(i => i.id === selectedItemId);
+  
+  const finalTotalCost = totalCost + additionalCosts;
+  const unitCost = quantity > 0 ? finalTotalCost / quantity : 0;
 
   const handleItemSelect = (itemId: string) => {
     setSelectedItemId(itemId);
@@ -58,6 +63,7 @@ export function AddPurchaseDialog() {
     setSelectedItemId(null);
     setQuantity(1);
     setTotalCost(0);
+    setAdditionalCosts(0);
     setIsPaid(true);
   }
 
@@ -78,6 +84,7 @@ export function AddPurchaseDialog() {
       product: selectedItem.productName,
       description: `Achat de ${quantity} x ${selectedItem.productName}`,
       amount: totalCost,
+      additionalCosts: additionalCosts,
       status: isPaid ? 'paid' : 'unpaid',
       inventoryId: selectedItem.id,
       quantity: quantity
@@ -169,13 +176,35 @@ export function AddPurchaseDialog() {
                         </Label>
                         <Input id="quantity" name="quantity" type="number" className="col-span-3" value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 0)} min="1" required/>
                     </div>
+
+                    <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Attention</AlertTitle>
+                        <AlertDescription>
+                            Saisissez le **coût total** pour l'ensemble des articles achetés, pas le coût unitaire.
+                        </AlertDescription>
+                    </Alert>
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="amount" className="text-right">
-                            Coût Total Achat
+                            Coût d'achat (Total)
                         </Label>
                         <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" value={totalCost} onChange={(e) => setTotalCost(parseFloat(e.target.value) || 0)} required/>
                     </div>
+                    
                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="additionalCosts" className="text-right">
+                            Coûts additionnels
+                        </Label>
+                        <Input id="additionalCosts" name="additionalCosts" type="number" className="col-span-3" placeholder="Transport, douane, etc." value={additionalCosts} onChange={(e) => setAdditionalCosts(parseFloat(e.target.value) || 0)} />
+                    </div>
+
+                    <div className="rounded-md bg-muted p-3 text-right">
+                        <p className="text-sm text-muted-foreground">Coût de revient total : <span className="font-bold text-foreground">{new Intl.NumberFormat('fr-FR').format(finalTotalCost)} F</span></p>
+                        <p className="text-sm text-muted-foreground">Coût de revient unitaire : <span className="font-bold text-foreground">{new Intl.NumberFormat('fr-FR').format(unitCost)} F</span></p>
+                    </div>
+
+                    <div className="grid grid-cols-4 items-center gap-4 pt-4">
                         <Label htmlFor="isPaid" className="text-right col-span-3">
                             Payer maintenant (mouvementer la trésorerie)
                         </Label>
