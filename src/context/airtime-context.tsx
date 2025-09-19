@@ -16,7 +16,6 @@ interface AirtimeContextType {
   addBulkTransactions: (transactions: Omit<AirtimeTransaction, 'id' | 'date'>[], providerToClear?: 'Moov' | 'Yas') => void;
   removeTransaction: (id: string) => void;
   clearAirtimeTransactions: (providerToClear?: 'Moov' | 'Yas') => void;
-  cleanPhoneNumbers: () => void;
   getStock: (provider: 'Moov' | 'Yas') => number;
   getProcessedTransactions: (provider: 'Moov' | 'Yas') => AirtimeTransaction[];
 }
@@ -82,18 +81,6 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     }
   }, [setTransactions, logAction]);
   
-  const cleanPhoneNumbers = useCallback(() => {
-    setTransactions(prev => 
-      prev.map(t => {
-        if (t.phoneNumber) {
-          return { ...t, phoneNumber: t.phoneNumber.replace(/\s+/g, '') };
-        }
-        return t;
-      })
-    );
-    logAction('CLEAN_PHONE_NUMBERS', 'Nettoyage des numéros de téléphone pour les transactions Airtime.');
-  }, [setTransactions, logAction]);
-
   const getStock = useCallback((provider: 'Moov' | 'Yas') => {
     return transactions
       .filter(t => t.provider === provider)
@@ -139,10 +126,9 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     addBulkTransactions,
     removeTransaction,
     clearAirtimeTransactions,
-    cleanPhoneNumbers,
     getStock,
     getProcessedTransactions,
-  }), [transactions, setTransactions, addTransaction, updateTransaction, addBulkTransactions, removeTransaction, clearAirtimeTransactions, cleanPhoneNumbers, getStock, getProcessedTransactions]);
+  }), [transactions, setTransactions, addTransaction, updateTransaction, addBulkTransactions, removeTransaction, clearAirtimeTransactions, getStock, getProcessedTransactions]);
 
   return (
     <AirtimeContext.Provider value={value}>
