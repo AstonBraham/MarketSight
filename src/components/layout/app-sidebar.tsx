@@ -45,7 +45,8 @@ import {
   DatabaseBackup,
   CalendarDays,
   Users,
-  Package
+  Package,
+  FileCode,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -83,6 +84,7 @@ const allMenuItems = [
         { href: '/autres/stock', label: 'Stock "Autres"', roles: ['admin', 'user']},
         { href: '/autres/ventes', label: 'Ventes "Autres"', roles: ['admin', 'user']},
         { href: '/autres/achats', label: 'Achats "Autres"', roles: ['admin', 'user']},
+        { href: '/autres/import-export', label: 'Import/Export "Autres"', roles: ['admin'] },
     ]
   },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
