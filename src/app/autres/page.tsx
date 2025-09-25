@@ -2,7 +2,7 @@
 'use client';
 
 import { PageHeader } from '@/components/page-header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Boxes, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
