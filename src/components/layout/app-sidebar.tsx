@@ -46,7 +46,6 @@ import {
   CalendarDays,
   Users,
   Package,
-  FileCode,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/context/user-context';
@@ -77,16 +76,6 @@ const allMenuItems = [
   },
   { href: '/invoices', label: 'Vente & Facturation', icon: Receipt, roles: ['admin', 'user'] },
   { href: '/purchases', label: 'Achats', icon: Truck, roles: ['admin', 'user'] },
-  { 
-    label: 'Autres', icon: Package, roles: ['admin', 'user'], subItems: [
-        { href: '/autres', label: 'Synthèse "Autres"', roles: ['admin', 'user']},
-        { href: '/autres/caisse', label: 'Caisse "Autres"', roles: ['admin', 'user']},
-        { href: '/autres/stock', label: 'Stock "Autres"', roles: ['admin', 'user']},
-        { href: '/autres/ventes', label: 'Ventes "Autres"', roles: ['admin', 'user']},
-        { href: '/autres/achats', label: 'Achats "Autres"', roles: ['admin', 'user']},
-        { href: '/autres/import-export', label: 'Import/Export "Autres"', roles: ['admin'] },
-    ]
-  },
   { href: '/wifi', label: 'Vente Wifi', icon: Wifi, roles: ['admin', 'user'] },
   { href: '/expenses', label: 'Dépenses', icon: Banknote, roles: ['admin', 'user'] },
   { href: '/inventory', label: 'Inventaire', icon: Boxes, roles: ['admin', 'user'] },
