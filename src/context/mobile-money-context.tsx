@@ -32,7 +32,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
       date: transaction.date || new Date().toISOString(),
     };
     setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-    logAction('CREATE_MM_TRANSACTION', `Ajout transaction MM ${transaction.provider} de type ${transaction.type} pour ${transaction.amount}F.`);
+    logAction('CREATE_MM_TRANSACTION', `Ajout transaction MM ${newTransaction.provider} de type ${newTransaction.type} pour ${newTransaction.amount}F.`);
   }, [setTransactions, logAction]);
   
   const updateTransaction = useCallback((id: string, updatedTransaction: Partial<Omit<MobileMoneyTransaction, 'id'>>) => {
@@ -167,3 +167,4 @@ export function useMobileMoney() {
   }
   return context;
 }
+
