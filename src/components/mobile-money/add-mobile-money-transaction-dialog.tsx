@@ -224,7 +224,3 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     </Dialog>
   );
 }
-
-
-
-
