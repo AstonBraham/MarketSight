@@ -54,7 +54,7 @@ interface TransactionContextType {
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
 export function TransactionProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions', []);
+  const [transactions, setTransactions] = useLocalStorage<(Sale | Purchase | Expense | Transaction)[]>('transactions_v2', []);
   const [invoices, setInvoices] = useLocalStorage<Invoice[]>('invoices', []);
   const [cashClosings, setCashClosings] = useLocalStorage<CashClosing[]>('cashClosings', []);
   const { logAction } = useAuditLog();
@@ -62,35 +62,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const { transactions: airtimeTransactions } = useAirtime();
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
   const { inventory, updateItem: updateInventoryItem, stockMovements, addStockMovement } = useInventory();
-
-  useEffect(() => {
-    // This is a one-time data migration script to fix categories.
-    const descriptionsToFix = [
-        "Marge sur achat credit Togocel", "Marge sur achat credit Moov", "Entrée de caisse",
-        "Entrée de caisse Patron", "Encaissement", "Achat de boissons pour la boutique pour 34000",
-        "Achat de boissons pour la boutique pour 37350", "Complément pour achat de boissons",
-        "Entrée de caisse pour achat de lubrifiants", "Remboursement JP", "Du Patron",
-        "ENtrée en caisse du patron", "ADJ-BULK-1757154365827-107"
-    ];
-
-    setTransactions(prev => {
-        let hasChanged = false;
-        const updatedTransactions = prev.map(t => {
-            const descriptionMatches = descriptionsToFix.some(desc => t.description === desc || t.id === desc);
-            
-            if (t.type === 'adjustment' && descriptionMatches && t.category !== 'Encaissement') {
-                hasChanged = true;
-                return { ...t, category: 'Encaissement' };
-            }
-            return t;
-        });
-
-        if (hasChanged) {
-            return updatedTransactions;
-        }
-        return prev;
-    });
-  }, [setTransactions]);
 
   const expenseCategories = useMemo(() => {
     const categories = transactions
