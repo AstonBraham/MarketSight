@@ -44,6 +44,7 @@ export default function Page() {
     }, []);
     
     const topSellingItems = useMemo(() => {
+        if (!isClient) return [];
         const salesByItem: { [key: string]: number } = {};
         sales.forEach(sale => {
             if (sale.inventoryId && sale.quantity) {
@@ -58,21 +59,24 @@ export default function Page() {
             .filter((item): item is InventoryItem => !!item);
 
         return sortedItems;
-    }, [sales, inventory]);
+    }, [isClient, sales, inventory]);
 
     const totalInvoiced = useMemo(() => {
+        if (!isClient) return 0;
         return invoices.reduce((acc, invoice) => acc + invoice.total, 0);
-    }, [invoices]);
+    }, [isClient, invoices]);
 
     const cashSales = useMemo(() => {
+        if (!isClient) return [];
         return sales
             .filter(s => !s.invoiceId && s.itemType !== 'Ticket Wifi') // Exclure les ventes Wifi
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [sales]);
+    }, [isClient, sales]);
 
     const totalCashSales = useMemo(() => {
+        if (!isClient) return 0;
         return cashSales.reduce((acc, sale) => acc + sale.amount, 0);
-    }, [cashSales]);
+    }, [isClient, cashSales]);
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value);
 
