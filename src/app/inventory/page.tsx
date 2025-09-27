@@ -30,12 +30,13 @@ type StockStatusFilter = 'all' | 'inStock' | 'lowStock' | 'outOfStock';
 
 export default function InventoryPage() {
   const { user } = useUser();
-  const { inventory, calculateAndSetReorderLevels } = useInventory();
+  const { inventory, calculateAndSetReorderLevels, itemCategories } = useInventory();
   const { purchases, sales } = useTransactions();
   const isAdmin = user?.role === 'admin';
   const { toast } = useToast();
   const [productFilter, setProductFilter] = useState('');
   const [stockStatusFilter, setStockStatusFilter] = useState<StockStatusFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   
   const stockValue = useMemo(() => {
     return inventory.reduce((acc, item) => acc + (item.inStock * (item.costPrice || 0)), 0);
@@ -107,8 +108,12 @@ export default function InventoryPage() {
         if (stockStatusFilter === 'outOfStock') return item.inStock <= 0;
         return true;
       })
+      .filter(item => {
+        if (categoryFilter === 'all') return true;
+        return item.category === categoryFilter;
+      })
       .filter(item => item.productName.toLowerCase().includes(productFilter.toLowerCase()));
-  }, [inventory, stockStatusFilter, productFilter]);
+  }, [inventory, stockStatusFilter, categoryFilter, productFilter]);
 
 
   return (
@@ -213,6 +218,18 @@ export default function InventoryPage() {
                                     <SelectItem value="inStock">En stock</SelectItem>
                                     <SelectItem value="lowStock">Stock bas</SelectItem>
                                     <SelectItem value="outOfStock">En rupture</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="flex items-center gap-2">
+                            <Label htmlFor="categoryFilter" className="whitespace-nowrap">Famille</Label>
+                            <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value as string)}>
+                                <SelectTrigger id="categoryFilter" className="w-[180px]">
+                                    <SelectValue placeholder="Filtrer par famille" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Toutes les familles</SelectItem>
+                                    {itemCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
