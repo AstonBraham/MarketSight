@@ -61,14 +61,17 @@ export default function Page() {
     const mobileMoneyBalanceMixx = getMobileMoneyBalance('Mixx');
     const mobileMoneyBalanceCoris = getMobileMoneyBalance('Coris');
     const totalMobileMoneyBalance = mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCoris;
-
-    const workingCapital = currentBalance + inventoryValue + totalAirtimeStock + totalMobileMoneyBalance;
+    
+    const workingCapital = useMemo(() => {
+        return currentBalance + inventoryValue + totalAirtimeStock + totalMobileMoneyBalance;
+    }, [currentBalance, inventoryValue, totalAirtimeStock, totalMobileMoneyBalance]);
     
     const todaySales = sales
         .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
         .reduce((acc, t) => acc + t.amount, 0);
-
+    
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
+
 
   if (!isClient) {
     return null;
