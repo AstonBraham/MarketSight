@@ -32,6 +32,11 @@ type ProfitableProduct = {
   marginRate: number;
 };
 
+type SalesByCategory = {
+  name: string;
+  value: number;
+};
+
 const profitableProductsColumns: ColumnDef<ProfitableProduct>[] = [
     {
         accessorKey: 'productName',
@@ -57,6 +62,23 @@ const profitableProductsColumns: ColumnDef<ProfitableProduct>[] = [
         accessorKey: 'marginRate',
         header: () => <div className="text-right">Taux de Marge</div>,
         cell: ({ row }) => <div className="text-right font-mono">{row.getValue('marginRate')}%</div>,
+    },
+];
+
+const salesByCategoryColumns: ColumnDef<SalesByCategory>[] = [
+    {
+        accessorKey: 'name',
+        header: 'Famille de produits',
+        cell: ({ row }) => <div className="font-medium">{row.getValue('name')}</div>
+    },
+    {
+        accessorKey: 'value',
+        header: () => <div className="text-right">Chiffre d'Affaires</div>,
+        cell: ({ row }) => {
+            const amount = parseFloat(row.getValue('value'));
+            const formatted = new Intl.NumberFormat('fr-FR').format(amount);
+            return <div className="text-right font-mono font-bold text-primary">{formatted} F</div>;
+        },
     },
 ];
 
@@ -126,6 +148,23 @@ export default function SalesAnalysisPage() {
             }));
     }, [sales]);
 
+    const salesByCategory = useMemo(() => {
+        const data: { [key: string]: number } = {};
+    
+        sales.forEach(sale => {
+          const category = sale.itemType || 'Non catégorisé';
+          if (!data[category]) {
+            data[category] = 0;
+          }
+          data[category] += sale.amount;
+        });
+    
+        return Object.keys(data)
+          .map(name => ({ name, value: data[name] }))
+          .sort((a, b) => b.value - a.value);
+    
+    }, [sales]);
+
     return (
         <div className="flex flex-col gap-8 p-4 md:p-8">
             <PageHeader title="Analyse des Ventes" />
@@ -170,7 +209,7 @@ export default function SalesAnalysisPage() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 space-y-8">
                     <Card>
                         <CardHeader>
                             <CardTitle>Évolution de la Marge</CardTitle>
@@ -200,10 +239,6 @@ export default function SalesAnalysisPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
-
-                <div className="lg:col-span-1 space-y-8">
-                    <SalesBreakdownChart />
                     <Card>
                         <CardHeader>
                             <CardTitle>Top Produits par Marge</CardTitle>
@@ -211,6 +246,19 @@ export default function SalesAnalysisPage() {
                         </CardHeader>
                         <CardContent>
                             <DataTable data={topProfitableProducts} columns={profitableProductsColumns} />
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="lg:col-span-1 space-y-8">
+                    <SalesBreakdownChart />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Ventes par Famille</CardTitle>
+                            <CardDescription>Chiffre d'affaires par famille de produits.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <DataTable data={salesByCategory} columns={salesByCategoryColumns} hideToolbar={true} />
                         </CardContent>
                     </Card>
                 </div>
