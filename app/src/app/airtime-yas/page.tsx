@@ -25,7 +25,7 @@ export default function AirtimeYasPage() {
     }, []);
     
     const yasTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Yas') : [], [isClient, transactions]);
-    const yasStock = useMemo(() => isClient ? getStock('Yas') : 0, [isClient, getStock, transactions]);
+    const yasStock = useMemo(() => isClient ? getStock('Yas') : 0, [isClient, getStock]);
 
     const totalPurchases = useMemo(() => {
       if (!isClient) return 0;

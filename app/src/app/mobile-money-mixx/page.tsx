@@ -35,7 +35,7 @@ export default function MobileMoneyMixxPage() {
     }, []);
 
     const mixxTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Mixx') : [], [isClient, transactions]);
-    const mixxBalance = useMemo(() => isClient ? getBalance('Mixx') : 0, [isClient, getBalance, transactions]);
+    const mixxBalance = useMemo(() => isClient ? getBalance('Mixx') : 0, [isClient, getBalance]);
     const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
      const dailyDeposits = useMemo(() => {

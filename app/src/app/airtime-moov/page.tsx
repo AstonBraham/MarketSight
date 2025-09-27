@@ -25,7 +25,7 @@ export default function AirtimeMoovPage() {
   }, []);
 
   const moovTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Moov') : [], [isClient, transactions]);
-  const moovStock = useMemo(() => isClient ? getStock('Moov') : 0, [isClient, getStock, transactions]);
+  const moovStock = useMemo(() => isClient ? getStock('Moov') : 0, [isClient, getStock]);
   
   const totalPurchases = useMemo(() => {
     if (!isClient) return 0;

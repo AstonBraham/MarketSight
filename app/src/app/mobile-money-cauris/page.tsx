@@ -33,7 +33,7 @@ export default function MobileMoneyCorisPage() {
     }, []);
 
     const corisTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Coris') : [], [isClient, transactions]);
-    const corisBalance = useMemo(() => isClient ? getBalance('Coris') : 0, [isClient, getBalance, transactions]);
+    const corisBalance = useMemo(() => isClient ? getBalance('Coris') : 0, [isClient, getBalance]);
     const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
      const dailyDeposits = useMemo(() => {

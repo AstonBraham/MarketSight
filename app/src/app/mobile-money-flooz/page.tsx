@@ -27,7 +27,7 @@ export default function MobileMoneyFloozPage() {
     }, []);
     
     const floozTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Flooz') : [], [isClient, transactions]);
-    const floozBalance = useMemo(() => isClient ? getBalance('Flooz') : 0, [isClient, getBalance, transactions]);
+    const floozBalance = useMemo(() => isClient ? getBalance('Flooz') : 0, [isClient, getBalance]);
     const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
     const dailyDeposits = useMemo(() => {
