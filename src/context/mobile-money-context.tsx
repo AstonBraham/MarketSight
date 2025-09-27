@@ -25,20 +25,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
   const { logAction } = useAuditLog();
 
-  useEffect(() => {
-    // One-time data cleanup for stale/corrupted data that might cause crashes.
-    const hasBeenCleaned = localStorage.getItem('mm-context-cleaned-v1');
-    if (!hasBeenCleaned) {
-      // Check if any transaction is not an object, which indicates corruption
-      const isCorrupted = transactions.some(t => typeof t !== 'object' || t === null);
-      if (isCorrupted) {
-        console.warn("Corrupted Mobile Money data detected. Clearing cache.");
-        setTransactions([]);
-      }
-      localStorage.setItem('mm-context-cleaned-v1', 'true');
-    }
-  }, [setTransactions, transactions]);
-
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
     const newTransaction: MobileMoneyTransaction = {
       ...transaction,

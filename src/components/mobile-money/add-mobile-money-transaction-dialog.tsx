@@ -95,7 +95,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount >= 250001 && amount <= 500000) calculatedCommission = 2164;
         else { 
             manual = true;
-            // Explicitly reset commission if out of range
             if (amount > 0) {
                  calculatedCommission = 0;
             }
@@ -108,7 +107,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
       setCommission(calculatedCommission);
 
     } else {
-        // Reset commission if type is not deposit or withdrawal
         setCommission(0);
         setIsCommissionManual(false);
     }
@@ -156,11 +154,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
       description: `La nouvelle opération pour ${provider} a été enregistrée.`,
     });
     setOpen(false);
-    // Reset form state
-    setAmount(0);
-    setCommission(0);
-    setType('');
-    setAffectsCash(false);
   };
 
   const showCommissionField = type === 'deposit' || type === 'withdrawal';
@@ -231,5 +224,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     </Dialog>
   );
 }
+
 
 
