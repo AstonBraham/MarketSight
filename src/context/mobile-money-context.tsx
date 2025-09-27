@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { MobileMoneyTransaction, MobileMoneyProvider } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useAuditLog } from './audit-log-context';
@@ -24,6 +23,14 @@ const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(und
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
   const { logAction } = useAuditLog();
+
+  useEffect(() => {
+    // ONE-TIME FIX: Clear potentially corrupted old data to resolve the persistent 2164F issue.
+    // This code will run once and can be removed later.
+    if (localStorage.getItem('mmTransactions')) {
+        localStorage.removeItem('mmTransactions');
+    }
+  }, []);
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
     const newTransaction: MobileMoneyTransaction = {
