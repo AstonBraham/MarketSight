@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,11 @@ const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
 export default function Page() {
     const { invoices, sales } = useTransactions();
     const { inventory } = useInventory();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
     
     const topSellingItems = useMemo(() => {
         const salesByItem: { [key: string]: number } = {};
@@ -71,6 +76,9 @@ export default function Page() {
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value);
 
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
