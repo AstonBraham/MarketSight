@@ -406,23 +406,28 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     const originalStatus = originalPurchase.status;
     const newStatus = updatedValues.status;
 
-    if (newStatus && newStatus !== originalStatus) {
-        if (newStatus === 'paid' && originalStatus === 'unpaid') {
-            // This is handled by the cash flow logic automatically when status changes
-             logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} via modification.`);
-        } else if (newStatus === 'unpaid' && originalStatus === 'paid') {
-            logAction('UNPAY_PURCHASE', `Annulation du paiement de l'achat ID ${purchaseId} via modification.`);
-        }
-    }
+    setTransactions(prev => {
+        const updated = prev.map(t => {
+            if (t.id === purchaseId) {
+                logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}.`);
+                return { ...t, ...updatedValues, date: new Date().toISOString() };
+            }
+            return t;
+        });
 
-    // --- Update the purchase transaction itself ---
-    setTransactions(prev => prev.map(t => {
-        if (t.id === purchaseId) {
-            logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}.`);
-            return { ...t, ...updatedValues, date: new Date().toISOString() };
+        // This logic was flawed and caused a crash. Correcting it.
+        // It's better to just update the status and let the `getAllTransactions` handle the cash flow.
+        // The previous implementation was trying to manually add/remove transactions which is complex and error-prone.
+        if (newStatus && newStatus !== originalStatus) {
+            if (newStatus === 'paid' && originalStatus === 'unpaid') {
+                 logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} via modification.`);
+            } else if (newStatus === 'unpaid' && originalStatus === 'paid') {
+                logAction('UNPAY_PURCHASE', `Annulation du paiement de l'achat ID ${purchaseId} via modification.`);
+            }
         }
-        return t;
-    }));
+        
+        return updated;
+    });
 
     return { success: true, message: 'Achat et stock mis à jour.' };
   }, [transactions, inventory, setTransactions, updateInventoryItem, logAction, addStockMovement]);
