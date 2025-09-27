@@ -28,20 +28,7 @@ function ActionsCell({ row }: { row: { original: Purchase }}) {
     }
 
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Ouvrir le menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-           <EditPurchaseDialog purchase={purchase} />
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled className="text-destructive">Supprimer</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <EditPurchaseDialog purchase={purchase} />
     );
 }
 

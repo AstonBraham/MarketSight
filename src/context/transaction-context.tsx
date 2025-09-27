@@ -28,7 +28,7 @@ interface TransactionContextType {
   returnSale: (saleId: string) => void;
   addBulkSales: (sales: Omit<Sale, 'id' | 'type' | 'category'>[]) => void;
   addPurchase: (purchase: Omit<Purchase, 'id' | 'type' | 'date' | 'category'>) => void;
-  updatePurchase: (purchaseId: string, updatedValues: { quantity: number; amount: number }) => { success: boolean, message: string };
+  updatePurchase: (purchaseId: string, updatedValues: Partial<Purchase>) => { success: boolean, message: string };
   payPurchase: (purchaseId: string) => { success: boolean, message: string };
   addExpense: (expense: Omit<Expense, 'id' | 'type' | 'currency'>) => void;
   updateExpense: (id: string, updatedExpense: Partial<Omit<Expense, 'id' | 'type' | 'currency'>>) => void;
@@ -61,7 +61,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   
   const { transactions: airtimeTransactions } = useAirtime();
   const { transactions: mobileMoneyTransactions } = useMobileMoney();
-  const { inventory, updateItem: updateInventoryItem, stockMovements } = useInventory();
+  const { inventory, updateItem: updateInventoryItem, stockMovements, addStockMovement } = useInventory();
 
   useEffect(() => {
     // This is a one-time data migration script to fix categories.
@@ -148,16 +148,24 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (newSale.inventoryId && newSale.quantity) {
         const currentItemState = inventory.find(i => i.id === newSale.inventoryId);
         if (currentItemState) {
+            addStockMovement({
+                inventoryId: currentItemState.id,
+                productName: currentItemState.productName,
+                type: 'out',
+                quantity: -newSale.quantity,
+                reason: `Vente (Client: ${newSale.client})`,
+                balanceBefore: currentItemState.inStock,
+                balanceAfter: currentItemState.inStock - newSale.quantity,
+                relatedTransactionId: newSale.id
+            });
             updateInventoryItem(
                 currentItemState.id, 
-                { inStock: currentItemState.inStock - newSale.quantity }, 
-                `Vente (Client: ${newSale.client})`,
-                newSale.id
+                { inStock: currentItemState.inStock - newSale.quantity }
             );
         }
     }
     return { success: true, message: "Vente enregistrée avec succès." };
-  }, [inventory, updateInventoryItem, logAction, setTransactions]);
+  }, [inventory, updateInventoryItem, logAction, setTransactions, addStockMovement]);
 
   const updateSale = useCallback((saleId: string, updatedValues: { quantity: number; price: number }): { success: boolean, message: string } => {
     const originalSale = transactions.find(t => t.id === saleId && t.type === 'sale') as Sale | undefined;
@@ -176,8 +184,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         return { success: false, message: `Stock insuffisant pour effectuer cette modification. Stock disponible: ${item.inStock + originalSale.quantity!}` };
     }
 
+    addStockMovement({
+        inventoryId: item.id,
+        productName: item.productName,
+        type: stockChange > 0 ? 'in' : 'out',
+        quantity: stockChange,
+        reason: `Modification vente ${saleId}`,
+        balanceBefore: item.inStock,
+        balanceAfter: newStock,
+        relatedTransactionId: saleId
+    });
+    
     // Update inventory first
-    updateInventoryItem(item.id, { inStock: newStock }, `Modification vente ${saleId}`);
+    updateInventoryItem(item.id, { inStock: newStock });
     
     // Update the sale transaction itself
     const newAmount = updatedValues.price * updatedValues.quantity;
@@ -200,7 +219,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
     return { success: true, message: 'Vente modifiée avec succès.' };
 
-  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
+  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction, addStockMovement]);
 
   const returnSale = useCallback((saleId: string) => {
     const saleToReturn = transactions.find(t => t.id === saleId && t.type === 'sale') as Sale | undefined;
@@ -225,11 +244,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (saleToReturn.inventoryId && saleToReturn.quantity) {
       const item = inventory.find(i => i.id === saleToReturn.inventoryId);
       if (item) {
+        addStockMovement({
+            inventoryId: item.id,
+            productName: item.productName,
+            type: 'in',
+            quantity: saleToReturn.quantity,
+            reason: `Retour vente ${saleToReturn.id}`,
+            balanceBefore: item.inStock,
+            balanceAfter: item.inStock + saleToReturn.quantity,
+            relatedTransactionId: returnTransaction.id
+        });
         updateInventoryItem(
           item.id, 
-          { inStock: item.inStock + saleToReturn.quantity },
-          `Retour de la vente ${saleToReturn.id}`,
-          returnTransaction.id
+          { inStock: item.inStock + saleToReturn.quantity }
         );
       }
     }
@@ -240,7 +267,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         return [returnTransaction, ...otherTransactions];
     });
 
-  }, [transactions, inventory, updateInventoryItem, setTransactions, logAction]);
+  }, [transactions, inventory, updateInventoryItem, setTransactions, logAction, addStockMovement]);
 
   const addBulkSales = useCallback((sales: Omit<Sale, 'id'|'type'|'category'>[]) => {
     const newSales: Sale[] = sales.map((sale, index) => {
@@ -314,18 +341,26 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
             const newStock = oldStock + newPurchase.quantity;
             const newCostPrice = newStock > 0 ? (oldStockValue + purchaseValue) / newStock : purchaseValue / newPurchase.quantity;
 
+            addStockMovement({
+                inventoryId: item.id,
+                productName: item.productName,
+                type: 'in',
+                quantity: newPurchase.quantity,
+                reason: `Achat (Fournisseur: ${newPurchase.supplier})`,
+                balanceBefore: oldStock,
+                balanceAfter: newStock,
+                relatedTransactionId: newPurchase.id
+            });
             updateInventoryItem(
                 item.id,
-                { inStock: newStock, costPrice: newCostPrice },
-                `Achat (Fournisseur: ${newPurchase.supplier})`,
-                newPurchase.id
+                { inStock: newStock, costPrice: newCostPrice }
             );
         }
     }
 
-  }, [setTransactions, inventory, updateInventoryItem, logAction]);
+  }, [setTransactions, inventory, updateInventoryItem, logAction, addStockMovement]);
 
-  const updatePurchase = useCallback((purchaseId: string, updatedValues: { quantity: number; amount: number }): { success: boolean, message: string } => {
+  const updatePurchase = useCallback((purchaseId: string, updatedValues: Partial<Purchase>): { success: boolean, message: string } => {
     const originalPurchase = transactions.find(t => t.id === purchaseId && t.type === 'purchase') as Purchase | undefined;
     if (!originalPurchase || !originalPurchase.inventoryId) {
         return { success: false, message: 'Achat original non trouvé ou non lié à un stock.' };
@@ -336,40 +371,61 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
         return { success: false, message: `Article ${originalPurchase.product} non trouvé.` };
     }
     
-    // Revert the old purchase from inventory
+    // --- Stock & CUMP recalculation logic ---
     const originalQuantity = originalPurchase.quantity || 0;
     const originalAmount = originalPurchase.amount + (originalPurchase.additionalCosts || 0);
+    const updatedQuantity = updatedValues.quantity ?? originalQuantity;
+    const updatedAmount = (updatedValues.amount ?? originalPurchase.amount) + (updatedValues.additionalCosts ?? originalPurchase.additionalCosts ?? 0);
     
+    // Revert the old purchase from inventory
     const stockWithoutThisPurchase = item.inStock - originalQuantity;
     if (stockWithoutThisPurchase < 0) {
         return { success: false, message: `Impossible d'annuler l'achat: le stock deviendrait négatif.` };
     }
-
     const valueWithoutThisPurchase = (item.inStock * (item.costPrice || 0)) - originalAmount;
-
+    
     // Apply the new purchase
-    const newStock = stockWithoutThisPurchase + updatedValues.quantity;
-    const newValue = valueWithoutThisPurchase + updatedValues.amount; // Assuming additional costs are re-entered or are 0 in the new amount
+    const newStock = stockWithoutThisPurchase + updatedQuantity;
+    const newValue = valueWithoutThisPurchase + updatedAmount;
     const newCump = newStock > 0 ? newValue / newStock : 0;
     
-    updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump }, `Modification achat ${purchaseId}`);
+    // Update inventory item with new stock and CUMP
+    updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump });
+    addStockMovement({
+        inventoryId: item.id,
+        productName: item.productName,
+        type: 'adjustment',
+        quantity: updatedQuantity - originalQuantity,
+        reason: `Modification achat ${purchaseId}`,
+        balanceBefore: item.inStock,
+        balanceAfter: newStock,
+        relatedTransactionId: purchaseId
+    });
+    
+    // --- Status change logic ---
+    const originalStatus = originalPurchase.status;
+    const newStatus = updatedValues.status;
 
+    if (newStatus && newStatus !== originalStatus) {
+        if (newStatus === 'paid' && originalStatus === 'unpaid') {
+            // This is handled by the cash flow logic automatically when status changes
+             logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} via modification.`);
+        } else if (newStatus === 'unpaid' && originalStatus === 'paid') {
+            logAction('UNPAY_PURCHASE', `Annulation du paiement de l'achat ID ${purchaseId} via modification.`);
+        }
+    }
+
+    // --- Update the purchase transaction itself ---
     setTransactions(prev => prev.map(t => {
         if (t.id === purchaseId) {
-            logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}. Qté: ${originalQuantity} -> ${updatedValues.quantity}, Montant: ${originalPurchase.amount} -> ${updatedValues.amount}`);
-            return {
-                ...t,
-                quantity: updatedValues.quantity,
-                amount: updatedValues.amount,
-                description: `Achat de ${updatedValues.quantity} x ${item.productName}`,
-                date: new Date().toISOString()
-            };
+            logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}.`);
+            return { ...t, ...updatedValues, date: new Date().toISOString() };
         }
         return t;
     }));
 
     return { success: true, message: 'Achat et stock mis à jour.' };
-  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction]);
+  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction, addStockMovement]);
   
   const payPurchase = useCallback((purchaseId: string): { success: boolean, message: string } => {
     let purchaseToPay: Purchase | undefined;
@@ -505,15 +561,24 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       if (item.inventoryId && item.quantity) {
         const inventoryItem = inventory.find(i => i.id === item.inventoryId);
         if (inventoryItem) {
-          updateInventoryItem(item.inventoryId, 
-            { inStock: inventoryItem.inStock + item.quantity },
-            `Annulation Vente Facture ${invoiceId}`
+          updateInventoryItem(
+            inventoryItem.id, 
+            { inStock: inventoryItem.inStock + item.quantity }
           );
+           addStockMovement({
+                inventoryId: inventoryItem.id,
+                productName: inventoryItem.productName,
+                type: 'in',
+                quantity: item.quantity,
+                reason: `Annulation Vente Facture ${invoiceId}`,
+                balanceBefore: inventoryItem.inStock,
+                balanceAfter: inventoryItem.inStock + item.quantity,
+            });
         }
       }
     });
 
-  }, [invoices, inventory, setInvoices, setTransactions, logAction, updateInventoryItem]);
+  }, [invoices, inventory, setInvoices, setTransactions, logAction, updateInventoryItem, addStockMovement]);
 
   const addCashClosing = useCallback((closing: Omit<CashClosing, 'id' | 'date'>) => {
     const newClosing: CashClosing = {

@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import type { Purchase } from '@/lib/types';
 import { Switch } from '@/components/ui/switch';
+import { DropdownMenuItem } from '../ui/dropdown-menu';
 
 
 export function EditPurchaseDialog({ purchase }: { purchase: Purchase }) {
@@ -28,6 +29,7 @@ export function EditPurchaseDialog({ purchase }: { purchase: Purchase }) {
 
   const [quantity, setQuantity] = useState(purchase.quantity || 1);
   const [totalCost, setTotalCost] = useState(purchase.amount);
+  const [isPaid, setIsPaid] = useState(purchase.status === 'paid');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +39,13 @@ export function EditPurchaseDialog({ purchase }: { purchase: Purchase }) {
       return;
     }
 
-    const result = updatePurchase(purchase.id, { quantity, amount: totalCost });
+    const newStatus = isPaid ? 'paid' : 'unpaid';
+
+    const result = updatePurchase(purchase.id, { 
+      quantity, 
+      amount: totalCost,
+      status: newStatus,
+    });
 
     if (result.success) {
       toast({ title: 'Achat Modifié', description: result.message });
@@ -47,19 +55,24 @@ export function EditPurchaseDialog({ purchase }: { purchase: Purchase }) {
     }
   };
 
+  const dialogTrigger = (
+    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+        <Edit className="mr-2 h-4 w-4" />
+        Modifier
+    </DropdownMenuItem>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8">
-            <Edit className="h-4 w-4" />
-        </Button>
+        {dialogTrigger}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Modifier l'Achat</DialogTitle>
             <DialogDescription>
-              Ajustez la quantité ou le coût de l'achat pour <strong>{purchase.product}</strong>.
+              Ajustez les détails de l'achat pour <strong>{purchase.product}</strong>.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -98,10 +111,14 @@ export function EditPurchaseDialog({ purchase }: { purchase: Purchase }) {
               />
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Statut
+                <Label htmlFor="status" className="text-right col-span-3">
+                  Marquer comme payé
                 </Label>
-                <Input id="status" value={purchase.status === 'paid' ? 'Payé' : 'Non Payé'} className="col-span-3" readOnly />
+                <Switch 
+                  id="status"
+                  checked={isPaid}
+                  onCheckedChange={setIsPaid}
+                />
             </div>
           </div>
           <DialogFooter>
