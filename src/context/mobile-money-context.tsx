@@ -25,16 +25,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
   const { logAction } = useAuditLog();
 
-  useState(() => {
-    setTransactions(prev => prev.filter(t => {
-      // This will remove any wrongly imported 'sale' type transactions for Mixx
-      if (t.provider === 'Mixx' && (t.type as any) === 'sale') {
-        return false;
-      }
-      return true;
-    }));
-  });
-
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
     const newTransaction: MobileMoneyTransaction = {
       ...transaction,
@@ -97,15 +87,15 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let newBalance = acc;
         switch (t.type) {
             case 'purchase': // Achat de virtuel
-            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
-                 newBalance += t.amount;
-                 break;
-            case 'deposit': // Dépôt client
-            case 'withdrawal': // Retrait
             case 'transfer_to_pos': // Transfert vers un autre PDV
             case 'virtual_return': // Retour de virtuel à l'opérateur
                 newBalance -= t.amount;
                 break;
+            case 'deposit': // Dépôt client
+            case 'withdrawal': // Retrait client
+            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
+                 newBalance += t.amount;
+                 break;
             case 'adjustment': // Ajustement manuel
             case 'collect_commission': // Collecte de commission (ajout au solde)
                 newBalance += t.amount;
@@ -127,15 +117,15 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let newBalance = runningBalance;
          switch (t.type) {
             case 'purchase': // Achat de virtuel
-            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
-                 newBalance += t.amount;
-                 break;
-            case 'deposit': // Dépôt client
-            case 'withdrawal': // Retrait
             case 'transfer_to_pos': // Transfert vers un autre PDV
             case 'virtual_return': // Retour de virtuel à l'opérateur
                 newBalance -= t.amount;
                 break;
+            case 'deposit': // Dépôt client
+            case 'withdrawal': // Retrait
+            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
+                 newBalance += t.amount;
+                 break;
             case 'adjustment': // Ajustement manuel
             case 'collect_commission': // Collecte de commission (ajout au solde)
                 newBalance += t.amount;
