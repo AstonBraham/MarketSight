@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 import { format, subMonths, startOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { SalesBreakdownChart } from '@/components/dashboard/sales-breakdown-chart';
 
 type ProfitableProduct = {
   productId: string;
@@ -201,7 +202,8 @@ export default function SalesAnalysisPage() {
                     </Card>
                 </div>
 
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 space-y-8">
+                    <SalesBreakdownChart />
                     <Card>
                         <CardHeader>
                             <CardTitle>Top Produits par Marge</CardTitle>
