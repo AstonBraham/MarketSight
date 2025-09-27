@@ -361,76 +361,57 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [setTransactions, inventory, updateInventoryItem, logAction, addStockMovement]);
 
   const updatePurchase = useCallback((purchaseId: string, updatedValues: Partial<Purchase>): { success: boolean, message: string } => {
-    const originalPurchase = transactions.find(t => t.id === purchaseId && t.type === 'purchase') as Purchase | undefined;
-    if (!originalPurchase || !originalPurchase.inventoryId) {
-        return { success: false, message: 'Achat original non trouvé ou non lié à un stock.' };
-    }
+      let originalPurchase: Purchase | undefined;
+      setTransactions(currentTransactions => {
+          originalPurchase = currentTransactions.find(t => t.id === purchaseId && t.type === 'purchase') as Purchase | undefined;
+          if (!originalPurchase) {
+              return currentTransactions;
+          }
 
-    const item = inventory.find(i => i.id === originalPurchase.inventoryId);
-    if (!item) {
-        return { success: false, message: `Article ${originalPurchase.product} non trouvé.` };
-    }
-    
-    // --- Stock & CUMP recalculation logic ---
-    const originalQuantity = originalPurchase.quantity || 0;
-    const originalAmount = originalPurchase.amount + (originalPurchase.additionalCosts || 0);
-    const updatedQuantity = updatedValues.quantity ?? originalQuantity;
-    const updatedAmount = (updatedValues.amount ?? originalPurchase.amount) + (updatedValues.additionalCosts ?? originalPurchase.additionalCosts ?? 0);
-    
-    // Revert the old purchase from inventory
-    const stockWithoutThisPurchase = item.inStock - originalQuantity;
-    if (stockWithoutThisPurchase < 0) {
-        return { success: false, message: `Impossible d'annuler l'achat: le stock deviendrait négatif.` };
-    }
-    const valueWithoutThisPurchase = (item.inStock * (item.costPrice || 0)) - originalAmount;
-    
-    // Apply the new purchase
-    const newStock = stockWithoutThisPurchase + updatedQuantity;
-    const newValue = valueWithoutThisPurchase + updatedAmount;
-    const newCump = newStock > 0 ? newValue / newStock : 0;
-    
-    // Update inventory item with new stock and CUMP
-    updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump });
-    addStockMovement({
-        inventoryId: item.id,
-        productName: item.productName,
-        type: 'adjustment',
-        quantity: updatedQuantity - originalQuantity,
-        reason: `Modification achat ${purchaseId}`,
-        balanceBefore: item.inStock,
-        balanceAfter: newStock,
-        relatedTransactionId: purchaseId
-    });
-    
-    // --- Status change logic ---
-    const originalStatus = originalPurchase.status;
-    const newStatus = updatedValues.status;
+          logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}.`);
+          return currentTransactions.map(t => 
+              t.id === purchaseId ? { ...t, ...updatedValues, date: new Date().toISOString() } : t
+          );
+      });
+      
+      if (!originalPurchase) {
+          return { success: false, message: 'Achat original non trouvé.' };
+      }
 
-    setTransactions(prev => {
-        const updated = prev.map(t => {
-            if (t.id === purchaseId) {
-                logAction('UPDATE_PURCHASE', `Modification achat ${purchaseId}.`);
-                return { ...t, ...updatedValues, date: new Date().toISOString() };
-            }
-            return t;
-        });
+      if (updatedValues.quantity !== undefined || updatedValues.amount !== undefined) {
+          const item = inventory.find(i => i.id === originalPurchase!.inventoryId);
+          if (item) {
+              const originalQuantity = originalPurchase.quantity || 0;
+              const originalAmount = originalPurchase.amount + (originalPurchase.additionalCosts || 0);
+              const updatedQuantity = updatedValues.quantity ?? originalQuantity;
+              const updatedAmount = (updatedValues.amount ?? originalPurchase.amount) + (updatedValues.additionalCosts ?? originalPurchase.additionalCosts ?? 0);
 
-        // This logic was flawed and caused a crash. Correcting it.
-        // It's better to just update the status and let the `getAllTransactions` handle the cash flow.
-        // The previous implementation was trying to manually add/remove transactions which is complex and error-prone.
-        if (newStatus && newStatus !== originalStatus) {
-            if (newStatus === 'paid' && originalStatus === 'unpaid') {
-                 logAction('PAY_PURCHASE', `Paiement de l'achat ID ${purchaseId} via modification.`);
-            } else if (newStatus === 'unpaid' && originalStatus === 'paid') {
-                logAction('UNPAY_PURCHASE', `Annulation du paiement de l'achat ID ${purchaseId} via modification.`);
-            }
-        }
-        
-        return updated;
-    });
+              const stockWithoutThisPurchase = item.inStock - originalQuantity;
+              if (stockWithoutThisPurchase < 0 && updatedQuantity < originalQuantity) {
+                   return { success: false, message: "Impossible d'annuler l'achat: le stock deviendrait négatif." };
+              }
+              const valueWithoutThisPurchase = (item.inStock * (item.costPrice || 0)) - originalAmount;
+              
+              const newStock = stockWithoutThisPurchase + updatedQuantity;
+              const newValue = valueWithoutThisPurchase + updatedAmount;
+              const newCump = newStock > 0 ? newValue / newStock : 0;
+              
+              updateInventoryItem(item.id, { inStock: newStock, costPrice: newCump });
+              addStockMovement({
+                  inventoryId: item.id,
+                  productName: item.productName,
+                  type: 'adjustment',
+                  quantity: updatedQuantity - originalQuantity,
+                  reason: `Modification achat ${purchaseId}`,
+                  balanceBefore: item.inStock,
+                  balanceAfter: newStock,
+                  relatedTransactionId: purchaseId
+              });
+          }
+      }
 
-    return { success: true, message: 'Achat et stock mis à jour.' };
-  }, [transactions, inventory, setTransactions, updateInventoryItem, logAction, addStockMovement]);
+      return { success: true, message: 'Achat et stock mis à jour.' };
+  }, [inventory, setTransactions, updateInventoryItem, addStockMovement, logAction]);
   
   const payPurchase = useCallback((purchaseId: string): { success: boolean, message: string } => {
     let purchaseToPay: Purchase | undefined;
