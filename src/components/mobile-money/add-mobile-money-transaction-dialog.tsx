@@ -47,6 +47,17 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [affectsCash, setAffectsCash] = useState(false);
 
   useEffect(() => {
+    if (!open) {
+        // Reset form state when dialog closes
+        setAmount(0);
+        setCommission(0);
+        setType('');
+        setAffectsCash(false);
+        setIsCommissionManual(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (type === 'deposit' || type === 'withdrawal') {
       let calculatedCommission = 0;
       let manual = false;
@@ -82,18 +93,24 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount >= 150001 && amount <= 200000) calculatedCommission = 1000;
         else if (amount >= 200001 && amount <= 250000) calculatedCommission = 1250;
         else if (amount >= 250001 && amount <= 500000) calculatedCommission = 2164;
-        else { manual = true; }
+        else { 
+            manual = true;
+            // Explicitly reset commission if out of range
+            if (amount > 0) {
+                 calculatedCommission = 0;
+            }
+        }
       } else {
         manual = true;
       }
       
       setIsCommissionManual(manual);
-      if (!manual) {
-        setCommission(calculatedCommission);
-      } else if (amount > 0) {
-        setCommission(0);
-      }
+      setCommission(calculatedCommission);
 
+    } else {
+        // Reset commission if type is not deposit or withdrawal
+        setCommission(0);
+        setIsCommissionManual(false);
     }
   }, [amount, type, provider, toast]);
 
@@ -214,4 +231,5 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     </Dialog>
   );
 }
+
 
