@@ -121,7 +121,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     const transactionAmount = parseFloat(data.amount as string);
     const currentBalance = getBalance(provider);
 
-    if (type === 'deposit' || type === 'transfer_to_pos') {
+    if (type === 'deposit' || type === 'transfer_to_pos' || type === 'virtual_return') {
         if (transactionAmount > currentBalance) {
             toast({
                 title: 'Solde virtuel insuffisant',

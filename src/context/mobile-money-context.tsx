@@ -22,7 +22,7 @@ interface MobileMoneyContextType {
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
 
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
+  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions_v3', []);
   const { logAction } = useAuditLog();
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
@@ -86,54 +86,54 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return providerTransactions.reduce((acc, t) => {
         let newBalance = acc;
         switch (t.type) {
-            case 'purchase': // Achat de virtuel
-            case 'withdrawal': // Retrait client
-            case 'transfer_to_pos': // Transfert vers un autre PDV
-                newBalance -= t.amount;
-                break;
-            case 'deposit': // Dépôt client
-            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
-            case 'virtual_return': // Retour de virtuel à l'opérateur
+            case 'withdrawal':
+            case 'purchase':
+            case 'transfer_from_pos':
                  newBalance += t.amount;
                  break;
-            case 'adjustment': // Ajustement manuel
-            case 'collect_commission': // Collecte de commission (ajout au solde)
+            case 'deposit':
+            case 'virtual_return':
+            case 'transfer_to_pos':
+                newBalance -= t.amount;
+                break;
+            case 'adjustment':
+            case 'collect_commission':
                 newBalance += t.amount;
                 break;
             default:
                 break;
         }
-        newBalance += t.commission; // Commissions always increase balance
+        newBalance += t.commission;
         return newBalance;
     }, 0);
   }, [transactions]);
   
   const getProcessedTransactions = useCallback((provider: MobileMoneyProvider) => {
      const providerTransactions = transactions.filter(t => t.provider === provider);
-     const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(a.date).getTime());
+     const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
      
      let runningBalance = 0;
      const withBalance = sorted.map(t => {
         let newBalance = runningBalance;
          switch (t.type) {
-            case 'purchase': // Achat de virtuel
-            case 'withdrawal': // Retrait client
-            case 'transfer_to_pos': // Transfert vers un autre PDV
-                newBalance -= t.amount;
-                break;
-            case 'deposit': // Dépôt client
-            case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
-            case 'virtual_return': // Retour de virtuel à l'opérateur
+            case 'withdrawal':
+            case 'purchase':
+            case 'transfer_from_pos':
                  newBalance += t.amount;
                  break;
-            case 'adjustment': // Ajustement manuel
-            case 'collect_commission': // Collecte de commission (ajout au solde)
+            case 'deposit':
+            case 'virtual_return':
+            case 'transfer_to_pos':
+                newBalance -= t.amount;
+                break;
+            case 'adjustment':
+            case 'collect_commission':
                 newBalance += t.amount;
                 break;
             default:
                 break;
         }
-        newBalance += t.commission; // Commissions always increase balance
+        newBalance += t.commission;
         runningBalance = newBalance;
         return { ...t, balance: runningBalance };
      });
