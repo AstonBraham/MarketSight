@@ -48,7 +48,7 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     const fullTransactions = newTransactions.map((t, i) => ({
       ...t,
       id: `AIRBULK-${Date.now()}-${i}`,
-      date: new Date().toISOString()
+      date: t.date || new Date().toISOString()
     }));
     
     setTransactions(prev => {
@@ -84,13 +84,15 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     return transactions
       .filter(t => t.provider === provider)
       .reduce((acc, t) => {
-        if (t.type === 'purchase' || (t.type === 'adjustment' && t.amount > 0)) {
+        if (t.type === 'purchase') {
             return acc + t.amount;
         }
-        if (t.type === 'sale' || (t.type === 'adjustment' && t.amount < 0)) {
-            return acc - Math.abs(t.amount);
+        if (t.type === 'sale') {
+            return acc - t.amount;
         }
-        // Commissions and positive adjustments that are pure profit don't change stock
+        if (t.type === 'adjustment') {
+            return acc + t.amount;
+        }
         return acc;
       }, 0);
   }, [transactions]);
