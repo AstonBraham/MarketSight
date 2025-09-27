@@ -56,10 +56,10 @@ export function EditPurchaseDialog({ purchase }: { purchase: Purchase }) {
   };
 
   const dialogTrigger = (
-    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-        <Edit className="mr-2 h-4 w-4" />
-        Modifier
-    </DropdownMenuItem>
+    <Button variant="ghost" size="icon" className="h-8 w-8">
+      <Edit className="h-4 w-4" />
+      <span className="sr-only">Modifier l'achat</span>
+    </Button>
   );
 
   return (
