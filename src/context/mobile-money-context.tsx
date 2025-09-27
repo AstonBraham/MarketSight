@@ -87,13 +87,13 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let newBalance = acc;
         switch (t.type) {
             case 'purchase': // Achat de virtuel
+            case 'withdrawal': // Retrait client
             case 'transfer_to_pos': // Transfert vers un autre PDV
-            case 'virtual_return': // Retour de virtuel à l'opérateur
                 newBalance -= t.amount;
                 break;
             case 'deposit': // Dépôt client
-            case 'withdrawal': // Retrait client
             case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
+            case 'virtual_return': // Retour de virtuel à l'opérateur
                  newBalance += t.amount;
                  break;
             case 'adjustment': // Ajustement manuel
@@ -117,13 +117,13 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         let newBalance = runningBalance;
          switch (t.type) {
             case 'purchase': // Achat de virtuel
+            case 'withdrawal': // Retrait client
             case 'transfer_to_pos': // Transfert vers un autre PDV
-            case 'virtual_return': // Retour de virtuel à l'opérateur
                 newBalance -= t.amount;
                 break;
             case 'deposit': // Dépôt client
-            case 'withdrawal': // Retrait
             case 'transfer_from_pos': // Transfert depuis un autre PDV vers nous
+            case 'virtual_return': // Retour de virtuel à l'opérateur
                  newBalance += t.amount;
                  break;
             case 'adjustment': // Ajustement manuel
