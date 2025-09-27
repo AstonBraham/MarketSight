@@ -43,7 +43,59 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [type, setType] = useState<MobileMoneyTransactionType | ''>('');
   const [amount, setAmount] = useState(0);
   const [commission, setCommission] = useState(0);
+  const [isCommissionManual, setIsCommissionManual] = useState(false);
   const [affectsCash, setAffectsCash] = useState(false);
+
+  useEffect(() => {
+    if (type === 'deposit' || type === 'withdrawal') {
+      let calculatedCommission = 0;
+      let manual = false;
+
+      if (provider === 'Flooz') {
+        if (amount >= 5 && amount <= 5000) calculatedCommission = 50;
+        else if (amount > 5000 && amount <= 10000) calculatedCommission = 75;
+        else if (amount > 10000 && amount <= 15000) calculatedCommission = 100;
+        else if (amount > 15000 && amount <= 20000) calculatedCommission = 125;
+        else if (amount > 20000 && amount <= 25000) calculatedCommission = 150;
+        else if (amount > 25000 && amount <= 30000) calculatedCommission = 175;
+        else if (amount > 30000 && amount <= 40000) calculatedCommission = 200;
+        else if (amount > 40000 && amount <= 50000) calculatedCommission = 250;
+        else if (amount > 50000 && amount <= 75000) calculatedCommission = 350;
+        else if (amount > 75000 && amount <= 100000) calculatedCommission = 450;
+        else if (amount > 100000 && amount <= 200000) calculatedCommission = 800;
+        else if (amount > 200000 && amount <= 300000) calculatedCommission = 1200;
+        else if (amount > 300000 && amount <= 400000) calculatedCommission = 1500;
+        else if (amount > 400000 && amount <= 500000) calculatedCommission = 1800;
+        else { manual = true; }
+      } else if (provider === 'Mixx') {
+        if (amount >= 100 && amount <= 4999) calculatedCommission = 50;
+        else if (amount >= 5000 && amount <= 10000) calculatedCommission = 80;
+        else if (amount >= 10001 && amount <= 15000) calculatedCommission = 110;
+        else if (amount >= 15001 && amount <= 20000) calculatedCommission = 135;
+        else if (amount >= 20001 && amount <= 25000) calculatedCommission = 165;
+        else if (amount >= 25001 && amount <= 30000) calculatedCommission = 190;
+        else if (amount >= 30001 && amount <= 40000) calculatedCommission = 240;
+        else if (amount >= 40001 && amount <= 50000) calculatedCommission = 290;
+        else if (amount >= 50001 && amount <= 75000) calculatedCommission = 430;
+        else if (amount >= 75001 && amount <= 100000) calculatedCommission = 500;
+        else if (amount >= 100001 && amount <= 150000) calculatedCommission = 750;
+        else if (amount >= 150001 && amount <= 200000) calculatedCommission = 1000;
+        else if (amount >= 200001 && amount <= 250000) calculatedCommission = 1250;
+        else if (amount >= 250001 && amount <= 500000) calculatedCommission = 2164;
+        else { manual = true; }
+      } else {
+        manual = true;
+      }
+      
+      setIsCommissionManual(manual);
+      if (!manual) {
+        setCommission(calculatedCommission);
+      } else if (amount > 0) {
+        setCommission(0);
+      }
+
+    }
+  }, [amount, type, provider, toast]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -139,7 +191,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
             <div className={cn("grid grid-cols-4 items-center gap-4", showCommissionField ? "grid" : "hidden")}>
               <Label htmlFor="commission" className="text-right">Commission</Label>
-              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder="0" value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} required={showCommissionField}/>
+              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required={showCommissionField}/>
             </div>
              {showPhoneNumber && (
               <div className="grid grid-cols-4 items-center gap-4">
@@ -162,3 +214,4 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     </Dialog>
   );
 }
+
