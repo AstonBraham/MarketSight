@@ -21,19 +21,8 @@ interface MobileMoneyContextType {
 
 const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(undefined);
 
-const initialMixxBalance: MobileMoneyTransaction = {
-    id: 'INITIAL_MIXX_BALANCE',
-    type: 'adjustment',
-    provider: 'Mixx',
-    amount: 2164,
-    commission: 0,
-    date: '2024-07-25T00:00:00.000Z',
-    description: 'Solde initial reporté',
-};
-
-
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
-  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', [initialMixxBalance]);
+  const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
   const { logAction } = useAuditLog();
 
   useState(() => {
@@ -78,11 +67,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
         if (providerToClear) {
             transactionsToKeep = prev.filter(t => t.provider !== providerToClear);
         }
-
-        // Ensure initialMixxBalance is always present
-        if (!transactionsToKeep.some(t => t.id === initialMixxBalance.id)) {
-            transactionsToKeep.push(initialMixxBalance);
-        }
         
         return [...transactionsToKeep, ...fullTransactions];
     });
@@ -90,7 +74,6 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   }, [setTransactions, logAction]);
 
   const removeTransaction = useCallback((id: string) => {
-    if (id === initialMixxBalance.id) return; // Prevent deleting the initial balance
     const trx = transactions.find(t => t.id === id);
     if(trx) {
       logAction('DELETE_MM_TRANSACTION', `Suppression transaction MM ID ${id} (${trx.type} ${trx.provider} ${trx.amount}F).`);
@@ -101,21 +84,12 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const clearMobileMoneyTransactions = useCallback((providerToClear?: MobileMoneyProvider) => {
     if (providerToClear) {
         logAction('CLEAR_MM_DATA', `Suppression des transactions MM pour ${providerToClear}.`);
-        setTransactions(prev => {
-            const otherTransactions = prev.filter(t => t.provider !== providerToClear);
-            // If clearing Mixx, ensure the initial balance is the only Mixx transaction left.
-            if (providerToClear === 'Mixx') {
-                 return [initialMixxBalance, ...otherTransactions.filter(t => t.provider !== 'Mixx')];
-            }
-            return otherTransactions;
-        });
+        setTransactions(prev => prev.filter(t => t.provider !== providerToClear));
     } else {
-        // Clear all except the initial balance for Mixx
         logAction('CLEAR_MM_DATA', 'Suppression de toutes les transactions MM.');
-        const nonMixxTransactions = transactions.filter(t => t.provider !== 'Mixx');
-        setTransactions([initialMixxBalance, ...nonMixxTransactions]);
+        setTransactions([]);
     }
-  }, [setTransactions, transactions, logAction]);
+  }, [setTransactions, logAction]);
   
   const getBalance = useCallback((provider: MobileMoneyProvider) => {
     const providerTransactions = transactions.filter(t => t.provider === provider);
