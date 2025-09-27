@@ -118,10 +118,8 @@ export default function CashPage() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <CashflowChart />
-        </div>
+      <div className="flex flex-col gap-8">
+        <CashflowChart />
         <Card>
             <CardHeader>
                 <div className="flex justify-between items-center">
