@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
@@ -23,6 +24,20 @@ const MobileMoneyContext = createContext<MobileMoneyContextType | undefined>(und
 export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useLocalStorage<MobileMoneyTransaction[]>('mobileMoneyTransactions', []);
   const { logAction } = useAuditLog();
+
+  useEffect(() => {
+    // One-time data cleanup for stale/corrupted data that might cause crashes.
+    const hasBeenCleaned = localStorage.getItem('mm-context-cleaned-v1');
+    if (!hasBeenCleaned) {
+      // Check if any transaction is not an object, which indicates corruption
+      const isCorrupted = transactions.some(t => typeof t !== 'object' || t === null);
+      if (isCorrupted) {
+        console.warn("Corrupted Mobile Money data detected. Clearing cache.");
+        setTransactions([]);
+      }
+      localStorage.setItem('mm-context-cleaned-v1', 'true');
+    }
+  }, [setTransactions, transactions]);
 
   const addTransaction = useCallback((transaction: Omit<MobileMoneyTransaction, 'id'>) => {
     const newTransaction: MobileMoneyTransaction = {
@@ -109,7 +124,7 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
   
   const getProcessedTransactions = useCallback((provider: MobileMoneyProvider) => {
      const providerTransactions = transactions.filter(t => t.provider === provider);
-     const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+     const sorted = [...providerTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(a.date).getTime());
      
      let runningBalance = 0;
      const withBalance = sorted.map(t => {
