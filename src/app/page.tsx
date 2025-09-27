@@ -18,7 +18,7 @@ import { DashboardAlerts } from '@/components/dashboard/dashboard-alerts';
 import type { Transaction } from '@/lib/types';
 import { SalesCurveChart } from '@/components/dashboard/sales-curve-chart';
 
-export default function DashboardPage() {
+export default function Page() {
     const { getAllTransactions, sales, getLastClosingDate } = useTransactions();
     const { inventory } = useInventory();
     const { getStock: getAirtimeStock } = useAirtime();
