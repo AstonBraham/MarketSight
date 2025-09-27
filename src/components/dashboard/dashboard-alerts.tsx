@@ -2,7 +2,7 @@
 'use client';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Archive, Save, FileWarning, Landmark, ShoppingCart, Info, Moon } from 'lucide-react';
+import { Archive, FileWarning, Info, Moon, ShoppingCart } from 'lucide-react';
 import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
@@ -20,7 +20,7 @@ const LOW_STOCK_THRESHOLDS = {
     mobileMoney: {
         Flooz: 30000,
         Mixx: 50000,
-        Coris: 100000, // Default value as it was not specified
+        Coris: 100000,
     }
 }
 
@@ -43,7 +43,7 @@ export function DashboardAlerts() {
     const twoWeeksAgo = subDays(new Date(), 14);
     const recentSalesInventoryIds = new Set(
         sales
-            .filter(sale => new Date(sale.date) > twoWeeksAgo && sale.inventoryId)
+            .filter(sale => sale.inventoryId && new Date(sale.date) > twoWeeksAgo)
             .map(sale => sale.inventoryId)
     );
     return inventory.filter(item => item.inStock > 0 && !recentSalesInventoryIds.has(item.id));
