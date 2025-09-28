@@ -46,16 +46,13 @@ export const columns: ColumnDef<Transaction>[] = [
       let colorClass = '';
       let sign = amount >= 0 ? '+' : '-';
 
-      if (isCredit) {
+      if (type === 'expense' || type === 'purchase') {
+          colorClass = 'text-red-600';
+          sign = '-';
+      } else if (isCredit) {
         colorClass = 'text-green-600';
       } else {
         colorClass = 'text-red-600';
-      }
-      
-      // Ensure expenses and purchases are always negative
-      if (type === 'expense' || type === 'purchase') {
-        colorClass = 'text-red-600';
-        sign = '-';
       }
       
       if (type === 'adjustment' && row.original.category !== 'Encaissement') {
