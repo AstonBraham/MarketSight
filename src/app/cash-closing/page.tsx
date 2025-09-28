@@ -37,18 +37,11 @@ export default function CashClosingPage() {
         let balance = 0;
         const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
-        const withBalance: Transaction[] = sorted.map(t => {
-        if (t.type === 'sale') {
+        sorted.forEach(t => {
             balance += t.amount;
-        } else if (t.type === 'purchase' || t.type === 'expense') {
-            balance -= t.amount;
-        } else if (t.type === 'adjustment') {
-            balance += t.amount;
-        }
-        return { ...t, balance };
         });
 
-        return withBalance.reverse()[0]?.balance || 0;
+        return balance;
     }, [allTransactions]);
 
     if (!isClient) {

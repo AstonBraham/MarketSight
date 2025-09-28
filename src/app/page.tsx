@@ -38,13 +38,7 @@ export default function Page() {
         const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
         sorted.forEach(t => {
-        if (t.type === 'sale') {
-            balance += t.amount;
-        } else if (t.type === 'purchase' || t.type === 'expense') {
-            balance -= Math.abs(t.amount);
-        } else if (t.type === 'adjustment') {
           balance += t.amount;
-        }
         });
         return balance;
     }, [isClient, allTransactions]);

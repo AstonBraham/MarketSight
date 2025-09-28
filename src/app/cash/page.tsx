@@ -26,13 +26,7 @@ export default function CashPage() {
     const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     const withBalance: Transaction[] = sorted.map(t => {
-      if (t.type === 'sale') {
-        balance += t.amount;
-      } else if (t.type === 'purchase' || t.type === 'expense') {
-        balance -= Math.abs(t.amount);
-      } else if (t.type === 'adjustment') {
-        balance += t.amount;
-      }
+      balance += t.amount;
       return { ...t, balance };
     });
 
@@ -61,14 +55,14 @@ export default function CashPage() {
   const currentBalance = processedTransactions.length > 0 ? processedTransactions[0].balance : 0;
   
   const dailyIncome = allTransactions
-    .filter(t => (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+    .filter(t => t.amount > 0 && (!lastClosingDate || new Date(t.date) > lastClosingDate))
     .reduce((acc, t) => acc + t.amount, 0);
 
   const dailyOutcome = allTransactions
-    .filter(t => (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-    .reduce((acc, t) => acc + Math.abs(t.amount), 0);
+    .filter(t => t.amount < 0 && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+    .reduce((acc, t) => acc + t.amount, 0);
   
-  const netFlow = dailyIncome - dailyOutcome;
+  const netFlow = dailyIncome + dailyOutcome;
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
@@ -103,7 +97,7 @@ export default function CashPage() {
                 <CardTitle className="text-sm font-medium">Sorties du Jour</CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold text-red-600">-{new Intl.NumberFormat('fr-FR').format(dailyOutcome)} F</div>
+                <div className="text-2xl font-bold text-red-600">{new Intl.NumberFormat('fr-FR').format(dailyOutcome)} F</div>
                  <p className="text-xs text-muted-foreground">Achats et dépenses</p>
             </CardContent>
         </Card>

@@ -52,11 +52,7 @@ export default function ReportsPage() {
     const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     const withBalance: Transaction[] = sorted.map(t => {
-      if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
-        balance += t.amount;
-      } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
-        balance -= Math.abs(t.amount);
-      }
+      balance += t.amount;
       return { ...t, balance };
     });
 

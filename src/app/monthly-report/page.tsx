@@ -66,20 +66,18 @@ export default function MonthlyReportPage() {
         const totalMargin = monthlySales.reduce((acc, s) => acc + (s.margin || 0), 0) + monthlyAirtimeCommissions + monthlyMMCommissions;
         const totalExpenses = expenses.filter(e => isWithinInterval(new Date(e.date), monthInterval)).reduce((acc, e) => acc + e.amount, 0);
 
-        const monthlyPurchases = purchases.filter(p => p.status === 'paid' && isWithinInterval(new Date(p.date), monthInterval));
-        const monthlyReceipts = receipts.filter(r => isWithinInterval(new Date(r.date), monthInterval));
-
         const allCashTransactions = getAllTransactions();
-        const cashBalanceStartOfMonth = allCashTransactions.filter(t => new Date(t.date) < monthInterval.start).reduce((acc, t) => {
-            if (t.type === 'sale') return acc + t.amount;
-            if (t.type === 'purchase' || t.type === 'expense') return acc - t.amount;
-            if (t.type === 'adjustment') return acc + t.amount;
-            return acc;
-        }, 0);
+        const cashBalanceStartOfMonth = allCashTransactions.filter(t => new Date(t.date) < monthInterval.start).reduce((acc, t) => acc + t.amount, 0);
         
-        const cashIn = monthlySales.reduce((acc, s) => acc + s.amount, 0) + monthlyReceipts.reduce((acc, r) => acc + r.amount, 0);
-        const cashOut = totalExpenses + monthlyPurchases.reduce((acc, p) => acc + p.amount, 0);
-        const cashBalanceEndOfMonth = cashBalanceStartOfMonth + cashIn - cashOut;
+        const cashIn = allCashTransactions
+            .filter(t => isWithinInterval(new Date(t.date), monthInterval) && t.amount > 0)
+            .reduce((acc, t) => acc + t.amount, 0);
+            
+        const cashOut = allCashTransactions
+            .filter(t => isWithinInterval(new Date(t.date), monthInterval) && t.amount < 0)
+            .reduce((acc, t) => acc + t.amount, 0);
+            
+        const cashBalanceEndOfMonth = cashBalanceStartOfMonth + cashIn + cashOut;
 
         const salesByCategory = monthlySales.reduce((acc, sale) => {
             const category = sale.itemType || 'Non classé';

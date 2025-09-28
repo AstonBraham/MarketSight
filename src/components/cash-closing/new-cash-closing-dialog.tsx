@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useTransactions } from '@/context/transaction-context';
 import { useUser } from '@/context/user-context';
 import { Textarea } from '@/components/ui/textarea';
+import type { Transaction } from '@/lib/types';
 
 type NewCashClosingDialogProps = {
     currentTheoreticalBalance: number;
