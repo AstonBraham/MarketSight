@@ -19,15 +19,15 @@ import type { Transaction } from '@/lib/types';
 import { SalesCurveChart } from '@/components/dashboard/sales-curve-chart';
 
 export default function Page() {
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
+
     const { getAllTransactions, sales, getLastClosingDate } = useTransactions();
     const { inventory } = useInventory();
     const { getStock: getAirtimeStock } = useAirtime();
     const { getBalance: getMobileMoneyBalance } = useMobileMoney();
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-      setIsClient(true);
-    }, []);
 
     const allTransactions = useMemo(() => isClient ? getAllTransactions() : [], [isClient, getAllTransactions]);
     const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
@@ -57,7 +57,7 @@ export default function Page() {
     const airtimeStockMoov = useMemo(() => isClient ? getAirtimeStock('Moov') : 0, [isClient, getAirtimeStock]);
     const airtimeStockYas = useMemo(() => isClient ? getAirtimeStock('Yas') : 0, [isClient, getAirtimeStock]);
     const totalAirtimeStock = useMemo(() => airtimeStockMoov + airtimeStockYas, [airtimeStockMoov, airtimeStockYas]);
-
+    
     const mobileMoneyBalanceFlooz = useMemo(() => isClient ? getMobileMoneyBalance('Flooz') : 0, [isClient, getMobileMoneyBalance]);
     const mobileMoneyBalanceMixx = useMemo(() => isClient ? getMobileMoneyBalance('Mixx') : 0, [isClient, getMobileMoneyBalance]);
     const mobileMoneyBalanceCoris = useMemo(() => isClient ? getMobileMoneyBalance('Coris') : 0, [isClient, getMobileMoneyBalance]);
@@ -76,11 +76,9 @@ export default function Page() {
     
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
 
-
   if (!isClient) {
     return null;
   }
-
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">

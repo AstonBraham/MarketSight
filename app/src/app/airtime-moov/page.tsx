@@ -10,7 +10,7 @@ import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-tr
 import type { AirtimeTransaction } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog';
-import { AlertTriangle, TrendingDown } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
