@@ -12,7 +12,6 @@ import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog'
 import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useTransactions } from '@/context/transaction-context';
 
 
 export default function AirtimeYasPage() {
