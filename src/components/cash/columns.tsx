@@ -52,8 +52,8 @@ export const columns: ColumnDef<Transaction>[] = [
         colorClass = 'text-red-600';
       }
       
-      // Ensure expenses are always negative
-      if (type === 'expense') {
+      // Ensure expenses and purchases are always negative
+      if (type === 'expense' || type === 'purchase') {
         colorClass = 'text-red-600';
         sign = '-';
       }
