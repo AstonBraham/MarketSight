@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -82,26 +81,19 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         if (amount <= 499) calculatedCommission = 0;
         else if (amount <= 5000) calculatedCommission = 14;
         else if (amount <= 15000) calculatedCommission = 36;
-        else if (amount <= 50000) calculatedCommission = 73; // Note: 20k and 50k have same commission
+        else if (amount <= 50000) calculatedCommission = 73;
         else if (amount <= 100000) calculatedCommission = 146;
         else if (amount <= 200000) calculatedCommission = 219;
         else { manual = true; }
       } else if (provider === 'Mixx' && type === 'withdrawal') {
-        if (amount >= 100 && amount <= 4999) calculatedCommission = 50;
-        else if (amount >= 5000 && amount <= 10000) calculatedCommission = 80;
-        else if (amount >= 10001 && amount <= 15000) calculatedCommission = 110;
-        else if (amount >= 15001 && amount <= 20000) calculatedCommission = 135;
-        else if (amount >= 20001 && amount <= 25000) calculatedCommission = 165;
-        else if (amount >= 25001 && amount <= 30000) calculatedCommission = 190;
-        else if (amount >= 30001 && amount <= 40000) calculatedCommission = 240;
-        else if (amount >= 40001 && amount <= 50000) calculatedCommission = 290;
-        else if (amount >= 50001 && amount <= 75000) calculatedCommission = 430;
-        else if (amount >= 75001 && amount <= 100000) calculatedCommission = 500;
-        else if (amount >= 100001 && amount <= 150000) calculatedCommission = 750;
-        else if (amount >= 150001 && amount <= 200000) calculatedCommission = 1000;
-        else if (amount >= 200001 && amount <= 250000) calculatedCommission = 1250;
-        else if (amount >= 250001 && amount <= 500000) calculatedCommission = 2164;
-        else { 
+        if (amount <= 5000) calculatedCommission = 21;
+        else if (amount <= 20000) calculatedCommission = 65;
+        else if (amount <= 50000) calculatedCommission = 146;
+        else if (amount <= 100000) calculatedCommission = 329;
+        else if (amount <= 200000) { 
+            manual = true;
+            calculatedCommission = 0;
+        } else { 
             manual = true;
             if (amount > 0) {
                  calculatedCommission = 0;
