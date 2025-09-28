@@ -613,13 +613,19 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 description = `Encaissement Retour de virtuel ${t.provider}`;
                 break;
              case 'transfer_to_pos':
-             case 'transfer_from_pos':
-                if (t.affectsCash) {
-                  cashFlowImpact = t.type === 'transfer_from_pos' ? t.amount : -t.amount;
-                  type = t.type === 'transfer_from_pos' ? 'sale' : 'expense';
-                  description = `Mouvement de caisse - ${t.type === 'transfer_from_pos' ? 'depuis' : 'vers'} PDV ${t.phoneNumber}`;
+                 if (t.affectsCash) {
+                  cashFlowImpact = t.amount;
+                  type = 'sale';
+                  description = `Encaissement - transfert vers PDV ${t.phoneNumber}`;
                 }
-                break;
+                 break;
+             case 'transfer_from_pos':
+                 if (t.affectsCash) {
+                  cashFlowImpact = -t.amount;
+                  type = 'expense';
+                  description = `Décaissement - transfert depuis PDV ${t.phoneNumber}`;
+                }
+                 break;
             case 'collect_commission':
               cashFlowImpact = t.amount; // collect_commission amount IS the commission
               type = 'sale';
@@ -708,8 +714,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 case 'withdrawal': amount = -mt.amount; description = `Retrait MM ${mt.provider}`; affectsCash=true; break;
                 case 'purchase': amount = -mt.amount; type = 'MM Purchase' as any; description = `Achat de virtuel ${mt.provider}`; affectsCash=true; break;
                 case 'virtual_return': amount = mt.amount; type = 'Retour Virtuel Caisse' as any; description = `Retour virtuel ${mt.provider}`; affectsCash=true; break;
-                case 'transfer_to_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? -mt.amount : 0; description = `Transfert vers PDV ${mt.phoneNumber}`; break;
-                case 'transfer_from_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? mt.amount : 0; description = `Transfert depuis PDV ${mt.phoneNumber}`; break;
+                case 'transfer_to_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? mt.amount : 0; description = `Transfert vers PDV ${mt.phoneNumber}`; break;
+                case 'transfer_from_pos': type='MM Transfer' as any; affectsCash = mt.affectsCash ?? false; amount = affectsCash ? -mt.amount : 0; description = `Transfert depuis PDV ${mt.phoneNumber}`; break;
                 case 'collect_commission': amount = mt.amount; type = 'MM Commission' as any; description = `Collecte commission ${mt.provider}`; affectsCash=true; break;
                 case 'adjustment': amount = 0; break; // Purely virtual
             }
