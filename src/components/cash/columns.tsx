@@ -42,26 +42,26 @@ export const columns: ColumnDef<Transaction>[] = [
       const formatted = new Intl.NumberFormat('fr-FR').format(Math.abs(amount));
 
       const isCredit = type === 'sale' || (type === 'adjustment' && amount > 0);
-      const isDebit = type === 'purchase' || type === 'expense' || (type === 'adjustment' && amount < 0);
       
       let colorClass = '';
       let sign = amount >= 0 ? '+' : '-';
 
       if (isCredit) {
         colorClass = 'text-green-600';
-      }
-      if (isDebit) {
+      } else {
         colorClass = 'text-red-600';
       }
-      if (type === 'adjustment' && row.original.category !== 'Encaissement') {
-        colorClass = 'text-orange-600';
-      }
-
+      
       // Ensure expenses are always negative
       if (type === 'expense') {
         colorClass = 'text-red-600';
         sign = '-';
       }
+      
+      if (type === 'adjustment' && row.original.category !== 'Encaissement') {
+        colorClass = 'text-orange-600';
+      }
+
 
       return <div className={cn("text-right font-mono", colorClass)}>{sign}{formatted} F</div>;
     },
