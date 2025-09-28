@@ -78,7 +78,15 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         else if (amount > 300000 && amount <= 400000) calculatedCommission = 1500;
         else if (amount > 400000 && amount <= 500000) calculatedCommission = 1800;
         else { manual = true; }
-      } else if (provider === 'Mixx') {
+      } else if (provider === 'Mixx' && type === 'deposit') {
+        if (amount <= 499) calculatedCommission = 0;
+        else if (amount <= 5000) calculatedCommission = 14;
+        else if (amount <= 15000) calculatedCommission = 36;
+        else if (amount <= 50000) calculatedCommission = 73; // Note: 20k and 50k have same commission
+        else if (amount <= 100000) calculatedCommission = 146;
+        else if (amount <= 200000) calculatedCommission = 219;
+        else { manual = true; }
+      } else if (provider === 'Mixx' && type === 'withdrawal') {
         if (amount >= 100 && amount <= 4999) calculatedCommission = 50;
         else if (amount >= 5000 && amount <= 10000) calculatedCommission = 80;
         else if (amount >= 10001 && amount <= 15000) calculatedCommission = 110;
@@ -121,7 +129,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     const transactionAmount = parseFloat(data.amount as string);
     const currentBalance = getBalance(provider);
 
-    if (type === 'deposit' || type === 'transfer_to_pos' || type === 'virtual_return') {
+    if (type === 'withdrawal' || type === 'transfer_to_pos') {
         if (transactionAmount > currentBalance) {
             toast({
                 title: 'Solde virtuel insuffisant',
@@ -141,13 +149,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         phoneNumber: (data.phoneNumber as string || '').replace(/\s+/g, ''),
         affectsCash: affectsCash
     });
-
-    if (type === 'virtual_return') {
-      addAdjustment({
-        amount: transactionAmount,
-        description: `Encaissement suite au retour de virtuel ${provider}`
-      });
-    }
     
     toast({
       title: 'Opération Ajoutée',
