@@ -9,7 +9,7 @@ import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
 import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo, useState, useEffect } from 'react';
-import type { MobileMoneyTransactionType } from '@/lib/types';
+import type { MobileMoneyTransaction, MobileMoneyTransactionType } from '@/lib/types';
 import {
   Select,
   SelectContent,
