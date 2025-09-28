@@ -578,8 +578,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     // 2. Airtime transactions that affect cash
     airtimeTransactions.forEach(t => {
       if (t.type === 'sale' || t.type === 'purchase' || t.type === 'commission') {
-        const amount = t.type === 'commission' ? t.commission : t.amount;
-        const type = t.type === 'sale' || t.type === 'commission' ? 'sale' : 'purchase';
+        let amount = t.type === 'commission' ? t.commission : t.amount;
+        let type : 'sale' | 'purchase';
+        if (t.type === 'purchase') {
+            amount = -Math.abs(amount); // Ensure purchase is a negative value for cash flow
+            type = 'purchase';
+        } else {
+            type = 'sale';
+        }
         const description = t.type === 'commission' ? `Commission Airtime ${t.provider}` : `${type === 'sale' ? 'Vente' : 'Achat'} Airtime ${t.provider}`;
         allCashTransactions.push({ id: t.id, type, date: t.date, amount, description });
       }
