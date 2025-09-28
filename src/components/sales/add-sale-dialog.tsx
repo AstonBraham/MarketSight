@@ -85,6 +85,13 @@ export function AddSaleDialog() {
     }
   };
 
+  const handleReset = () => {
+    setSelectedItemId(null);
+    setQuantity(1);
+    setPrice(0);
+    setCategoryFilter('all');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -118,11 +125,7 @@ export function AddSaleDialog() {
           description: 'La nouvelle vente a été enregistrée avec succès.',
         });
 
-        // Reset form and close
-        setSelectedItemId(null);
-        setQuantity(1);
-        setPrice(0);
-        setCategoryFilter('all');
+        handleReset();
         setOpen(false);
     } else {
         toast({
@@ -134,7 +137,10 @@ export function AddSaleDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+        if (!isOpen) handleReset();
+        setOpen(isOpen);
+    }}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
