@@ -24,22 +24,25 @@ export default function AirtimeMoovPage() {
     setIsClient(true);
   }, []);
 
-  const moovTransactions = useMemo(() => transactions.filter(t => t.provider === 'Moov'), [transactions]);
-  const moovStock = useMemo(() => getStock('Moov'), [getStock, transactions]);
+  const moovTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Moov') : [], [isClient, transactions]);
+  const moovStock = useMemo(() => isClient ? getStock('Moov') : 0, [isClient, getStock]);
   
   const totalPurchases = useMemo(() => {
+    if (!isClient) return 0;
     return moovTransactions
       .filter(t => t.type === 'purchase')
       .reduce((acc, t) => acc + t.amount, 0);
-  }, [moovTransactions]);
+  }, [isClient, moovTransactions]);
   
   const totalSales = useMemo(() => {
+    if (!isClient) return 0;
     return moovTransactions
       .filter(t => t.type === 'sale')
       .reduce((acc, t) => acc + t.amount, 0);
-  }, [moovTransactions]);
+  }, [isClient, moovTransactions]);
   
   const { averageDailySales, remainingDays } = useMemo(() => {
+    if (!isClient) return { averageDailySales: 0, remainingDays: Infinity };
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -51,17 +54,19 @@ export default function AirtimeMoovPage() {
     const remainingDays = averageDailySales > 0 ? moovStock / averageDailySales : Infinity;
 
     return { averageDailySales, remainingDays };
-  }, [moovTransactions, moovStock]);
+  }, [isClient, moovTransactions, moovStock]);
 
   const totalCommission = useMemo(() => {
+    if (!isClient) return 0;
     return totalPurchases * 0.05;
-  }, [totalPurchases]);
+  }, [isClient, totalPurchases]);
 
   const processedTransactions = useMemo(() => {
+    if (!isClient) return [];
     return getProcessedTransactions('Moov');
-  }, [getProcessedTransactions, moovTransactions]);
+  }, [isClient, getProcessedTransactions]);
 
-  const isStockLow = remainingDays <= 3;
+  const isStockLow = isClient && remainingDays <= 3;
 
 
   if (!isClient) {

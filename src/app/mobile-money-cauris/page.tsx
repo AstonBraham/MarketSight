@@ -32,28 +32,38 @@ export default function MobileMoneyCorisPage() {
         setIsClient(true);
     }, []);
 
-    const corisTransactions = transactions.filter(t => t.provider === 'Coris');
-    const corisBalance = getBalance('Coris');
+    const corisTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Coris') : [], [isClient, transactions]);
+    const corisBalance = useMemo(() => isClient ? getBalance('Coris') : 0, [isClient, getBalance]);
+    const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
-    const lastClosingDate = getLastClosingDate();
+     const dailyDeposits = useMemo(() => {
+        if (!isClient) return 0;
+        return corisTransactions
+            .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+            .reduce((acc, t) => acc + t.amount, 0);
+    }, [isClient, corisTransactions, lastClosingDate]);
 
-     const dailyDeposits = corisTransactions
-        .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-        .reduce((acc, t) => acc + t.amount, 0);
+    const dailyWithdrawals = useMemo(() => {
+        if (!isClient) return 0;
+        return corisTransactions
+            .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+            .reduce((acc, t) => acc + t.amount, 0);
+    }, [isClient, corisTransactions, lastClosingDate]);
 
-    const dailyWithdrawals = corisTransactions
-        .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-        .reduce((acc, t) => acc + t.amount, 0);
-
-    const dailyCommissions = corisTransactions
-        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
-        .reduce((acc, t) => acc + t.commission, 0);
+    const dailyCommissions = useMemo(() => {
+        if (!isClient) return 0;
+        return corisTransactions
+            .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
+            .reduce((acc, t) => acc + t.commission, 0);
+    }, [isClient, corisTransactions, lastClosingDate]);
     
     const processedTransactions = useMemo(() => {
+        if (!isClient) return [];
         return getProcessedTransactions('Coris');
-    }, [getProcessedTransactions, corisTransactions]);
+    }, [isClient, getProcessedTransactions, corisTransactions]);
     
     const filteredTransactions = useMemo(() => {
+        if (!isClient) return [];
         if (filter === "all") {
             return processedTransactions;
         }
@@ -66,7 +76,7 @@ export default function MobileMoneyCorisPage() {
         }
         return processedTransactions.filter(t => t.type === filter);
 
-    }, [processedTransactions, filter]);
+    }, [isClient, processedTransactions, filter]);
 
 
   if (!isClient) {

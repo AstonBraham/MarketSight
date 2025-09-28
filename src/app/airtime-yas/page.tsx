@@ -24,22 +24,25 @@ export default function AirtimeYasPage() {
         setIsClient(true);
     }, []);
     
-    const yasTransactions = useMemo(() => transactions.filter(t => t.provider === 'Yas'), [transactions]);
-    const yasStock = useMemo(() => getStock('Yas'), [getStock, transactions]);
+    const yasTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Yas') : [], [isClient, transactions]);
+    const yasStock = useMemo(() => isClient ? getStock('Yas') : 0, [isClient, getStock]);
 
     const totalPurchases = useMemo(() => {
+      if (!isClient) return 0;
       return yasTransactions
         .filter(t => t.type === 'purchase')
         .reduce((acc, t) => acc + t.amount, 0);
-    }, [yasTransactions]);
+    }, [isClient, yasTransactions]);
 
     const totalSales = useMemo(() => {
+      if (!isClient) return 0;
       return yasTransactions
         .filter(t => t.type === 'sale')
         .reduce((acc, t) => acc + t.amount, 0);
-    }, [yasTransactions]);
+    }, [isClient, yasTransactions]);
 
     const { averageDailySales, remainingDays } = useMemo(() => {
+        if (!isClient) return { averageDailySales: 0, remainingDays: Infinity };
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
@@ -51,17 +54,19 @@ export default function AirtimeYasPage() {
         const remainingDays = averageDailySales > 0 ? yasStock / averageDailySales : Infinity;
     
         return { averageDailySales, remainingDays };
-    }, [yasTransactions, yasStock]);
+    }, [isClient, yasTransactions, yasStock]);
 
     const totalCommission = useMemo(() => {
+      if (!isClient) return 0;
       return totalPurchases * 0.05;
-    }, [totalPurchases]);
+    }, [isClient, totalPurchases]);
 
     const processedTransactions = useMemo(() => {
+        if (!isClient) return [];
         return getProcessedTransactions('Yas');
-    }, [getProcessedTransactions, yasTransactions]);
+    }, [isClient, getProcessedTransactions]);
 
-    const isStockLow = remainingDays <= 3;
+    const isStockLow = isClient && remainingDays <= 3;
     
   if (!isClient) {
     return null;

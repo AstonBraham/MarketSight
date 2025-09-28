@@ -34,28 +34,38 @@ export default function MobileMoneyMixxPage() {
         setIsClient(true);
     }, []);
 
-    const mixxTransactions = transactions.filter(t => t.provider === 'Mixx');
-    const mixxBalance = getBalance('Mixx');
+    const mixxTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Mixx') : [], [isClient, transactions]);
+    const mixxBalance = useMemo(() => isClient ? getBalance('Mixx') : 0, [isClient, getBalance]);
+    const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
-    const lastClosingDate = getLastClosingDate();
+     const dailyDeposits = useMemo(() => {
+        if (!isClient) return 0;
+        return mixxTransactions
+            .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+            .reduce((acc, t) => acc + t.amount, 0);
+    }, [isClient, mixxTransactions, lastClosingDate]);
 
-     const dailyDeposits = mixxTransactions
-        .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-        .reduce((acc, t) => acc + t.amount, 0);
+    const dailyWithdrawals = useMemo(() => {
+        if (!isClient) return 0;
+        return mixxTransactions
+            .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+            .reduce((acc, t) => acc + t.amount, 0);
+    }, [isClient, mixxTransactions, lastClosingDate]);
 
-    const dailyWithdrawals = mixxTransactions
-        .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-        .reduce((acc, t) => acc + t.amount, 0);
-
-    const dailyCommissions = mixxTransactions
-        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
-        .reduce((acc, t) => acc + t.commission, 0);
+    const dailyCommissions = useMemo(() => {
+        if (!isClient) return 0;
+        return mixxTransactions
+            .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
+            .reduce((acc, t) => acc + t.commission, 0);
+    }, [isClient, mixxTransactions, lastClosingDate]);
     
     const processedTransactions = useMemo(() => {
+        if (!isClient) return [];
         return getProcessedTransactions('Mixx');
-    }, [getProcessedTransactions, mixxTransactions]);
+    }, [isClient, getProcessedTransactions, mixxTransactions]);
 
     const filteredTransactions = useMemo(() => {
+        if (!isClient) return [];
         if (filter === "all") {
             return processedTransactions;
         }
@@ -68,7 +78,7 @@ export default function MobileMoneyMixxPage() {
         }
         return processedTransactions.filter(t => t.type === filter);
 
-    }, [processedTransactions, filter]);
+    }, [isClient, processedTransactions, filter]);
 
   if (!isClient) {
     return null;

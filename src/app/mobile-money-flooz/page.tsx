@@ -26,28 +26,38 @@ export default function MobileMoneyFloozPage() {
         setIsClient(true);
     }, []);
     
-    const floozTransactions = transactions.filter(t => t.provider === 'Flooz');
-    const floozBalance = getBalance('Flooz');
+    const floozTransactions = useMemo(() => isClient ? transactions.filter(t => t.provider === 'Flooz') : [], [isClient, transactions]);
+    const floozBalance = useMemo(() => isClient ? getBalance('Flooz') : 0, [isClient, getBalance]);
+    const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
-    const lastClosingDate = getLastClosingDate();
+    const dailyDeposits = useMemo(() => {
+        if (!isClient) return 0;
+        return floozTransactions
+            .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+            .reduce((acc, t) => acc + t.amount, 0);
+    }, [isClient, floozTransactions, lastClosingDate]);
 
-    const dailyDeposits = floozTransactions
-        .filter(t => t.type === 'deposit' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-        .reduce((acc, t) => acc + t.amount, 0);
+    const dailyWithdrawals = useMemo(() => {
+        if (!isClient) return 0;
+        return floozTransactions
+            .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
+            .reduce((acc, t) => acc + t.amount, 0);
+    }, [isClient, floozTransactions, lastClosingDate]);
 
-    const dailyWithdrawals = floozTransactions
-        .filter(t => t.type === 'withdrawal' && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-        .reduce((acc, t) => acc + t.amount, 0);
-
-    const dailyCommissions = floozTransactions
-        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
-        .reduce((acc, t) => acc + t.commission, 0);
+    const dailyCommissions = useMemo(() => {
+        if (!isClient) return 0;
+        return floozTransactions
+            .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
+            .reduce((acc, t) => acc + t.commission, 0);
+    }, [isClient, floozTransactions, lastClosingDate]);
 
     const processedTransactions = useMemo(() => {
+        if (!isClient) return [];
         return getProcessedTransactions('Flooz');
-    }, [getProcessedTransactions, floozTransactions]);
+    }, [isClient, getProcessedTransactions, floozTransactions]);
 
     const filteredTransactions = useMemo(() => {
+        if (!isClient) return [];
         if (filter === "all") {
             return processedTransactions;
         }
@@ -60,7 +70,7 @@ export default function MobileMoneyFloozPage() {
         }
         return processedTransactions.filter(t => t.type === filter);
 
-    }, [processedTransactions, filter]);
+    }, [isClient, processedTransactions, filter]);
 
   if (!isClient) {
     return null; 

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,11 +34,17 @@ const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
     )
 }
 
-export default function InvoicesPage() {
+export default function Page() {
     const { invoices, sales } = useTransactions();
     const { inventory } = useInventory();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
     
     const topSellingItems = useMemo(() => {
+        if (!isClient) return [];
         const salesByItem: { [key: string]: number } = {};
         sales.forEach(sale => {
             if (sale.inventoryId && sale.quantity) {
@@ -53,24 +59,30 @@ export default function InvoicesPage() {
             .filter((item): item is InventoryItem => !!item);
 
         return sortedItems;
-    }, [sales, inventory]);
+    }, [isClient, sales, inventory]);
 
     const totalInvoiced = useMemo(() => {
+        if (!isClient) return 0;
         return invoices.reduce((acc, invoice) => acc + invoice.total, 0);
-    }, [invoices]);
+    }, [isClient, invoices]);
 
     const cashSales = useMemo(() => {
+        if (!isClient) return [];
         return sales
             .filter(s => !s.invoiceId && s.itemType !== 'Ticket Wifi') // Exclure les ventes Wifi
             .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }, [sales]);
+    }, [isClient, sales]);
 
     const totalCashSales = useMemo(() => {
+        if (!isClient) return 0;
         return cashSales.reduce((acc, sale) => acc + sale.amount, 0);
-    }, [cashSales]);
+    }, [isClient, cashSales]);
 
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value);
 
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">

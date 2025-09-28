@@ -29,11 +29,11 @@ export default function Page() {
       setIsClient(true);
     }, []);
 
-    const allTransactions = getAllTransactions();
-    const lastClosingDate = getLastClosingDate();
-
+    const allTransactions = useMemo(() => isClient ? getAllTransactions() : [], [isClient, getAllTransactions]);
+    const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
 
     const currentBalance = useMemo(() => {
+        if (!isClient) return 0;
         let balance = 0;
         const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         
@@ -47,28 +47,36 @@ export default function Page() {
         }
         });
         return balance;
-    }, [allTransactions]);
+    }, [isClient, allTransactions]);
 
     const inventoryValue = useMemo(() => {
+        if (!isClient) return 0;
         return inventory.reduce((acc, item) => acc + (item.inStock * (item.costPrice || 0)), 0);
-    }, [inventory]);
+    }, [isClient, inventory]);
 
-    const airtimeStockMoov = getAirtimeStock('Moov');
-    const airtimeStockYas = getAirtimeStock('Yas');
+    const airtimeStockMoov = useMemo(() => isClient ? getAirtimeStock('Moov') : 0, [isClient, getAirtimeStock]);
+    const airtimeStockYas = useMemo(() => isClient ? getAirtimeStock('Yas') : 0, [isClient, getAirtimeStock]);
     const totalAirtimeStock = airtimeStockMoov + airtimeStockYas;
 
-    const mobileMoneyBalanceFlooz = getMobileMoneyBalance('Flooz');
-    const mobileMoneyBalanceMixx = getMobileMoneyBalance('Mixx');
-    const mobileMoneyBalanceCoris = getMobileMoneyBalance('Coris');
+    const mobileMoneyBalanceFlooz = useMemo(() => isClient ? getMobileMoneyBalance('Flooz') : 0, [isClient, getMobileMoneyBalance]);
+    const mobileMoneyBalanceMixx = useMemo(() => isClient ? getMobileMoneyBalance('Mixx') : 0, [isClient, getMobileMoneyBalance]);
+    const mobileMoneyBalanceCoris = useMemo(() => isClient ? getMobileMoneyBalance('Coris') : 0, [isClient, getMobileMoneyBalance]);
     const totalMobileMoneyBalance = mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCoris;
-
-    const workingCapital = currentBalance + inventoryValue + totalAirtimeStock + totalMobileMoneyBalance;
     
-    const todaySales = sales
+    const workingCapital = useMemo(() => {
+        if (!isClient) return 0;
+        return currentBalance + inventoryValue + totalAirtimeStock + totalMobileMoneyBalance;
+    }, [isClient, currentBalance, inventoryValue, totalAirtimeStock, totalMobileMoneyBalance]);
+    
+    const todaySales = useMemo(() => {
+        if (!isClient) return 0;
+        return sales
         .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
         .reduce((acc, t) => acc + t.amount, 0);
-
+    }, [isClient, sales, lastClosingDate]);
+    
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
+
 
   if (!isClient) {
     return null;
