@@ -1,37 +1,19 @@
 
-'use client';
-
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { SidebarInset } from '@/components/ui/sidebar';
-import { UserProvider, useUser } from '@/context/user-context';
+import { UserProvider } from '@/context/user-context';
 import { InventoryProvider } from '@/context/inventory-context';
 import { TransactionProvider } from '@/context/transaction-context';
 import { AirtimeProvider } from '@/context/airtime-context';
 import { MobileMoneyProvider } from '@/context/mobile-money-context';
-import { useEffect, useState } from 'react';
 import { AuditLogProvider } from '@/context/audit-log-context';
-import LoginPage from './login/page';
+import ClientLayout from './client-layout';
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null; // or a loading skeleton
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
-
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -67,9 +49,11 @@ export default function RootLayout({
             <AirtimeProvider>
               <MobileMoneyProvider>
                 <TransactionProvider>
-                  <AppLayout>
-                    {children}
-                  </AppLayout>
+                  <ClientLayout>
+                    <AppLayout>
+                      {children}
+                    </AppLayout>
+                  </ClientLayout>
                 </TransactionProvider>
               </MobileMoneyProvider>
             </AirtimeProvider>
