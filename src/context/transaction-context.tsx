@@ -588,7 +588,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     // 3. Mobile Money transactions
     mobileMoneyTransactions.forEach(t => {
         let cashFlowImpact = 0;
-        let type: 'sale' | 'purchase' = 'sale';
+        let type: 'sale' | 'purchase' | 'expense' = 'sale';
         let description = '';
 
         const baseDesc = `${t.provider} (${t.phoneNumber || t.transactionId || ''})`
@@ -601,7 +601,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
                 break;
             case 'withdrawal':
                 cashFlowImpact = -t.amount;
-                type = 'purchase';
+                type = 'expense';
                 description = `Décaissement Retrait MM ${baseDesc}`;
                 break;
             case 'purchase':
