@@ -61,56 +61,47 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
       let calculatedCommission = 0;
       let manual = false;
 
-      if (provider === 'Flooz') {
-        if (amount >= 5 && amount <= 5000) calculatedCommission = 50;
-        else if (amount > 5000 && amount <= 10000) calculatedCommission = 75;
-        else if (amount > 10000 && amount <= 15000) calculatedCommission = 100;
-        else if (amount > 15000 && amount <= 20000) calculatedCommission = 125;
-        else if (amount > 20000 && amount <= 25000) calculatedCommission = 150;
-        else if (amount > 25000 && amount <= 30000) calculatedCommission = 175;
-        else if (amount > 30000 && amount <= 40000) calculatedCommission = 200;
-        else if (amount > 40000 && amount <= 50000) calculatedCommission = 250;
-        else if (amount > 50000 && amount <= 75000) calculatedCommission = 350;
-        else if (amount > 75000 && amount <= 100000) calculatedCommission = 450;
-        else if (amount > 100000 && amount <= 200000) calculatedCommission = 800;
-        else if (amount > 200000 && amount <= 300000) calculatedCommission = 1200;
-        else if (amount > 300000 && amount <= 400000) calculatedCommission = 1500;
-        else if (amount > 400000 && amount <= 500000) calculatedCommission = 1800;
-        else { manual = true; }
-      } else if (provider === 'Mixx' && type === 'deposit') {
+      if (provider === 'Mixx' && type === 'deposit') {
         if (amount <= 499) calculatedCommission = 0;
         else if (amount <= 5000) calculatedCommission = 14;
         else if (amount <= 15000) calculatedCommission = 36;
+        else if (amount <= 20000) calculatedCommission = 73;
         else if (amount <= 50000) calculatedCommission = 73;
         else if (amount <= 100000) calculatedCommission = 146;
         else if (amount <= 200000) calculatedCommission = 219;
         else { manual = true; }
       } else if (provider === 'Mixx' && type === 'withdrawal') {
-        if (amount <= 5000) calculatedCommission = 21;
+        if (amount <= 499) calculatedCommission = 21;
+        else if (amount <= 5000) calculatedCommission = 21;
+        else if (amount <= 15000) calculatedCommission = 65;
         else if (amount <= 20000) calculatedCommission = 65;
         else if (amount <= 50000) calculatedCommission = 146;
         else if (amount <= 100000) calculatedCommission = 329;
         else if (amount <= 200000) { 
             manual = true;
-            calculatedCommission = 0;
+            calculatedCommission = 0; // "X" means manual input
         } else { 
             manual = true;
-            if (amount > 0) {
-                 calculatedCommission = 0;
-            }
         }
       } else {
         manual = true;
       }
       
       setIsCommissionManual(manual);
-      setCommission(calculatedCommission);
+      if (!manual) {
+        setCommission(calculatedCommission);
+      } else {
+        // If we switch to manual, don't reset a user-entered commission
+        if (commission === calculatedCommission) {
+          setCommission(0);
+        }
+      }
 
     } else {
         setCommission(0);
         setIsCommissionManual(false);
     }
-  }, [amount, type, provider, toast]);
+  }, [amount, type, provider]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
