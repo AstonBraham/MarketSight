@@ -64,7 +64,7 @@ export default function AirtimeYasPage() {
     const processedTransactions = useMemo(() => {
         if (!isClient) return [];
         return getProcessedTransactions('Yas');
-    }, [isClient, getProcessedTransactions, yasTransactions]);
+    }, [isClient, getProcessedTransactions, transactions]);
 
     const isStockLow = isClient && remainingDays <= 3;
     

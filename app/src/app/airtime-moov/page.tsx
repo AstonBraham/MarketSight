@@ -64,7 +64,7 @@ export default function AirtimeMoovPage() {
   const processedTransactions = useMemo(() => {
     if (!isClient) return [];
     return getProcessedTransactions('Moov');
-  }, [isClient, getProcessedTransactions, moovTransactions]);
+  }, [isClient, getProcessedTransactions, transactions]);
 
   const isStockLow = isClient && remainingDays <= 3;
 
