@@ -41,7 +41,7 @@ export default function Page() {
         if (t.type === 'sale') {
             balance += t.amount;
         } else if (t.type === 'purchase' || t.type === 'expense') {
-            balance -= t.amount;
+            balance -= Math.abs(t.amount);
         } else if (t.type === 'adjustment') {
           balance += t.amount;
         }
