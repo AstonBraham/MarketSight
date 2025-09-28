@@ -86,24 +86,35 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
     return providerTransactions.reduce((acc, t) => {
         let newBalance = acc;
         switch (t.type) {
-            case 'withdrawal':
-            case 'purchase':
-            case 'transfer_from_pos':
-                 newBalance += t.amount;
-                 break;
             case 'deposit':
-            case 'virtual_return':
-            case 'transfer_to_pos':
-                newBalance -= t.amount;
+                newBalance -= t.amount; // Le virtuel diminue
+                newBalance += t.commission; // La commission augmente le virtuel
                 break;
-            case 'adjustment':
+            case 'withdrawal':
+                newBalance += t.amount; // Le virtuel augmente
+                newBalance += t.commission; // La commission augmente le virtuel
+                break;
+            case 'purchase':
+                newBalance += t.amount; // Achat de virtuel augmente le solde
+                break;
+            case 'virtual_return':
+                newBalance -= t.amount; // Retour de virtuel diminue le solde
+                break;
             case 'collect_commission':
-                newBalance += t.amount;
+                newBalance += t.amount; // La collecte augmente le solde virtuel
+                break;
+            case 'transfer_to_pos':
+                 newBalance -= t.amount; // Transfert sortant
+                 break;
+            case 'transfer_from_pos':
+                 newBalance += t.amount; // Transfert entrant
+                 break;
+            case 'adjustment':
+                newBalance += t.amount; // L'ajustement modifie le solde
                 break;
             default:
                 break;
         }
-        newBalance += t.commission;
         return newBalance;
     }, 0);
   }, [transactions]);
@@ -116,24 +127,35 @@ export function MobileMoneyProvider({ children }: { children: ReactNode }) {
      const withBalance = sorted.map(t => {
         let newBalance = runningBalance;
          switch (t.type) {
-            case 'withdrawal':
-            case 'purchase':
-            case 'transfer_from_pos':
-                 newBalance += t.amount;
-                 break;
             case 'deposit':
+                newBalance -= t.amount;
+                newBalance += t.commission;
+                break;
+            case 'withdrawal':
+                newBalance += t.amount;
+                newBalance += t.commission;
+                break;
+            case 'purchase':
+                newBalance += t.amount;
+                break;
             case 'virtual_return':
-            case 'transfer_to_pos':
                 newBalance -= t.amount;
                 break;
-            case 'adjustment':
             case 'collect_commission':
+                newBalance += t.amount;
+                break;
+             case 'transfer_to_pos':
+                 newBalance -= t.amount;
+                 break;
+             case 'transfer_from_pos':
+                 newBalance += t.amount;
+                 break;
+            case 'adjustment':
                 newBalance += t.amount;
                 break;
             default:
                 break;
         }
-        newBalance += t.commission;
         runningBalance = newBalance;
         return { ...t, balance: runningBalance };
      });
