@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -18,6 +19,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,13 +49,14 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { addTransaction, getBalance } = useMobileMoney();
-  const { addAdjustment } = useTransactions();
   
   const [type, setType] = useState<MobileMoneyTransactionType | ''>('');
   const [amount, setAmount] = useState(0);
   const [commission, setCommission] = useState(0);
   const [isCommissionManual, setIsCommissionManual] = useState(false);
   const [affectsCash, setAffectsCash] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [transactionId, setTransactionId] = useState('');
 
   useEffect(() => {
     if (!open) {
@@ -53,6 +66,8 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         setType('');
         setAffectsCash(false);
         setIsCommissionManual(false);
+        setPhoneNumber('');
+        setTransactionId('');
     }
   }, [open]);
 
@@ -91,7 +106,6 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
       if (!manual) {
         setCommission(calculatedCommission);
       } else {
-        // If we switch to manual, don't reset a user-entered commission
         if (commission === calculatedCommission) {
           setCommission(0);
         }
@@ -104,16 +118,11 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
   }, [amount, type, provider]);
 
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
-    const data = Object.fromEntries(formData.entries());
-
-    const transactionAmount = parseFloat(data.amount as string);
+  const handleFinalSubmit = () => {
     const currentBalance = getBalance(provider);
 
     if (type === 'withdrawal' || type === 'transfer_to_pos') {
-        if (transactionAmount > currentBalance) {
+        if (amount > currentBalance) {
             toast({
                 title: 'Solde virtuel insuffisant',
                 description: `Le solde ${provider} est de ${new Intl.NumberFormat('fr-FR').format(currentBalance)} F. Opération impossible.`,
@@ -124,12 +133,12 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     }
 
     addTransaction({
-        transactionId: data.transactionId as string,
+        transactionId: transactionId,
         type: type as MobileMoneyTransactionType,
         provider: provider,
-        amount: transactionAmount,
-        commission: parseFloat(data.commission as string) || 0,
-        phoneNumber: (data.phoneNumber as string || '').replace(/\s+/g, ''),
+        amount: amount,
+        commission: commission || 0,
+        phoneNumber: phoneNumber.replace(/\s+/g, ''),
         affectsCash: affectsCash
     });
     
@@ -139,6 +148,8 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
     });
     setOpen(false);
   };
+  
+  const formIsInvalid = !type || !transactionId || !amount;
 
   const showCommissionField = type === 'deposit' || type === 'withdrawal';
   const showPhoneNumber = type !== 'collect_commission' && type !== 'purchase' && type !== 'virtual_return' && type !== 'adjustment' ;
@@ -150,7 +161,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         <Button><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Opération</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Nouvelle Opération Mobile Money ({provider})</DialogTitle>
             <DialogDescription>
@@ -177,20 +188,20 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             </div>
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="transactionId" className="text-right">ID Transaction</Label>
-              <Input id="transactionId" name="transactionId" className="col-span-3" placeholder="Référence de la transaction" required/>
+              <Input id="transactionId" name="transactionId" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="col-span-3" placeholder="Référence de la transaction" required/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Montant</Label>
-              <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} min="0"/>
+              <Input id="amount" name="amount" type="number" className="col-span-3" placeholder="0" required value={amount || ''} onChange={(e) => setAmount(parseFloat(e.target.value) || 0)} min="0"/>
             </div>
             <div className={cn("grid grid-cols-4 items-center gap-4", showCommissionField ? "grid" : "hidden")}>
               <Label htmlFor="commission" className="text-right">Commission</Label>
-              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required={showCommissionField}/>
+              <Input id="commission" name="commission" type="number" className="col-span-3" placeholder={isCommissionManual ? "Saisie manuelle" : "Calcul automatique"} value={commission || ''} onChange={(e) => setCommission(parseFloat(e.target.value) || 0)} readOnly={!isCommissionManual} required={showCommissionField}/>
             </div>
              {showPhoneNumber && (
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="phoneNumber" className="text-right">Numéro Tél.</Label>
-                <Input id="phoneNumber" name="phoneNumber" className="col-span-3" placeholder="Numéro du client ou PDV" />
+                <Input id="phoneNumber" name="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="col-span-3" placeholder="Numéro du client ou PDV" />
               </div>
              )}
             {showAffectsCashSwitch && (
@@ -201,7 +212,29 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
             )}
           </div>
           <DialogFooter>
-            <Button type="submit">Enregistrer</Button>
+             {showAffectsCashSwitch ? (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button type="button" disabled={formIsInvalid}>Enregistrer</Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Confirmation de l'opération</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette opération <span className="font-bold">{affectsCash ? "AFFECTERA" : "N'AFFECTERA PAS"}</span> la trésorerie.
+                        <br/>
+                        Voulez-vous continuer ?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleFinalSubmit}>Confirmer</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              ) : (
+                <Button type="button" onClick={handleFinalSubmit} disabled={formIsInvalid}>Enregistrer</Button>
+              )}
           </DialogFooter>
         </form>
       </DialogContent>
