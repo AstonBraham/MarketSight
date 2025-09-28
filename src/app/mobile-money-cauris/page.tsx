@@ -60,7 +60,7 @@ export default function MobileMoneyCorisPage() {
     const processedTransactions = useMemo(() => {
         if (!isClient) return [];
         return getProcessedTransactions('Coris');
-    }, [isClient, getProcessedTransactions, corisTransactions]);
+    }, [isClient, getProcessedTransactions]);
     
     const filteredTransactions = useMemo(() => {
         if (!isClient) return [];

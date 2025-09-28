@@ -19,15 +19,15 @@ import type { Transaction } from '@/lib/types';
 import { SalesCurveChart } from '@/components/dashboard/sales-curve-chart';
 
 export default function Page() {
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
+
     const { getAllTransactions, sales, getLastClosingDate } = useTransactions();
     const { inventory } = useInventory();
     const { getStock: getAirtimeStock } = useAirtime();
     const { getBalance: getMobileMoneyBalance } = useMobileMoney();
-    const [isClient, setIsClient] = useState(false);
-
-    useEffect(() => {
-      setIsClient(true);
-    }, []);
 
     const allTransactions = useMemo(() => isClient ? getAllTransactions() : [], [isClient, getAllTransactions]);
     const lastClosingDate = useMemo(() => isClient ? getLastClosingDate() : null, [isClient, getLastClosingDate]);
@@ -75,84 +75,82 @@ export default function Page() {
         .reduce((acc, t) => acc + t.amount, 0);
     }, [isClient, sales, lastClosingDate]);
     
+    if (!isClient) {
+      return null;
+    }
+    
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';
 
+    return (
+      <div className="flex flex-col gap-8 p-4 md:p-8">
+        <PageHeader title="Tableau de Bord" />
+        
+        <DashboardAlerts />
 
-  if (!isClient) {
-    return null;
-  }
-
-
-  return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
-      <PageHeader title="Tableau de Bord" />
-      
-      <DashboardAlerts />
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <StatCard
-          title="Fonds de roulement"
-          value={formatCurrency(workingCapital)}
-          icon={<Landmark className="h-6 w-6 text-primary" />}
-          className="xl:col-span-2"
-        />
-        <StatCard
-          title="Solde de Trésorerie"
-          value={formatCurrency(currentBalance)}
-          icon={<DollarSign className="h-6 w-6 text-primary" />}
-        />
-        <StatCard
-          title="Valeur du Stock"
-          value={formatCurrency(inventoryValue)}
-          icon={<Boxes className="h-6 w-6 text-primary" />}
-        />
-        <StatCard
-          title="Ventes du Jour"
-          value={formatCurrency(todaySales)}
-          icon={<ShoppingCart className="h-6 w-6 text-primary" />}
-        />
-      </div>
-      
-       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-         <StatCard
-          title="Stock Airtime Moov"
-          value={formatCurrency(airtimeStockMoov)}
-          icon={<Smartphone className="h-6 w-6 text-blue-600" />}
-        />
-         <StatCard
-          title="Stock Airtime Yas"
-          value={formatCurrency(airtimeStockYas)}
-          icon={<Smartphone className="h-6 w-6 text-yellow-600" />}
-        />
-         <StatCard
-          title="Solde MM Flooz"
-          value={formatCurrency(mobileMoneyBalanceFlooz)}
-          icon={<Send className="h-6 w-6 text-blue-600" />}
-        />
-         <StatCard
-          title="Solde MM Mixx"
-          value={formatCurrency(mobileMoneyBalanceMixx)}
-          icon={<Send className="h-6 w-6 text-yellow-600" />}
-        />
-         <StatCard
-          title="Solde MM Coris"
-          value={formatCurrency(mobileMoneyBalanceCoris)}
-          icon={<Send className="h-6 w-6 text-red-600" />}
-        />
-       </div>
-
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 grid gap-8">
-          <UnpaidPurchases />
-          <CashflowChart />
-          <CashflowChartLast6Months />
-          <SalesCurveChart />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <StatCard
+            title="Fonds de roulement"
+            value={formatCurrency(workingCapital)}
+            icon={<Landmark className="h-6 w-6 text-primary" />}
+            className="xl:col-span-2"
+          />
+          <StatCard
+            title="Solde de Trésorerie"
+            value={formatCurrency(currentBalance)}
+            icon={<DollarSign className="h-6 w-6 text-primary" />}
+          />
+          <StatCard
+            title="Valeur du Stock"
+            value={formatCurrency(inventoryValue)}
+            icon={<Boxes className="h-6 w-6 text-primary" />}
+          />
+          <StatCard
+            title="Ventes du Jour"
+            value={formatCurrency(todaySales)}
+            icon={<ShoppingCart className="h-6 w-6 text-primary" />}
+          />
         </div>
-        <div className="grid gap-8">
-          <RecentTransactions />
-          <SalesBreakdownChart />
+        
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <StatCard
+            title="Stock Airtime Moov"
+            value={formatCurrency(airtimeStockMoov)}
+            icon={<Smartphone className="h-6 w-6 text-blue-600" />}
+          />
+          <StatCard
+            title="Stock Airtime Yas"
+            value={formatCurrency(airtimeStockYas)}
+            icon={<Smartphone className="h-6 w-6 text-yellow-600" />}
+          />
+          <StatCard
+            title="Solde MM Flooz"
+            value={formatCurrency(mobileMoneyBalanceFlooz)}
+            icon={<Send className="h-6 w-6 text-blue-600" />}
+          />
+          <StatCard
+            title="Solde MM Mixx"
+            value={formatCurrency(mobileMoneyBalanceMixx)}
+            icon={<Send className="h-6 w-6 text-yellow-600" />}
+          />
+          <StatCard
+            title="Solde MM Coris"
+            value={formatCurrency(mobileMoneyBalanceCoris)}
+            icon={<Send className="h-6 w-6 text-red-600" />}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 grid gap-8">
+            <UnpaidPurchases />
+            <CashflowChart />
+            <CashflowChartLast6Months />
+            <SalesCurveChart />
+          </div>
+          <div className="grid gap-8">
+            <RecentTransactions />
+            <SalesBreakdownChart />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }

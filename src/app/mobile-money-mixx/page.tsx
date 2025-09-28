@@ -9,7 +9,7 @@ import { useMobileMoney } from '@/context/mobile-money-context';
 import { AddMobileMoneyTransactionDialog } from '@/components/mobile-money/add-mobile-money-transaction-dialog';
 import { AdjustMobileMoneyBalanceDialog } from '@/components/mobile-money/adjust-mobile-money-balance-dialog';
 import { useMemo, useState, useEffect } from 'react';
-import type { MobileMoneyTransaction, MobileMoneyTransactionType } from '@/lib/types';
+import type { MobileMoneyTransactionType } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -62,7 +62,7 @@ export default function MobileMoneyMixxPage() {
     const processedTransactions = useMemo(() => {
         if (!isClient) return [];
         return getProcessedTransactions('Mixx');
-    }, [isClient, getProcessedTransactions, mixxTransactions]);
+    }, [isClient, getProcessedTransactions]);
 
     const filteredTransactions = useMemo(() => {
         if (!isClient) return [];

@@ -11,8 +11,6 @@ import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
 import { DataTable } from '@/components/data-table/data-table';
 import type { Invoice, InventoryItem, Sale } from '@/lib/types';
-import type { ColumnDef } from '@tanstack/react-table';
-import { useRouter } from 'next/navigation';
 import { useInventory } from '@/context/inventory-context';
 import { QuickSaleDialog } from '@/components/sales/quick-sale-dialog';
 import { columns as invoiceColumns } from '@/components/invoices/columns-invoices';
@@ -52,13 +50,11 @@ export default function Page() {
             }
         });
 
-        const sortedItems = Object.entries(salesByItem)
+        return Object.entries(salesByItem)
             .sort(([, qtyA], [, qtyB]) => qtyB - qtyA)
             .slice(0, 10)
             .map(([inventoryId]) => inventory.find(item => item.id === inventoryId))
             .filter((item): item is InventoryItem => !!item);
-
-        return sortedItems;
     }, [isClient, sales, inventory]);
 
     const totalInvoiced = useMemo(() => {
@@ -78,97 +74,97 @@ export default function Page() {
         return cashSales.reduce((acc, sale) => acc + sale.amount, 0);
     }, [isClient, cashSales]);
 
+    if (!isClient) {
+      return null;
+    }
+
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value);
 
-  if (!isClient) {
-    return null;
-  }
+    return (
+      <div className="flex flex-col gap-8 p-4 md:p-8">
+          <PageHeader title="Ventes et Facturation" />
 
-  return (
-    <div className="flex flex-col gap-8 p-4 md:p-8">
-        <PageHeader title="Ventes et Facturation" />
+          <div className="grid gap-4 md:grid-cols-4">
+              <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Facturé</CardTitle>
+                  <Receipt className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(totalInvoiced)} F</div>
+                  <p className="text-xs text-muted-foreground">
+                  Montant total de toutes les factures émises.
+                  </p>
+              </CardContent>
+              </Card>
+              <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Ventes au Comptant (produits)</CardTitle>
+                  <Banknote className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                  <div className="text-2xl font-bold">{formatCurrency(totalCashSales)} F</div>
+                  <p className="text-xs text-muted-foreground">
+                  Total des ventes de produits au comptant (hors Wifi).
+                  </p>
+              </CardContent>
+              </Card>
+        </div>
+          
+          <div className="flex gap-4">
+              <AddSaleDialog />
+              <Link href="/invoices/new">
+                  <Button variant="outline">
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Nouvelle Facture
+                  </Button>
+              </Link>
+          </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-            <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Facturé</CardTitle>
-                <Receipt className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(totalInvoiced)} F</div>
-                <p className="text-xs text-muted-foreground">
-                Montant total de toutes les factures émises.
-                </p>
-            </CardContent>
-            </Card>
-             <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ventes au Comptant (produits)</CardTitle>
-                <Banknote className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(totalCashSales)} F</div>
-                <p className="text-xs text-muted-foreground">
-                Total des ventes de produits au comptant (hors Wifi).
-                </p>
-            </CardContent>
-            </Card>
+          {topSellingItems.length > 0 && (
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Ventes Rapides (Top 10 articles)</CardTitle>
+                      <CardDescription>Cliquez sur un article pour enregistrer une vente rapide au comptant.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4">
+                    {topSellingItems.map(item => (
+                        <QuickSaleItem key={item.id} item={item} />
+                    ))}
+                  </CardContent>
+              </Card>
+          )}
+
+          <div className="grid grid-cols-1 gap-8">
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Ventes au comptant récentes</CardTitle>
+                      <CardDescription>Liste des dernières ventes de produits au comptant (hors Wifi).</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                  <DataTable
+                          columns={salesColumns}
+                          data={cashSales}
+                          filterColumn="product"
+                          filterPlaceholder="Filtrer par produit..."
+                      />
+                  </CardContent>
+              </Card>
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Factures Récentes</CardTitle>
+                      <CardDescription>Liste des dernières factures émises.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                  <DataTable
+                          columns={invoiceColumns}
+                          data={invoices}
+                          filterColumn="clientName"
+                          filterPlaceholder="Filtrer par client..."
+                      />
+                  </CardContent>
+              </Card>
+          </div>
       </div>
-        
-        <div className="flex gap-4">
-            <AddSaleDialog />
-            <Link href="/invoices/new">
-                <Button variant="outline">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Nouvelle Facture
-                </Button>
-            </Link>
-        </div>
-
-        {topSellingItems.length > 0 && (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Ventes Rapides (Top 10 articles)</CardTitle>
-                    <CardDescription>Cliquez sur un article pour enregistrer une vente rapide au comptant.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4">
-                   {topSellingItems.map(item => (
-                       <QuickSaleItem key={item.id} item={item} />
-                   ))}
-                </CardContent>
-            </Card>
-        )}
-
-        <div className="grid grid-cols-1 gap-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Ventes au comptant récentes</CardTitle>
-                    <CardDescription>Liste des dernières ventes de produits au comptant (hors Wifi).</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <DataTable
-                        columns={salesColumns}
-                        data={cashSales}
-                        filterColumn="product"
-                        filterPlaceholder="Filtrer par produit..."
-                    />
-                </CardContent>
-             </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Factures Récentes</CardTitle>
-                    <CardDescription>Liste des dernières factures émises.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                <DataTable
-                        columns={invoiceColumns}
-                        data={invoices}
-                        filterColumn="clientName"
-                        filterPlaceholder="Filtrer par client..."
-                    />
-                </CardContent>
-            </Card>
-        </div>
-    </div>
-  );
+    );
 }

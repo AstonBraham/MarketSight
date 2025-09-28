@@ -54,7 +54,7 @@ export default function MobileMoneyFloozPage() {
     const processedTransactions = useMemo(() => {
         if (!isClient) return [];
         return getProcessedTransactions('Flooz');
-    }, [isClient, getProcessedTransactions, floozTransactions]);
+    }, [isClient, getProcessedTransactions]);
 
     const filteredTransactions = useMemo(() => {
         if (!isClient) return [];

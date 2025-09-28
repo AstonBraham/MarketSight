@@ -1,11 +1,9 @@
 
-
 'use client';
 
 import { createContext, useContext, useState, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { AirtimeTransaction } from '@/lib/types';
 import { useLocalStorage } from '@/hooks/use-local-storage';
-import { useTransactions } from './transaction-context';
 import { useAuditLog } from './audit-log-context';
 
 interface AirtimeContextType {
@@ -56,9 +54,10 @@ export function AirtimeProvider({ children }: { children: ReactNode }) {
     setTransactions(prev => {
         const otherProviderTransactions = providerToClear 
             ? prev.filter(t => t.provider !== providerToClear)
-            : prev;
+            : [];
         
-        return [...otherProviderTransactions, ...fullTransactions];
+        const allTransactions = [...otherProviderTransactions, ...fullTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return allTransactions;
     });
     logAction('IMPORT_AIRTIME', `Importation de ${newTransactions.length} transactions pour ${providerToClear || 'tous les fournisseurs'}.`);
   }, [setTransactions, logAction]);

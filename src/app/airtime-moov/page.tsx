@@ -7,17 +7,14 @@ import { DataTable } from '@/components/data-table/data-table';
 import { columns as airtimeColumns } from '@/components/airtime/columns-airtime';
 import { useAirtime } from '@/context/airtime-context';
 import { AddAirtimeTransactionDialog } from '@/components/airtime/add-airtime-transaction-dialog';
-import type { AirtimeTransaction } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { AdjustBalanceDialog } from '@/components/airtime/adjust-balance-dialog';
-import { AlertTriangle, TrendingDown } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useTransactions } from '@/context/transaction-context';
 
 export default function AirtimeMoovPage() {
   const { transactions, getStock, getProcessedTransactions } = useAirtime();
-  const { getLastClosingDate } = useTransactions();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -67,7 +64,6 @@ export default function AirtimeMoovPage() {
   }, [isClient, getProcessedTransactions]);
 
   const isStockLow = isClient && remainingDays <= 3;
-
 
   if (!isClient) {
     return null; 
