@@ -29,7 +29,7 @@ export default function CashPage() {
       if (t.type === 'sale') {
         balance += t.amount;
       } else if (t.type === 'purchase' || t.type === 'expense') {
-        balance -= t.amount;
+        balance -= Math.abs(t.amount);
       } else if (t.type === 'adjustment') {
         balance += t.amount;
       }
@@ -66,7 +66,7 @@ export default function CashPage() {
 
   const dailyOutcome = allTransactions
     .filter(t => (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) && (!lastClosingDate || new Date(t.date) > lastClosingDate))
-    .reduce((acc, t) => acc + t.amount, 0);
+    .reduce((acc, t) => acc + Math.abs(t.amount), 0);
   
   const netFlow = dailyIncome - dailyOutcome;
 
