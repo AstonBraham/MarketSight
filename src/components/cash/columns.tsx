@@ -45,11 +45,23 @@ export const columns: ColumnDef<Transaction>[] = [
       const isDebit = type === 'purchase' || type === 'expense' || (type === 'adjustment' && amount < 0);
       
       let colorClass = '';
-      if(isCredit) colorClass = 'text-green-600';
-      if(isDebit) colorClass = 'text-red-600';
-      if(row.original.type === 'adjustment' && row.original.category !== 'Encaissement') colorClass = 'text-orange-600';
+      let sign = amount >= 0 ? '+' : '-';
 
-      const sign = amount >= 0 ? '+' : '-';
+      if (isCredit) {
+        colorClass = 'text-green-600';
+      }
+      if (isDebit) {
+        colorClass = 'text-red-600';
+      }
+      if (type === 'adjustment' && row.original.category !== 'Encaissement') {
+        colorClass = 'text-orange-600';
+      }
+
+      // Ensure expenses are always negative
+      if (type === 'expense') {
+        colorClass = 'text-red-600';
+        sign = '-';
+      }
 
       return <div className={cn("text-right font-mono", colorClass)}>{sign}{formatted} F</div>;
     },
