@@ -62,7 +62,7 @@ export default function MobileMoneyMixxPage() {
     const processedTransactions = useMemo(() => {
         if (!isClient) return [];
         return getProcessedTransactions('Mixx');
-    }, [isClient, getProcessedTransactions, mixxTransactions]);
+    }, [isClient, getProcessedTransactions, transactions]);
 
     const filteredTransactions = useMemo(() => {
         if (!isClient) return [];

@@ -56,12 +56,12 @@ export default function Page() {
 
     const airtimeStockMoov = useMemo(() => isClient ? getAirtimeStock('Moov') : 0, [isClient, getAirtimeStock]);
     const airtimeStockYas = useMemo(() => isClient ? getAirtimeStock('Yas') : 0, [isClient, getAirtimeStock]);
-    const totalAirtimeStock = airtimeStockMoov + airtimeStockYas;
+    const totalAirtimeStock = useMemo(() => airtimeStockMoov + airtimeStockYas, [airtimeStockMoov, airtimeStockYas]);
 
     const mobileMoneyBalanceFlooz = useMemo(() => isClient ? getMobileMoneyBalance('Flooz') : 0, [isClient, getMobileMoneyBalance]);
     const mobileMoneyBalanceMixx = useMemo(() => isClient ? getMobileMoneyBalance('Mixx') : 0, [isClient, getMobileMoneyBalance]);
     const mobileMoneyBalanceCoris = useMemo(() => isClient ? getMobileMoneyBalance('Coris') : 0, [isClient, getMobileMoneyBalance]);
-    const totalMobileMoneyBalance = mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCoris;
+    const totalMobileMoneyBalance = useMemo(() => mobileMoneyBalanceFlooz + mobileMoneyBalanceMixx + mobileMoneyBalanceCoris, [mobileMoneyBalanceFlooz, mobileMoneyBalanceMixx, mobileMoneyBalanceCoris]);
     
     const workingCapital = useMemo(() => {
         if (!isClient) return 0;
@@ -70,9 +70,8 @@ export default function Page() {
     
     const todaySales = useMemo(() => {
         if (!isClient) return 0;
-        return sales
-        .filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate)
-        .reduce((acc, t) => acc + t.amount, 0);
+        const relevantSales = sales.filter(t => !lastClosingDate || new Date(t.date) > lastClosingDate);
+        return relevantSales.reduce((acc, t) => acc + t.amount, 0);
     }, [isClient, sales, lastClosingDate]);
     
     const formatCurrency = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' F';

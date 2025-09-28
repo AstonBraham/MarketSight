@@ -11,8 +11,6 @@ import Link from 'next/link';
 import { useTransactions } from '@/context/transaction-context';
 import { DataTable } from '@/components/data-table/data-table';
 import type { Invoice, InventoryItem, Sale } from '@/lib/types';
-import type { ColumnDef } from '@tanstack/react-table';
-import { useRouter } from 'next/navigation';
 import { useInventory } from '@/context/inventory-context';
 import { QuickSaleDialog } from '@/components/sales/quick-sale-dialog';
 import { columns as invoiceColumns } from '@/components/invoices/columns-invoices';
@@ -34,7 +32,7 @@ const QuickSaleItem = ({ item }: { item: InventoryItem }) => {
     )
 }
 
-export default function Page() {
+export default function InvoicesPage() {
     const { invoices, sales } = useTransactions();
     const { inventory } = useInventory();
     const [isClient, setIsClient] = useState(false);
@@ -52,13 +50,11 @@ export default function Page() {
             }
         });
 
-        const sortedItems = Object.entries(salesByItem)
+        return Object.entries(salesByItem)
             .sort(([, qtyA], [, qtyB]) => qtyB - qtyA)
             .slice(0, 10)
             .map(([inventoryId]) => inventory.find(item => item.id === inventoryId))
             .filter((item): item is InventoryItem => !!item);
-
-        return sortedItems;
     }, [isClient, sales, inventory]);
 
     const totalInvoiced = useMemo(() => {

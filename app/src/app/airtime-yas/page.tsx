@@ -17,7 +17,6 @@ import { useTransactions } from '@/context/transaction-context';
 
 export default function AirtimeYasPage() {
     const { transactions, getStock, getProcessedTransactions } = useAirtime();
-    const { getLastClosingDate } = useTransactions();
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
