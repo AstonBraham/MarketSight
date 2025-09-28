@@ -12,7 +12,7 @@ import { useInventory } from '@/context/inventory-context';
 import { useAirtime } from '@/context/airtime-context';
 import { useMobileMoney } from '@/context/mobile-money-context';
 import { useMemo } from 'react';
-import type { MobileMoneyProvider, AirtimeTransaction } from '@/lib/types';
+import type { MobileMoneyProvider, AirtimeTransaction, Transaction } from '@/lib/types';
 
 const IMPORT_TEMPLATES = {
   products: [{ productName: '', sku: '', category: '', brand: '', reference: '', inStock: 0, reorderLevel: 10, supplier: '', defaultPrice: 0, costPrice: 0 }],
@@ -46,8 +46,21 @@ export default function ReportsPage() {
     return sales.filter(s => s.itemType === 'Ticket Wifi');
   }, [sales]);
 
-  const allCashTransactions = useMemo(() => {
-    return getAllTransactions();
+  const allCashTransactionsWithBalance = useMemo(() => {
+    const allTransactions = getAllTransactions();
+    let balance = 0;
+    const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    const withBalance: Transaction[] = sorted.map(t => {
+      if (t.type === 'sale' || (t.type === 'adjustment' && t.amount > 0)) {
+        balance += t.amount;
+      } else if (t.type === 'purchase' || t.type === 'expense' || (t.type === 'adjustment' && t.amount < 0)) {
+        balance -= Math.abs(t.amount);
+      }
+      return { ...t, balance };
+    });
+
+    return withBalance.reverse();
   }, [getAllTransactions]);
   
   const handleMobileMoneyExport = () => {
@@ -127,7 +140,7 @@ export default function ReportsPage() {
             <CardDescription>Générez des rapports et exportez-les au format CSV pour Excel.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Button variant="outline" onClick={() => handleExport('rapport_tresorerie', allCashTransactions)}>
+          <Button variant="outline" onClick={() => handleExport('rapport_tresorerie', allCashTransactionsWithBalance)}>
             <Wallet className="mr-2 h-4 w-4" />
             Exporter les Mouvements de Trésorerie
           </Button>
