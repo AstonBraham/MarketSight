@@ -138,7 +138,7 @@ export function AddMobileMoneyTransactionDialog({ provider }: AddMobileMoneyTran
         provider: provider,
         amount: transactionAmount,
         commission: parseFloat(data.commission as string) || 0,
-        phoneNumber: (data.phoneNumber as string).replace(/\s+/g, ''),
+        phoneNumber: (data.phoneNumber as string || '').replace(/\s+/g, ''),
         affectsCash: affectsCash
     });
 
