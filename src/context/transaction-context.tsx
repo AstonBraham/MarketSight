@@ -568,10 +568,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
 
     // 1. Core transactions (sales, paid purchases, expenses, adjustments)
     transactions.forEach(t => {
-      if (t.type === 'sale' || t.type === 'expense' || t.type === 'adjustment') {
+      if (t.type === 'sale') {
+        allCashTransactions.push(t);
+      } else if (t.type === 'expense') {
+        allCashTransactions.push({ ...t, amount: -Math.abs(t.amount) });
+      } else if (t.type === 'adjustment') {
         allCashTransactions.push(t);
       } else if (t.type === 'purchase' && (t as Purchase).status !== 'unpaid') {
-        allCashTransactions.push(t);
+        allCashTransactions.push({ ...t, amount: -Math.abs(t.amount) });
       }
     });
 
@@ -579,7 +583,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     airtimeTransactions.forEach(t => {
       if (t.type === 'purchase') {
           const description = `Achat de virtuel Airtime ${t.provider}`;
-          allCashTransactions.push({ id: t.id, type: 'expense', date: t.date, amount: t.amount, description });
+          allCashTransactions.push({ id: t.id, type: 'expense', date: t.date, amount: -Math.abs(t.amount), description });
       }
     });
 
